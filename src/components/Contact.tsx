@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Contact = () => {
   const { toast } = useToast();
@@ -20,24 +21,31 @@ const Contact = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Create mailto link
-    const subject = encodeURIComponent(formData.subject || "Website Inquiry");
-    const body = encodeURIComponent(
-      `Name: ${formData.name}\n` +
-      `Email: ${formData.email}\n\n` +
-      `Message:\n${formData.message}`
-    );
+    try {
+      const { error } = await supabase.from("contacts").insert({
+        name: formData.name,
+        email: formData.email,
+        subject: formData.subject || "Website Inquiry",
+        message: formData.message,
+      });
 
-    window.location.href = `mailto:admissions@microsoftinstitute.africa?subject=${subject}&body=${body}`;
+      if (error) throw error;
 
-    setTimeout(() => {
-      setIsSubmitting(false);
       setFormData({ name: "", email: "", subject: "", message: "" });
       toast({
-        title: "Email Client Opened!",
-        description: "Please send the email to complete your inquiry.",
+        title: "Message Sent!",
+        description: "Thank you for reaching out. We'll get back to you soon.",
       });
-    }, 1000);
+    } catch (error) {
+      console.error("Error submitting contact form:", error);
+      toast({
+        title: "Submission Failed",
+        description: "There was an error sending your message. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (field: string, value: string) => {

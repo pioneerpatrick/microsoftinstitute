@@ -3,6 +3,7 @@ import { Mail, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Newsletter = () => {
   const { toast } = useToast();
@@ -13,22 +14,37 @@ const Newsletter = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Create mailto link for newsletter signup
-    const subject = encodeURIComponent("Newsletter Subscription");
-    const body = encodeURIComponent(
-      `Please add me to your newsletter.\n\nEmail: ${email}`
-    );
-
-    window.location.href = `mailto:admissions@microsoftinstitute.africa?subject=${subject}&body=${body}`;
-
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setEmail("");
-      toast({
-        title: "Almost there!",
-        description: "Please send the email to complete your subscription.",
+    try {
+      const { error } = await supabase.from("newsletter_subscribers").insert({
+        email: email,
       });
-    }, 1000);
+
+      if (error) {
+        if (error.code === "23505") {
+          toast({
+            title: "Already Subscribed",
+            description: "This email is already subscribed to our newsletter.",
+          });
+        } else {
+          throw error;
+        }
+      } else {
+        setEmail("");
+        toast({
+          title: "Subscribed!",
+          description: "Thank you for subscribing to our newsletter.",
+        });
+      }
+    } catch (error) {
+      console.error("Error subscribing:", error);
+      toast({
+        title: "Subscription Failed",
+        description: "There was an error. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
