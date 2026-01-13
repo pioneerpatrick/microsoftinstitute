@@ -1,0 +1,108 @@
+import { useState } from "react";
+import { Menu, X, Phone, Mail } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import logo from "@/assets/logo.png";
+
+const Navbar = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const navLinks = [
+    { name: "Home", href: "#home" },
+    { name: "About", href: "#about" },
+    { name: "Courses", href: "#courses" },
+    { name: "Contact", href: "#contact" },
+  ];
+
+  const scrollToSection = (href: string) => {
+    const element = document.querySelector(href);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+    setIsOpen(false);
+  };
+
+  return (
+    <>
+      {/* Top Bar */}
+      <div className="bg-primary text-primary-foreground py-2 px-4">
+        <div className="container mx-auto flex flex-wrap justify-center md:justify-between items-center text-sm gap-2">
+          <div className="flex items-center gap-4">
+            <a href="tel:+254723821798" className="flex items-center gap-1 hover:text-secondary transition-colors">
+              <Phone className="h-4 w-4" />
+              <span>+254 723 821 798</span>
+            </a>
+            <a href="mailto:admissions@microsoftinstitute.africa" className="flex items-center gap-1 hover:text-secondary transition-colors">
+              <Mail className="h-4 w-4" />
+              <span>admissions@microsoftinstitute.africa</span>
+            </a>
+          </div>
+          <span className="hidden md:block">Quest for Excellence</span>
+        </div>
+      </div>
+
+      {/* Main Navbar */}
+      <nav className="bg-background/95 backdrop-blur-md sticky top-0 z-50 shadow-sm border-b border-border">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center h-20">
+            {/* Logo */}
+            <a href="#home" className="flex items-center gap-3">
+              <img src={logo} alt="Microsoft Training Institute" className="h-16 w-auto" />
+            </a>
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-8">
+              {navLinks.map((link) => (
+                <button
+                  key={link.name}
+                  onClick={() => scrollToSection(link.href)}
+                  className="text-foreground hover:text-primary font-medium transition-colors"
+                >
+                  {link.name}
+                </button>
+              ))}
+              <Button
+                onClick={() => scrollToSection("#apply")}
+                className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold px-6"
+              >
+                Apply Now
+              </Button>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="md:hidden p-2 text-foreground"
+            >
+              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
+
+          {/* Mobile Navigation */}
+          {isOpen && (
+            <div className="md:hidden py-4 border-t border-border">
+              {navLinks.map((link) => (
+                <button
+                  key={link.name}
+                  onClick={() => scrollToSection(link.href)}
+                  className="block w-full text-left py-3 px-4 text-foreground hover:bg-muted transition-colors"
+                >
+                  {link.name}
+                </button>
+              ))}
+              <div className="px-4 pt-4">
+                <Button
+                  onClick={() => scrollToSection("#apply")}
+                  className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold"
+                >
+                  Apply Now
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </nav>
+    </>
+  );
+};
+
+export default Navbar;
