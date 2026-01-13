@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Apply = () => {
   const { toast } = useToast();
@@ -49,29 +50,32 @@ const Apply = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Create mailto link with form data
-    const subject = encodeURIComponent(`Application for ${formData.course}`);
-    const body = encodeURIComponent(
-      `New Application\n\n` +
-      `Full Name: ${formData.fullName}\n` +
-      `Email: ${formData.email}\n` +
-      `Phone: ${formData.phone}\n` +
-      `Course: ${formData.course}\n` +
-      `Education Level: ${formData.education}\n\n` +
-      `Please process this application.`
-    );
+    try {
+      const { error } = await supabase.from("applications").insert({
+        full_name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        course: formData.course,
+        education_level: formData.education,
+      });
 
-    // Open email client
-    window.location.href = `mailto:admissions@microsoftinstitute.africa?subject=${subject}&body=${body}`;
+      if (error) throw error;
 
-    setTimeout(() => {
-      setIsSubmitting(false);
       setIsSubmitted(true);
       toast({
-        title: "Application Initiated!",
-        description: "Your email client should open. Please send the email to complete your application.",
+        title: "Application Submitted!",
+        description: "Thank you for applying. Our admissions team will contact you within 24-48 hours.",
       });
-    }, 1000);
+    } catch (error) {
+      console.error("Error submitting application:", error);
+      toast({
+        title: "Submission Failed",
+        description: "There was an error submitting your application. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (field: string, value: string) => {
@@ -86,13 +90,16 @@ const Apply = () => {
             <div className="inline-flex items-center justify-center w-20 h-20 bg-accent rounded-full mb-6">
               <CheckCircle className="h-10 w-10 text-accent-foreground" />
             </div>
-            <h2 className="text-3xl font-heading font-bold mb-4">Application Started!</h2>
+            <h2 className="text-3xl font-heading font-bold mb-4">Application Submitted!</h2>
             <p className="text-lg text-primary-foreground/90 mb-6">
-              Your email client should have opened with your application details. 
-              Please send the email to complete your application. We will respond within 24-48 hours.
+              Thank you for your application! Our admissions team will review your details 
+              and contact you within 24-48 hours.
             </p>
             <Button
-              onClick={() => setIsSubmitted(false)}
+              onClick={() => {
+                setIsSubmitted(false);
+                setFormData({ fullName: "", email: "", phone: "", course: "", education: "" });
+              }}
               variant="outline"
               className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
             >
@@ -206,7 +213,7 @@ const Apply = () => {
                 className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold py-6 text-lg"
               >
                 {isSubmitting ? (
-                  "Processing..."
+                  "Submitting..."
                 ) : (
                   <>
                     Submit Application
