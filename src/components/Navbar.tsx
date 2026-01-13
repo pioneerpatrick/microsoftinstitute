@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Menu, X, Phone, Mail } from "lucide-react";
+import { Menu, X, Phone, Mail, UserCog } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.png";
 
@@ -36,7 +37,13 @@ const Navbar = () => {
               <span>admissions@microsoftinstitute.africa</span>
             </a>
           </div>
-          <span className="hidden md:block">Quest for Excellence</span>
+          <div className="flex items-center gap-4">
+            <span className="hidden md:block">Quest for Excellence</span>
+            <Link to="/auth" className="flex items-center gap-1 hover:text-secondary transition-colors" title="Admin Login">
+              <UserCog className="h-4 w-4" />
+              <span className="hidden sm:inline">Admin</span>
+            </Link>
+          </div>
         </div>
       </div>
 
