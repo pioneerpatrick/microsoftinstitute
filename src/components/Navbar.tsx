@@ -39,9 +39,13 @@ const Navbar = () => {
           </div>
           <div className="flex items-center gap-4">
             <span className="hidden md:block">Quest for Excellence</span>
-            <Link to="/auth" className="flex items-center gap-1 hover:text-secondary transition-colors" title="Admin Login">
+            <Link 
+              to="/auth" 
+              className="flex items-center gap-1.5 bg-secondary/20 hover:bg-secondary/40 px-3 py-1.5 rounded-md font-medium transition-all duration-200" 
+              title="Admin Login"
+            >
               <UserCog className="h-4 w-4" />
-              <span className="hidden sm:inline">Admin</span>
+              <span>Admin</span>
             </Link>
           </div>
         </div>
