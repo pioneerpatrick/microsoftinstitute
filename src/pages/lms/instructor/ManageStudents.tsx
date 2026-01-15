@@ -158,7 +158,7 @@ const ManageStudents = () => {
   };
 
   const filteredStudents = students.filter(student =>
-    student.profiles?.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
+    student.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || !searchQuery
   );
 
   if (loading || isLoading) {

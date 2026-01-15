@@ -120,11 +120,6 @@ const LiveSessions = () => {
                 <span>{session.duration_minutes} min</span>
               </div>
             </div>
-            {session.profiles?.full_name && (
-              <p className="text-sm text-muted-foreground mt-2">
-                Instructor: {session.profiles.full_name}
-              </p>
-            )}
           </div>
           <div className="flex flex-col gap-2">
             {session.status === 'live' && session.meeting_url && (
