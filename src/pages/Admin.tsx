@@ -4,11 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, FileText, MessageSquare, Mail, RefreshCw } from "lucide-react";
+import { LogOut, FileText, MessageSquare, Mail, RefreshCw, Users } from "lucide-react";
 import { User, Session } from "@supabase/supabase-js";
 import ApplicationsTable from "@/components/admin/ApplicationsTable";
 import ContactsTable from "@/components/admin/ContactsTable";
 import SubscribersTable from "@/components/admin/SubscribersTable";
+import UserManagement from "@/components/admin/UserManagement";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -100,8 +101,12 @@ const Admin = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="applications" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-3">
+        <Tabs defaultValue="users" className="space-y-6">
+          <TabsList className="grid w-full max-w-lg grid-cols-4">
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">Users</span>
+            </TabsTrigger>
             <TabsTrigger value="applications" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">Applications</span>
@@ -115,6 +120,10 @@ const Admin = () => {
               <span className="hidden sm:inline">Subscribers</span>
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="users">
+            <UserManagement key={`users-${refreshKey}`} />
+          </TabsContent>
 
           <TabsContent value="applications">
             <ApplicationsTable key={`apps-${refreshKey}`} />
