@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, X, Phone, Mail, UserCog } from "lucide-react";
+import { Menu, X, Phone, Mail, UserCog, GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.png";
@@ -39,6 +39,14 @@ const Navbar = () => {
           </div>
           <div className="flex items-center gap-4">
             <span className="hidden md:block">Quest for Excellence</span>
+            <Link 
+              to="/lms/login" 
+              className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-md font-medium transition-all duration-200" 
+              title="Student Portal"
+            >
+              <GraduationCap className="h-4 w-4" />
+              <span>LMS</span>
+            </Link>
             <Link 
               to="/auth" 
               className="flex items-center gap-1.5 bg-secondary/20 hover:bg-secondary/40 px-3 py-1.5 rounded-md font-medium transition-all duration-200" 
