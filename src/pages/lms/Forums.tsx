@@ -278,7 +278,7 @@ const Forums = () => {
                         <Badge variant="secondary">{topic.courses?.title}</Badge>
                         <div className="flex items-center gap-1">
                           <User className="h-3 w-3" />
-                          <span>{topic.profiles?.full_name || 'Anonymous'}</span>
+                          <span>Student</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />

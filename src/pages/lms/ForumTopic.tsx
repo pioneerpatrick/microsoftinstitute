@@ -174,10 +174,7 @@ const ForumTopic = () => {
           <CardHeader className="pb-4">
             <div className="flex items-start gap-4">
               <Avatar className="h-12 w-12">
-                <AvatarImage src={topic.profiles?.avatar_url || undefined} />
-                <AvatarFallback>
-                  {topic.profiles?.full_name?.charAt(0) || 'U'}
-                </AvatarFallback>
+                <AvatarFallback>U</AvatarFallback>
               </Avatar>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
@@ -190,7 +187,7 @@ const ForumTopic = () => {
                   <h1 className="text-xl font-bold">{topic.title}</h1>
                 </div>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span>{topic.profiles?.full_name || 'Anonymous'}</span>
+                  <span>Student</span>
                   <span>•</span>
                   <span>{new Date(topic.created_at).toLocaleDateString()}</span>
                 </div>
@@ -214,17 +211,12 @@ const ForumTopic = () => {
               <CardContent className="p-4">
                 <div className="flex items-start gap-4">
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={reply.profiles?.avatar_url || undefined} />
-                    <AvatarFallback>
-                      {reply.profiles?.full_name?.charAt(0) || 'U'}
-                    </AvatarFallback>
+                    <AvatarFallback>U</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">
-                          {reply.profiles?.full_name || 'Anonymous'}
-                        </span>
+                        <span className="font-medium">Student</span>
                         {reply.is_solution && (
                           <Badge className="bg-green-500">
                             <CheckCircle className="h-3 w-3 mr-1" />
