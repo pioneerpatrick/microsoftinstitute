@@ -13,6 +13,7 @@ import NotFound from "./pages/NotFound";
 import LMSLogin from "./pages/lms/Login";
 import LMSDashboard from "./pages/lms/Dashboard";
 import MyCourses from "./pages/lms/MyCourses";
+import CourseCatalog from "./pages/lms/CourseCatalog";
 import CourseView from "./pages/lms/CourseView";
 import Certificates from "./pages/lms/Certificates";
 import LiveSessions from "./pages/lms/LiveSessions";
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/lms/login" element={<LMSLogin />} />
             <Route path="/lms/dashboard" element={<LMSDashboard />} />
             <Route path="/lms/courses" element={<MyCourses />} />
+            <Route path="/lms/catalog" element={<CourseCatalog />} />
             <Route path="/lms/courses/:courseId" element={<CourseView />} />
             <Route path="/lms/certificates" element={<Certificates />} />
             <Route path="/lms/live-sessions" element={<LiveSessions />} />
