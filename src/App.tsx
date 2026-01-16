@@ -18,12 +18,18 @@ import Certificates from "./pages/lms/Certificates";
 import LiveSessions from "./pages/lms/LiveSessions";
 import Forums from "./pages/lms/Forums";
 import ForumTopic from "./pages/lms/ForumTopic";
+import Assignments from "./pages/lms/Assignments";
+import Messages from "./pages/lms/Messages";
+import JitsiMeet from "./pages/lms/JitsiMeet";
+import ProfilePage from "./pages/lms/Profile";
 
 // Instructor Pages
 import InstructorDashboard from "./pages/lms/instructor/InstructorDashboard";
 import ManageCourses from "./pages/lms/instructor/ManageCourses";
 import CourseEditor from "./pages/lms/instructor/CourseEditor";
 import ManageStudents from "./pages/lms/instructor/ManageStudents";
+import ManageAssignments from "./pages/lms/instructor/ManageAssignments";
+import ManageLiveSessions from "./pages/lms/instructor/ManageLiveSessions";
 
 const queryClient = new QueryClient();
 
@@ -48,12 +54,18 @@ const App = () => (
             <Route path="/lms/live-sessions" element={<LiveSessions />} />
             <Route path="/lms/forums" element={<Forums />} />
             <Route path="/lms/forums/:topicId" element={<ForumTopic />} />
+            <Route path="/lms/assignments" element={<Assignments />} />
+            <Route path="/lms/messages" element={<Messages />} />
+            <Route path="/lms/meet/:sessionId" element={<JitsiMeet />} />
+            <Route path="/lms/profile" element={<ProfilePage />} />
             
             {/* Instructor Routes */}
             <Route path="/lms/instructor" element={<InstructorDashboard />} />
             <Route path="/lms/instructor/courses" element={<ManageCourses />} />
             <Route path="/lms/instructor/courses/:courseId" element={<CourseEditor />} />
             <Route path="/lms/instructor/students" element={<ManageStudents />} />
+            <Route path="/lms/instructor/assignments" element={<ManageAssignments />} />
+            <Route path="/lms/instructor/live-sessions" element={<ManageLiveSessions />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

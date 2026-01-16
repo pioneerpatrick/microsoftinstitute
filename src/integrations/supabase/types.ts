@@ -88,6 +88,110 @@ export type Database = {
         }
         Relationships: []
       }
+      assignment_submissions: {
+        Row: {
+          assignment_id: string
+          content: string | null
+          feedback: string | null
+          file_url: string | null
+          graded_at: string | null
+          graded_by: string | null
+          id: string
+          score: number | null
+          status: string | null
+          submitted_at: string
+          user_id: string
+        }
+        Insert: {
+          assignment_id: string
+          content?: string | null
+          feedback?: string | null
+          file_url?: string | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          score?: number | null
+          status?: string | null
+          submitted_at?: string
+          user_id: string
+        }
+        Update: {
+          assignment_id?: string
+          content?: string | null
+          feedback?: string | null
+          file_url?: string | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          score?: number | null
+          status?: string | null
+          submitted_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_submissions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assignments: {
+        Row: {
+          course_id: string
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          is_published: boolean | null
+          lesson_id: string | null
+          max_score: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          is_published?: boolean | null
+          lesson_id?: string | null
+          max_score?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          is_published?: boolean | null
+          lesson_id?: string | null
+          max_score?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignments_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       certificates: {
         Row: {
           certificate_number: string
@@ -181,6 +285,57 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_resources: {
+        Row: {
+          course_id: string
+          created_at: string
+          description: string | null
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          lesson_id: string | null
+          title: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          description?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          lesson_id?: string | null
+          title: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          description?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          lesson_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_resources_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_resources_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
             referencedColumns: ["id"]
           },
         ]
@@ -432,6 +587,41 @@ export type Database = {
           },
         ]
       }
+      live_session_attendance: {
+        Row: {
+          duration_seconds: number | null
+          id: string
+          joined_at: string
+          left_at: string | null
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          duration_seconds?: number | null
+          id?: string
+          joined_at?: string
+          left_at?: string | null
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          duration_seconds?: number | null
+          id?: string
+          joined_at?: string
+          left_at?: string | null
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_session_attendance_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "live_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       live_sessions: {
         Row: {
           course_id: string
@@ -482,6 +672,47 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_read: boolean | null
+          parent_id: string | null
+          recipient_id: string
+          sender_id: string
+          subject: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          parent_id?: string | null
+          recipient_id: string
+          sender_id: string
+          subject?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          parent_id?: string | null
+          recipient_id?: string
+          sender_id?: string
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       newsletter_subscribers: {
         Row: {
           email: string
@@ -502,6 +733,59 @@ export type Database = {
           subscribed_at?: string
         }
         Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          course_id: string | null
+          created_at: string
+          currency: string | null
+          id: string
+          metadata: Json | null
+          mpesa_receipt_number: string | null
+          payment_method: string | null
+          status: string | null
+          transaction_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          course_id?: string | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          metadata?: Json | null
+          mpesa_receipt_number?: string | null
+          payment_method?: string | null
+          status?: string | null
+          transaction_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          course_id?: string | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          metadata?: Json | null
+          mpesa_receipt_number?: string | null
+          payment_method?: string | null
+          status?: string | null
+          transaction_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
