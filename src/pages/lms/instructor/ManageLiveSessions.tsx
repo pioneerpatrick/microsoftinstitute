@@ -126,13 +126,24 @@ const ManageLiveSessions = () => {
     setIsLoading(false);
   };
 
+  const generateJitsiRoomName = () => {
+    // Generate a unique room name for Jitsi
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 8);
+    return `lms-session-${timestamp}-${random}`;
+  };
+
   const createSession = async () => {
     if (!newSession.title || !newSession.course_id || !newSession.scheduled_at) {
       toast.error('Please fill in required fields');
       return;
     }
 
-    const { error } = await supabase
+    // Generate a unique Jitsi room and meeting URL
+    const roomName = generateJitsiRoomName();
+    const meetingUrl = `https://meet.jit.si/${roomName}`;
+
+    const { data, error } = await supabase
       .from('live_sessions')
       .insert({
         title: newSession.title,
@@ -141,13 +152,20 @@ const ManageLiveSessions = () => {
         scheduled_at: new Date(newSession.scheduled_at).toISOString(),
         duration_minutes: newSession.duration_minutes,
         instructor_id: user?.id,
+        meeting_url: meetingUrl,
         status: 'scheduled'
-      });
+      })
+      .select()
+      .single();
 
     if (error) {
       toast.error('Failed to create session');
     } else {
-      toast.success('Session scheduled');
+      toast.success('Session scheduled with Jitsi link generated!');
+      // Copy the join link to clipboard
+      const internalLink = `${window.location.origin}/lms/meet/${data.id}`;
+      navigator.clipboard.writeText(internalLink);
+      toast.info('Join link copied to clipboard!');
       setDialogOpen(false);
       setNewSession({
         title: '',

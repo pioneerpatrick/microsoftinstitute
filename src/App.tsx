@@ -31,6 +31,9 @@ import CourseEditor from "./pages/lms/instructor/CourseEditor";
 import ManageStudents from "./pages/lms/instructor/ManageStudents";
 import ManageAssignments from "./pages/lms/instructor/ManageAssignments";
 import ManageLiveSessions from "./pages/lms/instructor/ManageLiveSessions";
+import ManageExams from "./pages/lms/instructor/ManageExams";
+import Reports from "./pages/lms/instructor/Reports";
+import Grades from "./pages/lms/Grades";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +64,9 @@ const App = () => (
             <Route path="/lms/meet/:sessionId" element={<JitsiMeet />} />
             <Route path="/lms/profile" element={<ProfilePage />} />
             
+            {/* Student Grades */}
+            <Route path="/lms/grades" element={<Grades />} />
+            
             {/* Instructor Routes */}
             <Route path="/lms/instructor" element={<InstructorDashboard />} />
             <Route path="/lms/instructor/courses" element={<ManageCourses />} />
@@ -68,6 +74,8 @@ const App = () => (
             <Route path="/lms/instructor/students" element={<ManageStudents />} />
             <Route path="/lms/instructor/assignments" element={<ManageAssignments />} />
             <Route path="/lms/instructor/live-sessions" element={<ManageLiveSessions />} />
+            <Route path="/lms/instructor/exams" element={<ManageExams />} />
+            <Route path="/lms/instructor/reports" element={<Reports />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

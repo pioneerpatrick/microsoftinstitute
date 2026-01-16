@@ -31,6 +31,8 @@ import {
   BarChart3,
   Home,
   GraduationCap,
+  ClipboardList,
+  TrendingUp,
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import { cn } from '@/lib/utils';
@@ -55,6 +57,7 @@ const LMSLayout = ({ children }: LMSLayoutProps) => {
     { icon: GraduationCap, label: 'Course Catalog', href: '/lms/catalog' },
     { icon: BookOpen, label: 'My Courses', href: '/lms/courses' },
     { icon: FileText, label: 'Assignments', href: '/lms/assignments' },
+    { icon: TrendingUp, label: 'My Grades', href: '/lms/grades' },
     { icon: Award, label: 'Certificates', href: '/lms/certificates' },
     { icon: Calendar, label: 'Live Sessions', href: '/lms/live-sessions' },
     { icon: MessageSquare, label: 'Forums', href: '/lms/forums' },
@@ -65,7 +68,9 @@ const LMSLayout = ({ children }: LMSLayoutProps) => {
     { icon: BookOpen, label: 'Manage Courses', href: '/lms/instructor/courses' },
     { icon: Users, label: 'Students', href: '/lms/instructor/students' },
     { icon: FileText, label: 'Assignments', href: '/lms/instructor/assignments' },
+    { icon: ClipboardList, label: 'Exams', href: '/lms/instructor/exams' },
     { icon: Calendar, label: 'Live Sessions', href: '/lms/instructor/live-sessions' },
+    { icon: BarChart3, label: 'Reports', href: '/lms/instructor/reports' },
   ];
 
   const navItems = isStaff ? [...staffNavItems, ...studentNavItems] : studentNavItems;
