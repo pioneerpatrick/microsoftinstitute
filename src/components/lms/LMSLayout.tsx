@@ -51,7 +51,8 @@ const LMSLayout = ({ children }: LMSLayoutProps) => {
 
   const studentNavItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/lms/dashboard' },
-    { icon: BookOpen, label: 'My Courses', href: '/lms/my-courses' },
+    { icon: BookOpen, label: 'My Courses', href: '/lms/courses' },
+    { icon: FileText, label: 'Assignments', href: '/lms/assignments' },
     { icon: Award, label: 'Certificates', href: '/lms/certificates' },
     { icon: Calendar, label: 'Live Sessions', href: '/lms/live-sessions' },
     { icon: MessageSquare, label: 'Forums', href: '/lms/forums' },
@@ -61,8 +62,8 @@ const LMSLayout = ({ children }: LMSLayoutProps) => {
     { icon: LayoutDashboard, label: 'Instructor Dashboard', href: '/lms/instructor' },
     { icon: BookOpen, label: 'Manage Courses', href: '/lms/instructor/courses' },
     { icon: Users, label: 'Students', href: '/lms/instructor/students' },
-    { icon: FileText, label: 'Quizzes', href: '/lms/instructor/quizzes' },
-    { icon: BarChart3, label: 'Reports', href: '/lms/instructor/reports' },
+    { icon: FileText, label: 'Assignments', href: '/lms/instructor/assignments' },
+    { icon: Calendar, label: 'Live Sessions', href: '/lms/instructor/live-sessions' },
   ];
 
   const navItems = isStaff ? [...staffNavItems, ...studentNavItems] : studentNavItems;
