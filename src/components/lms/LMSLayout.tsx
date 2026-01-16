@@ -30,6 +30,7 @@ import {
   FileText,
   BarChart3,
   Home,
+  GraduationCap,
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import { cn } from '@/lib/utils';
@@ -51,6 +52,7 @@ const LMSLayout = ({ children }: LMSLayoutProps) => {
 
   const studentNavItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/lms/dashboard' },
+    { icon: GraduationCap, label: 'Course Catalog', href: '/lms/catalog' },
     { icon: BookOpen, label: 'My Courses', href: '/lms/courses' },
     { icon: FileText, label: 'Assignments', href: '/lms/assignments' },
     { icon: Award, label: 'Certificates', href: '/lms/certificates' },

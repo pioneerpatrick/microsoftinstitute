@@ -185,9 +185,12 @@ const MyCourses = () => {
                 <CardContent className="p-8 text-center">
                   <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="font-semibold mb-2">No active courses</h3>
-                  <p className="text-muted-foreground">
-                    You don't have any active courses. Contact an administrator to enroll.
+                  <p className="text-muted-foreground mb-4">
+                    You don't have any active courses yet.
                   </p>
+                  <Button onClick={() => navigate('/lms/catalog')}>
+                    Browse Course Catalog
+                  </Button>
                 </CardContent>
               </Card>
             ) : (
