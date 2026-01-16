@@ -40,7 +40,7 @@ const Navbar = () => {
           <div className="flex items-center gap-4">
             <span className="hidden md:block">Quest for Excellence</span>
             <Link 
-              to="/lms/login" 
+              to="/lms/dashboard" 
               className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-md font-medium transition-all duration-200" 
               title="Student Portal"
             >
