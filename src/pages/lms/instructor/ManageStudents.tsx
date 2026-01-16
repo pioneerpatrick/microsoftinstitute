@@ -436,7 +436,7 @@ const ManageStudents = () => {
                         onValueChange={(value) => setNewStudent({ ...newStudent, course_id: value })}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a course" />
+                          <SelectValue placeholder="Select a course or type below" />
                         </SelectTrigger>
                         <SelectContent>
                           {courses.map((course) => (
@@ -446,6 +446,17 @@ const ManageStudents = () => {
                           ))}
                         </SelectContent>
                       </Select>
+                      <p className="text-xs text-muted-foreground">Or search by typing course name:</p>
+                      <Input
+                        placeholder="Type to search courses..."
+                        onChange={(e) => {
+                          const search = e.target.value.toLowerCase();
+                          const found = courses.find(c => c.title.toLowerCase().includes(search));
+                          if (found) {
+                            setNewStudent({ ...newStudent, course_id: found.id });
+                          }
+                        }}
+                      />
                     </div>
                     <Button onClick={createStudentAndEnroll} disabled={creating} className="w-full">
                       {creating ? (
@@ -488,7 +499,7 @@ const ManageStudents = () => {
                         onValueChange={(value) => setExistingEnrollment({ ...existingEnrollment, course_id: value })}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a course" />
+                          <SelectValue placeholder="Select a course or type below" />
                         </SelectTrigger>
                         <SelectContent>
                           {courses.map((course) => (
@@ -498,6 +509,17 @@ const ManageStudents = () => {
                           ))}
                         </SelectContent>
                       </Select>
+                      <p className="text-xs text-muted-foreground">Or search by typing course name:</p>
+                      <Input
+                        placeholder="Type to search courses..."
+                        onChange={(e) => {
+                          const search = e.target.value.toLowerCase();
+                          const found = courses.find(c => c.title.toLowerCase().includes(search));
+                          if (found) {
+                            setExistingEnrollment({ ...existingEnrollment, course_id: found.id });
+                          }
+                        }}
+                      />
                     </div>
                     <Button onClick={enrollExistingStudent} disabled={enrolling} className="w-full">
                       {enrolling ? (

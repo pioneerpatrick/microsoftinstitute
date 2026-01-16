@@ -334,14 +334,26 @@ const Assignments = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label>File URL (optional)</Label>
+                <Label>Upload File (optional)</Label>
+                <Input
+                  type="file"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      // For now, users need to upload to external service
+                      // In production, this would upload to Supabase Storage
+                      toast.info('Please upload your file to Google Drive or similar service and paste the link below');
+                    }
+                  }}
+                  className="cursor-pointer"
+                />
                 <Input
                   value={submissionFile}
                   onChange={(e) => setSubmissionFile(e.target.value)}
-                  placeholder="https://drive.google.com/..."
+                  placeholder="https://drive.google.com/... or paste file link here"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Upload your file to Google Drive or another service and paste the link here
+                  Upload your file to Google Drive, Dropbox, or another service and paste the sharing link above
                 </p>
               </div>
               <Button 
