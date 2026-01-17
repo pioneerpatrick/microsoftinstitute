@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, Clock, Video, Play, ExternalLink } from 'lucide-react';
+import { Calendar, Clock, Video, Play, Shield, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import LMSLayout from '@/components/lms/LMSLayout';
 
 interface LiveSession {
@@ -18,9 +19,11 @@ interface LiveSession {
   meeting_url: string | null;
   recording_url: string | null;
   status: string;
+  moderation_enabled: boolean;
   courses: {
     title: string;
   };
+  request_status?: string;
 }
 
 const LiveSessions = () => {
@@ -53,6 +56,7 @@ const LiveSessions = () => {
         meeting_url,
         recording_url,
         status,
+        moderation_enabled,
         courses (
           title
         )
@@ -60,9 +64,60 @@ const LiveSessions = () => {
       .order('scheduled_at', { ascending: true });
 
     if (!error && data) {
-      setSessions(data as LiveSession[]);
+      // Get user's request status for each session
+      const sessionsWithStatus = await Promise.all(
+        data.map(async (session) => {
+          if (session.moderation_enabled && user) {
+            const { data: requestData } = await supabase
+              .from('live_session_requests')
+              .select('status')
+              .eq('session_id', session.id)
+              .eq('user_id', user.id)
+              .maybeSingle();
+
+            return {
+              ...session,
+              request_status: requestData?.status || null
+            };
+          }
+          return session;
+        })
+      );
+
+      setSessions(sessionsWithStatus as LiveSession[]);
     }
     setIsLoading(false);
+  };
+
+  const requestToJoin = async (sessionId: string) => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('live_session_requests')
+      .insert({
+        session_id: sessionId,
+        user_id: user.id,
+        status: 'pending'
+      });
+
+    if (error) {
+      if (error.code === '23505') {
+        toast.info('You have already requested to join this session');
+      } else {
+        toast.error('Failed to request access');
+      }
+    } else {
+      toast.success('Request sent! Waiting for instructor approval.');
+      fetchSessions();
+    }
+  };
+
+  const joinSession = (session: LiveSession) => {
+    if (session.moderation_enabled && session.request_status !== 'approved') {
+      toast.error('You need instructor approval to join this session');
+      return;
+    }
+    navigate(`/lms/meet/${session.id}`);
   };
 
   const upcomingSessions = sessions.filter(s => s.status === 'scheduled');
@@ -84,71 +139,119 @@ const LiveSessions = () => {
     }
   };
 
-  const SessionCard = ({ session }: { session: LiveSession }) => (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              {getStatusBadge(session.status)}
-              <span className="text-sm text-muted-foreground">
-                {session.courses?.title}
-              </span>
-            </div>
-            <h3 className="text-lg font-semibold mb-2">{session.title}</h3>
-            {session.description && (
-              <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                {session.description}
-              </p>
-            )}
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" />
-                <span>{new Date(session.scheduled_at).toLocaleDateString()}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Clock className="h-4 w-4" />
-                <span>
-                  {new Date(session.scheduled_at).toLocaleTimeString([], { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })}
+  const SessionCard = ({ session }: { session: LiveSession }) => {
+    const canJoin = !session.moderation_enabled || session.request_status === 'approved';
+    const isPending = session.moderation_enabled && session.request_status === 'pending';
+    const needsRequest = session.moderation_enabled && !session.request_status;
+
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                {getStatusBadge(session.status)}
+                <span className="text-sm text-muted-foreground">
+                  {session.courses?.title}
                 </span>
+                {session.moderation_enabled && (
+                  <Badge variant="outline" className="gap-1">
+                    <Shield className="h-3 w-3" />
+                    Moderated
+                  </Badge>
+                )}
               </div>
-              <div className="flex items-center gap-1">
-                <Video className="h-4 w-4" />
-                <span>{session.duration_minutes} min</span>
+              <h3 className="text-lg font-semibold mb-2">{session.title}</h3>
+              {session.description && (
+                <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+                  {session.description}
+                </p>
+              )}
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-4 w-4" />
+                  <span>{new Date(session.scheduled_at).toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
+                  <span>
+                    {new Date(session.scheduled_at).toLocaleTimeString([], { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Video className="h-4 w-4" />
+                  <span>{session.duration_minutes} min</span>
+                </div>
               </div>
             </div>
+            <div className="flex flex-col gap-2">
+              {session.status === 'live' && (
+                <>
+                  {canJoin && (
+                    <Button onClick={() => joinSession(session)}>
+                      <Play className="h-4 w-4 mr-2" />
+                      Join Now
+                    </Button>
+                  )}
+                  {isPending && (
+                    <Button disabled variant="secondary">
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Waiting Approval
+                    </Button>
+                  )}
+                  {needsRequest && (
+                    <Button onClick={() => requestToJoin(session.id)}>
+                      <Shield className="h-4 w-4 mr-2" />
+                      Request to Join
+                    </Button>
+                  )}
+                </>
+              )}
+              {session.status === 'scheduled' && (
+                <>
+                  {canJoin && (
+                    <Button variant="outline" disabled>
+                      <Clock className="h-4 w-4 mr-2" />
+                      Approved
+                    </Button>
+                  )}
+                  {isPending && (
+                    <Button disabled variant="secondary">
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Pending
+                    </Button>
+                  )}
+                  {needsRequest && session.moderation_enabled && (
+                    <Button variant="outline" onClick={() => requestToJoin(session.id)}>
+                      <Shield className="h-4 w-4 mr-2" />
+                      Request Access
+                    </Button>
+                  )}
+                  {!session.moderation_enabled && (
+                    <Button variant="outline" disabled>
+                      <Clock className="h-4 w-4 mr-2" />
+                      Waiting
+                    </Button>
+                  )}
+                </>
+              )}
+              {session.status === 'completed' && session.recording_url && (
+                <Button variant="outline" asChild>
+                  <a href={session.recording_url} target="_blank" rel="noopener noreferrer">
+                    <Play className="h-4 w-4 mr-2" />
+                    Watch Recording
+                  </a>
+                </Button>
+              )}
+            </div>
           </div>
-          <div className="flex flex-col gap-2">
-            {session.status === 'live' && session.meeting_url && (
-              <Button asChild>
-                <a href={session.meeting_url} target="_blank" rel="noopener noreferrer">
-                  <Play className="h-4 w-4 mr-2" />
-                  Join Now
-                </a>
-              </Button>
-            )}
-            {session.status === 'scheduled' && session.meeting_url && (
-              <Button variant="outline" disabled>
-                <Clock className="h-4 w-4 mr-2" />
-                Waiting
-              </Button>
-            )}
-            {session.status === 'completed' && session.recording_url && (
-              <Button variant="outline" asChild>
-                <a href={session.recording_url} target="_blank" rel="noopener noreferrer">
-                  <Play className="h-4 w-4 mr-2" />
-                  Watch Recording
-                </a>
-              </Button>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+        </CardContent>
+      </Card>
+    );
+  };
 
   if (loading || isLoading) {
     return (

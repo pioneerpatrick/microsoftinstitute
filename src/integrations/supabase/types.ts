@@ -783,6 +783,44 @@ export type Database = {
           },
         ]
       }
+      live_session_requests: {
+        Row: {
+          id: string
+          requested_at: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          session_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          requested_at?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          session_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          requested_at?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          session_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_session_requests_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "live_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       live_sessions: {
         Row: {
           course_id: string
@@ -792,6 +830,7 @@ export type Database = {
           id: string
           instructor_id: string | null
           meeting_url: string | null
+          moderation_enabled: boolean | null
           recording_url: string | null
           scheduled_at: string
           status: string | null
@@ -805,6 +844,7 @@ export type Database = {
           id?: string
           instructor_id?: string | null
           meeting_url?: string | null
+          moderation_enabled?: boolean | null
           recording_url?: string | null
           scheduled_at: string
           status?: string | null
@@ -818,6 +858,7 @@ export type Database = {
           id?: string
           instructor_id?: string | null
           meeting_url?: string | null
+          moderation_enabled?: boolean | null
           recording_url?: string | null
           scheduled_at?: string
           status?: string | null
