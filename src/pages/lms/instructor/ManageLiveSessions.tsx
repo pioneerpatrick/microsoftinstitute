@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -20,7 +21,11 @@ import {
   Users,
   Play,
   ExternalLink,
-  Copy
+  Copy,
+  Shield,
+  Check,
+  X,
+  UserCheck
 } from 'lucide-react';
 import { toast } from 'sonner';
 import LMSLayout from '@/components/lms/LMSLayout';
@@ -36,15 +41,29 @@ interface LiveSession {
   recording_url: string | null;
   status: string;
   course_id: string;
+  moderation_enabled: boolean;
   courses: {
     title: string;
   };
   attendance_count?: number;
+  pending_requests?: number;
 }
 
 interface Course {
   id: string;
   title: string;
+}
+
+interface JoinRequest {
+  id: string;
+  session_id: string;
+  user_id: string;
+  status: string;
+  requested_at: string;
+  profiles: {
+    full_name: string | null;
+    email: string | null;
+  };
 }
 
 const ManageLiveSessions = () => {
@@ -54,12 +73,16 @@ const ManageLiveSessions = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [moderationDialogOpen, setModerationDialogOpen] = useState(false);
+  const [selectedSession, setSelectedSession] = useState<LiveSession | null>(null);
+  const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
   const [newSession, setNewSession] = useState({
     title: '',
     description: '',
     course_id: '',
     scheduled_at: '',
-    duration_minutes: 60
+    duration_minutes: 60,
+    moderation_enabled: true
   });
 
   useEffect(() => {
@@ -99,6 +122,7 @@ const ManageLiveSessions = () => {
         recording_url,
         status,
         course_id,
+        moderation_enabled,
         courses (
           title
         )
@@ -106,17 +130,24 @@ const ManageLiveSessions = () => {
       .order('scheduled_at', { ascending: false });
 
     if (!error && data) {
-      // Get attendance counts
+      // Get attendance counts and pending requests
       const sessionsWithCounts = await Promise.all(
         data.map(async (session) => {
-          const { count } = await supabase
+          const { count: attendanceCount } = await supabase
             .from('live_session_attendance')
             .select('*', { count: 'exact', head: true })
             .eq('session_id', session.id);
 
+          const { count: pendingCount } = await supabase
+            .from('live_session_requests')
+            .select('*', { count: 'exact', head: true })
+            .eq('session_id', session.id)
+            .eq('status', 'pending');
+
           return {
             ...session,
-            attendance_count: count || 0
+            attendance_count: attendanceCount || 0,
+            pending_requests: pendingCount || 0
           };
         })
       );
@@ -124,6 +155,89 @@ const ManageLiveSessions = () => {
       setSessions(sessionsWithCounts as LiveSession[]);
     }
     setIsLoading(false);
+  };
+
+  const fetchJoinRequests = async (sessionId: string) => {
+    const { data, error } = await supabase
+      .from('live_session_requests')
+      .select(`
+        id,
+        session_id,
+        user_id,
+        status,
+        requested_at,
+        profiles!inner (
+          full_name,
+          email
+        )
+      `)
+      .eq('session_id', sessionId)
+      .order('requested_at', { ascending: true });
+
+    if (!error && data) {
+      setJoinRequests(data as unknown as JoinRequest[]);
+    }
+  };
+
+  const openModerationDialog = (session: LiveSession) => {
+    setSelectedSession(session);
+    fetchJoinRequests(session.id);
+    setModerationDialogOpen(true);
+
+    // Subscribe to realtime updates for this session's requests
+    const channel = supabase
+      .channel(`session-requests-${session.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'live_session_requests',
+          filter: `session_id=eq.${session.id}`
+        },
+        () => {
+          fetchJoinRequests(session.id);
+          fetchSessions();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
+
+  const handleJoinRequest = async (requestId: string, status: 'approved' | 'rejected') => {
+    const { error } = await supabase
+      .from('live_session_requests')
+      .update({
+        status,
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: user?.id
+      })
+      .eq('id', requestId);
+
+    if (error) {
+      toast.error(`Failed to ${status} request`);
+    } else {
+      toast.success(`Student ${status === 'approved' ? 'approved' : 'rejected'}`);
+      if (selectedSession) {
+        fetchJoinRequests(selectedSession.id);
+        fetchSessions();
+      }
+    }
+  };
+
+  const approveAllPending = async () => {
+    if (!selectedSession) return;
+
+    const pendingRequests = joinRequests.filter(r => r.status === 'pending');
+    
+    for (const request of pendingRequests) {
+      await handleJoinRequest(request.id, 'approved');
+    }
+    
+    toast.success(`Approved ${pendingRequests.length} students`);
   };
 
   const generateJitsiRoomName = () => {
@@ -153,7 +267,8 @@ const ManageLiveSessions = () => {
         duration_minutes: newSession.duration_minutes,
         instructor_id: user?.id,
         meeting_url: meetingUrl,
-        status: 'scheduled'
+        status: 'scheduled',
+        moderation_enabled: newSession.moderation_enabled
       })
       .select()
       .single();
@@ -172,7 +287,8 @@ const ManageLiveSessions = () => {
         description: '',
         course_id: '',
         scheduled_at: '',
-        duration_minutes: 60
+        duration_minutes: 60,
+        moderation_enabled: true
       });
       fetchSessions();
     }
@@ -317,6 +433,18 @@ const ManageLiveSessions = () => {
                     />
                   </div>
                 </div>
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Waiting Room</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Require approval before students can join
+                    </p>
+                  </div>
+                  <Switch
+                    checked={newSession.moderation_enabled}
+                    onCheckedChange={(checked) => setNewSession({ ...newSession, moderation_enabled: checked })}
+                  />
+                </div>
                 <Button onClick={createSession} className="w-full">
                   <Calendar className="h-4 w-4 mr-2" />
                   Schedule Session
@@ -325,6 +453,108 @@ const ManageLiveSessions = () => {
             </DialogContent>
           </Dialog>
         </div>
+
+        {/* Moderation Dialog */}
+        <Dialog open={moderationDialogOpen} onOpenChange={setModerationDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Session Moderation - {selectedSession?.title}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              {/* Pending Requests */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold">Pending Requests</h3>
+                  {joinRequests.filter(r => r.status === 'pending').length > 0 && (
+                    <Button size="sm" onClick={approveAllPending}>
+                      <UserCheck className="h-4 w-4 mr-1" />
+                      Approve All
+                    </Button>
+                  )}
+                </div>
+                {joinRequests.filter(r => r.status === 'pending').length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No pending requests
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {joinRequests
+                      .filter(r => r.status === 'pending')
+                      .map((request) => (
+                        <div
+                          key={request.id}
+                          className="flex items-center justify-between p-3 border rounded-lg"
+                        >
+                          <div>
+                            <p className="font-medium">
+                              {request.profiles?.full_name || 'Unknown'}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {request.profiles?.email}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleJoinRequest(request.id, 'approved')}
+                            >
+                              <Check className="h-4 w-4 mr-1" />
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleJoinRequest(request.id, 'rejected')}
+                            >
+                              <X className="h-4 w-4 mr-1" />
+                              Reject
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Approved Students */}
+              <div>
+                <h3 className="font-semibold mb-3">Approved Students</h3>
+                {joinRequests.filter(r => r.status === 'approved').length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No approved students yet
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {joinRequests
+                      .filter(r => r.status === 'approved')
+                      .map((request) => (
+                        <div
+                          key={request.id}
+                          className="flex items-center justify-between p-3 border rounded-lg bg-green-50"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Check className="h-4 w-4 text-green-600" />
+                            <div>
+                              <p className="font-medium">
+                                {request.profiles?.full_name || 'Unknown'}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {request.profiles?.email}
+                              </p>
+                            </div>
+                          </div>
+                          <Badge variant="secondary">Approved</Badge>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {sessions.length === 0 ? (
           <Card>
@@ -346,6 +576,7 @@ const ManageLiveSessions = () => {
                   <TableHead>Date & Time</TableHead>
                   <TableHead>Duration</TableHead>
                   <TableHead>Attendance</TableHead>
+                  <TableHead>Moderation</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead></TableHead>
                 </TableRow>
@@ -372,6 +603,26 @@ const ManageLiveSessions = () => {
                         <Users className="h-4 w-4 text-muted-foreground" />
                         {session.attendance_count}
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {session.moderation_enabled ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="relative"
+                          onClick={() => openModerationDialog(session)}
+                        >
+                          <Shield className="h-4 w-4 mr-1" />
+                          Moderate
+                          {session.pending_requests && session.pending_requests > 0 && (
+                            <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                              {session.pending_requests}
+                            </span>
+                          )}
+                        </Button>
+                      ) : (
+                        <Badge variant="outline">Open Access</Badge>
+                      )}
                     </TableCell>
                     <TableCell>{getStatusBadge(session.status)}</TableCell>
                     <TableCell>
