@@ -1,1 +1,7 @@
 project_id = "ifvilyobcntmsfavhted"
+
+[functions.manage-users]
+verify_jwt = false
+
+[functions.send-session-approval]
+verify_jwt = false
