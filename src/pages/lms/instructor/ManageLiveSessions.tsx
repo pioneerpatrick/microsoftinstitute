@@ -208,6 +208,9 @@ const ManageLiveSessions = () => {
   };
 
   const handleJoinRequest = async (requestId: string, status: 'approved' | 'rejected') => {
+    // Find the request to get student info
+    const request = joinRequests.find(r => r.id === requestId);
+    
     const { error } = await supabase
       .from('live_session_requests')
       .update({
@@ -221,6 +224,34 @@ const ManageLiveSessions = () => {
       toast.error(`Failed to ${status} request`);
     } else {
       toast.success(`Student ${status === 'approved' ? 'approved' : 'rejected'}`);
+      
+      // Send email notification if approved
+      if (status === 'approved' && request && selectedSession) {
+        const studentEmail = request.profiles?.email;
+        const studentName = request.profiles?.full_name || 'Student';
+        
+        if (studentEmail) {
+          try {
+            const { data: sessionData } = await supabase.auth.getSession();
+            
+            await supabase.functions.invoke('send-session-approval', {
+              body: {
+                studentEmail,
+                studentName,
+                sessionTitle: selectedSession.title,
+                sessionDate: format(new Date(selectedSession.scheduled_at), 'MMMM d, yyyy h:mm a'),
+                meetingUrl: selectedSession.meeting_url || ''
+              }
+            });
+            
+            console.log('Approval email sent to:', studentEmail);
+          } catch (emailError) {
+            console.error('Failed to send approval email:', emailError);
+            // Don't show error to user - approval was successful, email is secondary
+          }
+        }
+      }
+      
       if (selectedSession) {
         fetchJoinRequests(selectedSession.id);
         fetchSessions();
