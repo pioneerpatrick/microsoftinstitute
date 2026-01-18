@@ -143,26 +143,48 @@ const JitsiMeet = () => {
 
   useEffect(() => {
     // Load Jitsi Meet External API script
+    const existingScript = document.querySelector('script[src="https://meet.jit.si/external_api.js"]');
+    
+    if (existingScript) {
+      setIsJitsiLoaded(true);
+      return;
+    }
+    
     const script = document.createElement('script');
     script.src = 'https://meet.jit.si/external_api.js';
     script.async = true;
-    script.onload = () => setIsJitsiLoaded(true);
+    script.onload = () => {
+      console.log('Jitsi script loaded');
+      setIsJitsiLoaded(true);
+    };
+    script.onerror = () => {
+      console.error('Failed to load Jitsi script');
+      toast.error('Failed to load video conference');
+    };
     document.body.appendChild(script);
 
     return () => {
-      document.body.removeChild(script);
-      if (api) {
-        api.dispose();
-      }
+      // Don't remove script on cleanup - it might be needed
     };
   }, []);
 
+  // Cleanup api on unmount
+  useEffect(() => {
+    return () => {
+      if (api) {
+        console.log('Disposing Jitsi API');
+        api.dispose();
+      }
+    };
+  }, [api]);
+
   useEffect(() => {
     const shouldLoadJitsi = accessStatus === 'approved' || accessStatus === 'open';
-    if (isJitsiLoaded && jitsiContainerRef.current && roomName && user && shouldLoadJitsi) {
+    if (isJitsiLoaded && jitsiContainerRef.current && roomName && user && shouldLoadJitsi && !api) {
+      console.log('Initializing Jitsi - conditions met');
       initJitsi();
     }
-  }, [isJitsiLoaded, roomName, user, accessStatus]);
+  }, [isJitsiLoaded, roomName, user, accessStatus, api]);
 
   const fetchSession = async () => {
     if (!sessionId) return;
@@ -221,7 +243,13 @@ const JitsiMeet = () => {
   };
 
   const initJitsi = () => {
-    if (!jitsiContainerRef.current || !window.JitsiMeetExternalAPI) return;
+    if (!jitsiContainerRef.current || !window.JitsiMeetExternalAPI) {
+      console.error('Jitsi container or API not ready');
+      return;
+    }
+
+    // Clear any existing content
+    jitsiContainerRef.current.innerHTML = '';
 
     const domain = 'meet.jit.si';
     const options = {
@@ -240,6 +268,11 @@ const JitsiMeet = () => {
         disableDeepLinking: true,
         enableWelcomePage: false,
         enableClosePage: false,
+        // Whiteboard config for Jitsi
+        whiteboard: {
+          enabled: true,
+          collabServerBaseUrl: 'https://excalidraw.com'
+        },
         toolbarButtons: [
           'microphone',
           'camera',
@@ -253,8 +286,6 @@ const JitsiMeet = () => {
           'livestreaming',
           'etherpad',
           'whiteboard',
-          'shareaudio',
-          'sharedvideo',
           'settings',
           'raisehand',
           'videoquality',
@@ -264,11 +295,7 @@ const JitsiMeet = () => {
           'select-background',
           'mute-everyone',
           'security'
-        ],
-        whiteboard: {
-          enabled: true,
-          collabServerBaseUrl: 'https://excalidraw.com'
-        }
+        ]
       },
       interfaceConfigOverwrite: {
         SHOW_JITSI_WATERMARK: false,
@@ -277,37 +304,45 @@ const JitsiMeet = () => {
         BRAND_WATERMARK_LINK: '',
         DEFAULT_LOGO_URL: '',
         DEFAULT_WELCOME_PAGE_LOGO_URL: '',
-        TOOLBAR_BUTTONS: [
-          'microphone',
-          'camera',
-          'desktop',
-          'fullscreen',
-          'hangup',
-          'chat',
-          'whiteboard',
-          'raisehand',
-          'tileview',
-          'participants-pane'
-        ]
+        DISABLE_JOIN_LEAVE_NOTIFICATIONS: false,
+        FILM_STRIP_MAX_HEIGHT: 120,
+        VERTICAL_FILMSTRIP: true
       }
     };
 
-    const jitsiApi = new window.JitsiMeetExternalAPI(domain, options);
+    console.log('Initializing Jitsi with options:', options);
 
-    jitsiApi.addEventListeners({
-      readyToClose: () => {
-        updateAttendance();
-        navigate('/lms/live-sessions');
-      },
-      participantJoined: (participant: any) => {
-        console.log('Participant joined:', participant);
-      },
-      participantLeft: (participant: any) => {
-        console.log('Participant left:', participant);
-      }
-    });
+    try {
+      const jitsiApi = new window.JitsiMeetExternalAPI(domain, options);
 
-    setApi(jitsiApi);
+      jitsiApi.addEventListeners({
+        videoConferenceJoined: () => {
+          console.log('Video conference joined successfully');
+        },
+        videoConferenceLeft: () => {
+          console.log('Video conference left');
+          updateAttendance();
+        },
+        readyToClose: () => {
+          updateAttendance();
+          navigate('/lms/live-sessions');
+        },
+        participantJoined: (participant: any) => {
+          console.log('Participant joined:', participant);
+        },
+        participantLeft: (participant: any) => {
+          console.log('Participant left:', participant);
+        },
+        errorOccurred: (error: any) => {
+          console.error('Jitsi error:', error);
+        }
+      });
+
+      setApi(jitsiApi);
+    } catch (error) {
+      console.error('Failed to initialize Jitsi:', error);
+      toast.error('Failed to initialize video conference');
+    }
   };
 
   const handleLeave = () => {
