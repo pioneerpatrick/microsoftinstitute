@@ -158,25 +158,47 @@ const ManageLiveSessions = () => {
   };
 
   const fetchJoinRequests = async (sessionId: string) => {
-    const { data, error } = await supabase
+    console.log('Fetching join requests for session:', sessionId);
+    
+    // First get the requests
+    const { data: requestsData, error: requestsError } = await supabase
       .from('live_session_requests')
-      .select(`
-        id,
-        session_id,
-        user_id,
-        status,
-        requested_at,
-        profiles!inner (
-          full_name,
-          email
-        )
-      `)
+      .select('*')
       .eq('session_id', sessionId)
       .order('requested_at', { ascending: true });
 
-    if (!error && data) {
-      setJoinRequests(data as unknown as JoinRequest[]);
+    if (requestsError) {
+      console.error('Error fetching requests:', requestsError);
+      return;
     }
+
+    console.log('Found requests:', requestsData);
+
+    if (!requestsData || requestsData.length === 0) {
+      setJoinRequests([]);
+      return;
+    }
+
+    // Get profiles for these users
+    const userIds = requestsData.map(r => r.user_id);
+    const { data: profilesData, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, full_name, email')
+      .in('id', userIds);
+
+    if (profilesError) {
+      console.error('Error fetching profiles:', profilesError);
+    }
+
+    // Combine the data
+    const profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
+    const combinedData = requestsData.map(request => ({
+      ...request,
+      profiles: profilesMap.get(request.user_id) || { full_name: 'Unknown User', email: 'No email' }
+    }));
+
+    console.log('Combined requests with profiles:', combinedData);
+    setJoinRequests(combinedData as unknown as JoinRequest[]);
   };
 
   const openModerationDialog = (session: LiveSession) => {
