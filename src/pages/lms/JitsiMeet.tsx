@@ -252,6 +252,9 @@ const JitsiMeet = () => {
           'recording',
           'livestreaming',
           'etherpad',
+          'whiteboard',
+          'shareaudio',
+          'sharedvideo',
           'settings',
           'raisehand',
           'videoquality',
@@ -259,8 +262,13 @@ const JitsiMeet = () => {
           'participants-pane',
           'tileview',
           'select-background',
-          'mute-everyone'
-        ]
+          'mute-everyone',
+          'security'
+        ],
+        whiteboard: {
+          enabled: true,
+          collabServerBaseUrl: 'https://excalidraw.com'
+        }
       },
       interfaceConfigOverwrite: {
         SHOW_JITSI_WATERMARK: false,
@@ -276,6 +284,7 @@ const JitsiMeet = () => {
           'fullscreen',
           'hangup',
           'chat',
+          'whiteboard',
           'raisehand',
           'tileview',
           'participants-pane'
