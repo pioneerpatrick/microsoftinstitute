@@ -82,7 +82,8 @@ const ManageLiveSessions = () => {
     course_id: '',
     scheduled_at: '',
     duration_minutes: 60,
-    moderation_enabled: true
+    moderation_enabled: true,
+    meeting_url: ''
   });
 
   useEffect(() => {
@@ -293,11 +294,12 @@ const ManageLiveSessions = () => {
     toast.success(`Approved ${pendingRequests.length} students`);
   };
 
-  const generateJitsiRoomName = () => {
-    // Generate a unique room name for Jitsi
-    const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).substring(2, 8);
-    return `lms-session-${timestamp}-${random}`;
+  const validateGoogleMeetUrl = (url: string): boolean => {
+    if (!url) return false;
+    // Accept Google Meet URLs
+    const meetPattern = /^https:\/\/meet\.google\.com\/[a-z]{3}-[a-z]{4}-[a-z]{3}$/i;
+    const altMeetPattern = /^https:\/\/meet\.google\.com\/.+/i;
+    return meetPattern.test(url) || altMeetPattern.test(url);
   };
 
   const createSession = async () => {
@@ -306,9 +308,15 @@ const ManageLiveSessions = () => {
       return;
     }
 
-    // Generate a unique Jitsi room and meeting URL
-    const roomName = generateJitsiRoomName();
-    const meetingUrl = `https://meet.jit.si/${roomName}`;
+    if (!newSession.meeting_url) {
+      toast.error('Please enter your Google Meet link');
+      return;
+    }
+
+    if (!validateGoogleMeetUrl(newSession.meeting_url)) {
+      toast.error('Please enter a valid Google Meet URL (e.g., https://meet.google.com/abc-defg-hij)');
+      return;
+    }
 
     const { data, error } = await supabase
       .from('live_sessions')
@@ -319,7 +327,7 @@ const ManageLiveSessions = () => {
         scheduled_at: new Date(newSession.scheduled_at).toISOString(),
         duration_minutes: newSession.duration_minutes,
         instructor_id: user?.id,
-        meeting_url: meetingUrl,
+        meeting_url: newSession.meeting_url,
         status: 'scheduled',
         moderation_enabled: newSession.moderation_enabled
       })
@@ -329,7 +337,7 @@ const ManageLiveSessions = () => {
     if (error) {
       toast.error('Failed to create session');
     } else {
-      toast.success('Session scheduled with Jitsi link generated!');
+      toast.success('Session scheduled with Google Meet!');
       // Copy the join link to clipboard
       const internalLink = `${window.location.origin}/lms/meet/${data.id}`;
       navigator.clipboard.writeText(internalLink);
@@ -341,7 +349,8 @@ const ManageLiveSessions = () => {
         course_id: '',
         scheduled_at: '',
         duration_minutes: 60,
-        moderation_enabled: true
+        moderation_enabled: true,
+        meeting_url: ''
       });
       fetchSessions();
     }
@@ -375,11 +384,13 @@ const ManageLiveSessions = () => {
     }
   };
 
-  const startSession = (sessionId: string) => {
+  const startSession = (session: LiveSession) => {
     // Update status to live
-    updateStatus(sessionId, 'live');
-    // Navigate to Jitsi meeting
-    navigate(`/lms/meet/${sessionId}`);
+    updateStatus(session.id, 'live');
+    // Open Google Meet in new tab
+    if (session.meeting_url) {
+      window.open(session.meeting_url, '_blank');
+    }
   };
 
   const copyJoinLink = (sessionId: string) => {
@@ -419,7 +430,7 @@ const ManageLiveSessions = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Live Sessions</h1>
-            <p className="text-muted-foreground">Schedule and manage live classes with Jitsi Meet</p>
+            <p className="text-muted-foreground">Schedule and manage live classes with Google Meet</p>
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
@@ -485,6 +496,18 @@ const ManageLiveSessions = () => {
                       onChange={(e) => setNewSession({ ...newSession, duration_minutes: parseInt(e.target.value) })}
                     />
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Google Meet Link *</Label>
+                  <Input
+                    type="url"
+                    value={newSession.meeting_url}
+                    onChange={(e) => setNewSession({ ...newSession, meeting_url: e.target.value })}
+                    placeholder="https://meet.google.com/abc-defg-hij"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Create a meeting in Google Calendar or Google Meet, then paste the link here
+                  </p>
                 </div>
                 <div className="flex items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
@@ -615,7 +638,7 @@ const ManageLiveSessions = () => {
               <Video className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="font-semibold mb-2">No Sessions Scheduled</h3>
               <p className="text-muted-foreground mb-4">
-                Schedule your first live session with Jitsi Meet
+                Schedule your first live session with Google Meet
               </p>
             </CardContent>
           </Card>
@@ -684,7 +707,7 @@ const ManageLiveSessions = () => {
                           <>
                             <Button
                               size="sm"
-                              onClick={() => startSession(session.id)}
+                              onClick={() => startSession(session)}
                             >
                               <Play className="h-4 w-4 mr-1" />
                               Start

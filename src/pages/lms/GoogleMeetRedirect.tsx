@@ -1,17 +1,11 @@
-import { useEffect, useState, useRef } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Video, Phone, Shield, Clock, Loader2 } from 'lucide-react';
+import { ArrowLeft, Video, Shield, Clock, Loader2, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
-
-declare global {
-  interface Window {
-    JitsiMeetExternalAPI: any;
-  }
-}
 
 interface Session {
   id: string;
@@ -24,17 +18,13 @@ interface Session {
   };
 }
 
-const JitsiMeet = () => {
+const GoogleMeetRedirect = () => {
   const { sessionId } = useParams();
-  const [searchParams] = useSearchParams();
-  const roomName = searchParams.get('room') || sessionId;
   const { user, loading, isStaff } = useAuth();
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
-  const [isJitsiLoaded, setIsJitsiLoaded] = useState(false);
-  const [api, setApi] = useState<any>(null);
   const [accessStatus, setAccessStatus] = useState<'checking' | 'approved' | 'pending' | 'denied' | 'open'>('checking');
-  const jitsiContainerRef = useRef<HTMLDivElement>(null);
+  const [hasOpened, setHasOpened] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -141,51 +131,6 @@ const JitsiMeet = () => {
     }
   };
 
-  useEffect(() => {
-    // Load Jitsi Meet External API script
-    const existingScript = document.querySelector('script[src="https://meet.jit.si/external_api.js"]');
-    
-    if (existingScript) {
-      setIsJitsiLoaded(true);
-      return;
-    }
-    
-    const script = document.createElement('script');
-    script.src = 'https://meet.jit.si/external_api.js';
-    script.async = true;
-    script.onload = () => {
-      console.log('Jitsi script loaded');
-      setIsJitsiLoaded(true);
-    };
-    script.onerror = () => {
-      console.error('Failed to load Jitsi script');
-      toast.error('Failed to load video conference');
-    };
-    document.body.appendChild(script);
-
-    return () => {
-      // Don't remove script on cleanup - it might be needed
-    };
-  }, []);
-
-  // Cleanup api on unmount
-  useEffect(() => {
-    return () => {
-      if (api) {
-        console.log('Disposing Jitsi API');
-        api.dispose();
-      }
-    };
-  }, [api]);
-
-  useEffect(() => {
-    const shouldLoadJitsi = accessStatus === 'approved' || accessStatus === 'open';
-    if (isJitsiLoaded && jitsiContainerRef.current && roomName && user && shouldLoadJitsi && !api) {
-      console.log('Initializing Jitsi - conditions met');
-      initJitsi();
-    }
-  }, [isJitsiLoaded, roomName, user, accessStatus, api]);
-
   const fetchSession = async () => {
     if (!sessionId) return;
     
@@ -215,142 +160,13 @@ const JitsiMeet = () => {
       });
   };
 
-  const updateAttendance = async () => {
-    if (!sessionId || !user) return;
-
-    const { data } = await supabase
-      .from('live_session_attendance')
-      .select('id, joined_at')
-      .eq('session_id', sessionId)
-      .eq('user_id', user.id)
-      .order('joined_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (data) {
-      const durationSeconds = Math.floor(
-        (new Date().getTime() - new Date(data.joined_at).getTime()) / 1000
-      );
-
-      await supabase
-        .from('live_session_attendance')
-        .update({
-          left_at: new Date().toISOString(),
-          duration_seconds: durationSeconds
-        })
-        .eq('id', data.id);
+  const openGoogleMeet = () => {
+    if (session?.meeting_url) {
+      setHasOpened(true);
+      window.open(session.meeting_url, '_blank');
+    } else {
+      toast.error('No meeting link available');
     }
-  };
-
-  const initJitsi = () => {
-    if (!jitsiContainerRef.current || !window.JitsiMeetExternalAPI) {
-      console.error('Jitsi container or API not ready');
-      return;
-    }
-
-    // Clear any existing content
-    jitsiContainerRef.current.innerHTML = '';
-
-    const domain = 'meet.jit.si';
-    const options = {
-      roomName: `MicrosoftInstitute_${roomName}`,
-      width: '100%',
-      height: '100%',
-      parentNode: jitsiContainerRef.current,
-      userInfo: {
-        displayName: user?.user_metadata?.full_name || user?.email || 'Student',
-        email: user?.email
-      },
-      configOverwrite: {
-        startWithAudioMuted: true,
-        startWithVideoMuted: false,
-        prejoinPageEnabled: false,
-        disableDeepLinking: true,
-        enableWelcomePage: false,
-        enableClosePage: false,
-        // Whiteboard config for Jitsi
-        whiteboard: {
-          enabled: true,
-          collabServerBaseUrl: 'https://excalidraw.com'
-        },
-        toolbarButtons: [
-          'microphone',
-          'camera',
-          'closedcaptions',
-          'desktop',
-          'fullscreen',
-          'fodeviceselection',
-          'hangup',
-          'chat',
-          'recording',
-          'livestreaming',
-          'etherpad',
-          'whiteboard',
-          'settings',
-          'raisehand',
-          'videoquality',
-          'filmstrip',
-          'participants-pane',
-          'tileview',
-          'select-background',
-          'mute-everyone',
-          'security'
-        ]
-      },
-      interfaceConfigOverwrite: {
-        SHOW_JITSI_WATERMARK: false,
-        SHOW_WATERMARK_FOR_GUESTS: false,
-        SHOW_BRAND_WATERMARK: false,
-        BRAND_WATERMARK_LINK: '',
-        DEFAULT_LOGO_URL: '',
-        DEFAULT_WELCOME_PAGE_LOGO_URL: '',
-        DISABLE_JOIN_LEAVE_NOTIFICATIONS: false,
-        FILM_STRIP_MAX_HEIGHT: 120,
-        VERTICAL_FILMSTRIP: true
-      }
-    };
-
-    console.log('Initializing Jitsi with options:', options);
-
-    try {
-      const jitsiApi = new window.JitsiMeetExternalAPI(domain, options);
-
-      jitsiApi.addEventListeners({
-        videoConferenceJoined: () => {
-          console.log('Video conference joined successfully');
-        },
-        videoConferenceLeft: () => {
-          console.log('Video conference left');
-          updateAttendance();
-        },
-        readyToClose: () => {
-          updateAttendance();
-          navigate('/lms/live-sessions');
-        },
-        participantJoined: (participant: any) => {
-          console.log('Participant joined:', participant);
-        },
-        participantLeft: (participant: any) => {
-          console.log('Participant left:', participant);
-        },
-        errorOccurred: (error: any) => {
-          console.error('Jitsi error:', error);
-        }
-      });
-
-      setApi(jitsiApi);
-    } catch (error) {
-      console.error('Failed to initialize Jitsi:', error);
-      toast.error('Failed to initialize video conference');
-    }
-  };
-
-  const handleLeave = () => {
-    if (api) {
-      api.executeCommand('hangup');
-    }
-    updateAttendance();
-    navigate('/lms/live-sessions');
   };
 
   if (loading) {
@@ -361,7 +177,7 @@ const JitsiMeet = () => {
     );
   }
 
-  // Waiting room for pending/denied students
+  // Waiting room for pending students
   if (accessStatus === 'pending') {
     return (
       <div className="min-h-screen bg-background flex flex-col">
@@ -443,49 +259,70 @@ const JitsiMeet = () => {
     );
   }
 
+  // Approved - show join button
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
       <header className="h-16 border-b bg-background flex items-center justify-between px-4">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={handleLeave}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/lms/live-sessions')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h1 className="font-semibold">
-              {session?.title || 'Live Session'}
-            </h1>
+            <h1 className="font-semibold">{session?.title || 'Live Session'}</h1>
             {session?.courses?.title && (
-              <p className="text-sm text-muted-foreground">
-                {session.courses.title}
-              </p>
+              <p className="text-sm text-muted-foreground">{session.courses.title}</p>
             )}
           </div>
         </div>
-        <Button variant="destructive" onClick={handleLeave}>
-          <Phone className="h-4 w-4 mr-2 rotate-[135deg]" />
-          Leave Session
-        </Button>
       </header>
-
-      {/* Jitsi Container */}
-      <div className="flex-1 relative">
-        {!isJitsiLoaded && (
-          <div className="absolute inset-0 flex items-center justify-center bg-muted">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading video conference...</p>
+      
+      <div className="flex-1 flex items-center justify-center">
+        <Card className="max-w-md w-full mx-4">
+          <CardContent className="p-8 text-center">
+            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Video className="h-10 w-10 text-primary" />
             </div>
-          </div>
-        )}
-        <div 
-          ref={jitsiContainerRef} 
-          className="w-full h-full"
-          style={{ minHeight: 'calc(100vh - 64px)' }}
-        />
+            <h2 className="text-2xl font-bold mb-2">{session?.title}</h2>
+            {session?.courses?.title && (
+              <p className="text-muted-foreground mb-6">{session.courses.title}</p>
+            )}
+            
+            {session?.meeting_url ? (
+              <>
+                {!hasOpened ? (
+                  <Button size="lg" onClick={openGoogleMeet} className="w-full">
+                    <ExternalLink className="h-5 w-5 mr-2" />
+                    Join Google Meet
+                  </Button>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Meeting opened in a new tab
+                    </p>
+                    <Button variant="outline" onClick={openGoogleMeet} className="w-full">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Open Again
+                    </Button>
+                    <Button variant="ghost" onClick={() => navigate('/lms/live-sessions')} className="w-full">
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Back to Sessions
+                    </Button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center">
+                <p className="text-destructive mb-4">No meeting link available</p>
+                <Button variant="outline" onClick={() => navigate('/lms/live-sessions')}>
+                  Back to Sessions
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
 };
 
-export default JitsiMeet;
+export default GoogleMeetRedirect;
