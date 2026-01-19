@@ -4,7 +4,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowLeft, Video, Shield, Clock, Loader2, ExternalLink } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ArrowLeft, Video, Shield, Loader2, ExternalLink, Check, X, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Session {
@@ -13,8 +14,20 @@ interface Session {
   meeting_url: string | null;
   moderation_enabled: boolean;
   status: string;
+  instructor_id: string | null;
   courses: {
     title: string;
+  };
+}
+
+interface JoinRequest {
+  id: string;
+  user_id: string;
+  status: string;
+  requested_at: string;
+  profiles: {
+    full_name: string | null;
+    email: string | null;
   };
 }
 
@@ -25,6 +38,9 @@ const GoogleMeetRedirect = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [accessStatus, setAccessStatus] = useState<'checking' | 'approved' | 'pending' | 'denied' | 'open'>('checking');
   const [hasOpened, setHasOpened] = useState(false);
+  const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
+
+  const isInstructor = session?.instructor_id === user?.id || isStaff;
 
   useEffect(() => {
     if (!loading && !user) {
@@ -38,14 +54,45 @@ const GoogleMeetRedirect = () => {
     }
   }, [sessionId, user]);
 
-  // Check access and setup realtime subscription
+  // Auto-open for instructors and setup moderation
   useEffect(() => {
     if (!session || !user) return;
 
-    // Staff always have access
-    if (isStaff) {
+    // Staff/Instructors - auto-open and setup moderation
+    if (isInstructor) {
       setAccessStatus('approved');
       recordAttendance();
+      
+      // Auto-open Google Meet for instructors
+      if (session.meeting_url && !hasOpened) {
+        setHasOpened(true);
+        window.open(session.meeting_url, '_blank');
+      }
+
+      // Fetch and subscribe to join requests for moderation
+      if (session.moderation_enabled) {
+        fetchJoinRequests();
+        
+        const channel = supabase
+          .channel(`instructor-requests-${session.id}`)
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'live_session_requests',
+              filter: `session_id=eq.${session.id}`
+            },
+            () => {
+              fetchJoinRequests();
+            }
+          )
+          .subscribe();
+
+        return () => {
+          supabase.removeChannel(channel);
+        };
+      }
       return;
     }
 
@@ -56,7 +103,7 @@ const GoogleMeetRedirect = () => {
       return;
     }
 
-    // Check if user has approval
+    // Students - check if approved
     const checkAccess = async () => {
       const { data } = await supabase
         .from('live_session_requests')
@@ -73,7 +120,6 @@ const GoogleMeetRedirect = () => {
       } else if (data?.status === 'rejected') {
         setAccessStatus('denied');
       } else {
-        // Auto-request access if not requested yet
         await requestAccess();
       }
     };
@@ -109,7 +155,62 @@ const GoogleMeetRedirect = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [session, user, isStaff]);
+  }, [session, user, isInstructor]);
+
+  const fetchJoinRequests = async () => {
+    if (!sessionId) return;
+
+    const { data: requestsData } = await supabase
+      .from('live_session_requests')
+      .select('*')
+      .eq('session_id', sessionId)
+      .order('requested_at', { ascending: true });
+
+    if (!requestsData || requestsData.length === 0) {
+      setJoinRequests([]);
+      return;
+    }
+
+    const userIds = requestsData.map(r => r.user_id);
+    const { data: profilesData } = await supabase
+      .from('profiles')
+      .select('id, full_name, email')
+      .in('id', userIds);
+
+    const profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
+    const combinedData = requestsData.map(request => ({
+      ...request,
+      profiles: profilesMap.get(request.user_id) || { full_name: 'Unknown User', email: 'No email' }
+    }));
+
+    setJoinRequests(combinedData as unknown as JoinRequest[]);
+  };
+
+  const handleJoinRequest = async (requestId: string, status: 'approved' | 'rejected') => {
+    const { error } = await supabase
+      .from('live_session_requests')
+      .update({
+        status,
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: user?.id
+      })
+      .eq('id', requestId);
+
+    if (error) {
+      toast.error(`Failed to ${status} request`);
+    } else {
+      toast.success(`Student ${status === 'approved' ? 'approved' : 'rejected'}`);
+      fetchJoinRequests();
+    }
+  };
+
+  const approveAllPending = async () => {
+    const pendingRequests = joinRequests.filter(r => r.status === 'pending');
+    for (const request of pendingRequests) {
+      await handleJoinRequest(request.id, 'approved');
+    }
+    toast.success(`Approved ${pendingRequests.length} students`);
+  };
 
   const requestAccess = async () => {
     if (!session || !user) return;
@@ -126,7 +227,6 @@ const GoogleMeetRedirect = () => {
       setAccessStatus('pending');
       toast.info('Waiting for instructor approval...');
     } else if (error.code === '23505') {
-      // Already requested
       setAccessStatus('pending');
     }
   };
@@ -177,7 +277,151 @@ const GoogleMeetRedirect = () => {
     );
   }
 
-  // Waiting room for pending students
+  // Instructor view with moderation panel
+  if (isInstructor && session) {
+    const pendingRequests = joinRequests.filter(r => r.status === 'pending');
+    const approvedRequests = joinRequests.filter(r => r.status === 'approved');
+
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="h-16 border-b bg-background flex items-center justify-between px-4">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate('/lms/instructor/live-sessions')}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="font-semibold">{session.title}</h1>
+              {session.courses?.title && (
+                <p className="text-sm text-muted-foreground">{session.courses.title}</p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="gap-1">
+              <Users className="h-3 w-3" />
+              {approvedRequests.length} joined
+            </Badge>
+            <Button onClick={openGoogleMeet}>
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Open Meet
+            </Button>
+          </div>
+        </header>
+
+        <div className="flex-1 p-6 max-w-4xl mx-auto w-full">
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Meeting Info */}
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <Video className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Meeting Opened</h3>
+                    <p className="text-sm text-muted-foreground">Google Meet in new tab</p>
+                  </div>
+                </div>
+                <Button variant="outline" onClick={openGoogleMeet} className="w-full">
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Open Meet Again
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Pending Requests */}
+            {session.moderation_enabled && (
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-5 w-5 text-primary" />
+                      <h3 className="font-semibold">Waiting Room</h3>
+                      {pendingRequests.length > 0 && (
+                        <Badge variant="destructive">{pendingRequests.length}</Badge>
+                      )}
+                    </div>
+                    {pendingRequests.length > 0 && (
+                      <Button size="sm" onClick={approveAllPending}>
+                        Approve All
+                      </Button>
+                    )}
+                  </div>
+
+                  {pendingRequests.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No pending requests
+                    </p>
+                  ) : (
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {pendingRequests.map((request) => (
+                        <div
+                          key={request.id}
+                          className="flex items-center justify-between p-3 border rounded-lg"
+                        >
+                          <div>
+                            <p className="font-medium text-sm">
+                              {request.profiles?.full_name || 'Unknown'}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {request.profiles?.email}
+                            </p>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                              onClick={() => handleJoinRequest(request.id, 'approved')}
+                            >
+                              <Check className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => handleJoinRequest(request.id, 'rejected')}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Approved Students */}
+          {session.moderation_enabled && approvedRequests.length > 0 && (
+            <Card className="mt-6">
+              <CardContent className="p-6">
+                <h3 className="font-semibold mb-4 flex items-center gap-2">
+                  <Check className="h-5 w-5 text-green-600" />
+                  Approved Students ({approvedRequests.length})
+                </h3>
+                <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
+                  {approvedRequests.map((request) => (
+                    <div
+                      key={request.id}
+                      className="flex items-center gap-2 p-2 bg-green-50 rounded-lg text-sm"
+                    >
+                      <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
+                      <span className="truncate">{request.profiles?.full_name || request.profiles?.email}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Student waiting room
   if (accessStatus === 'pending') {
     return (
       <div className="min-h-screen bg-background flex flex-col">
@@ -259,7 +503,7 @@ const GoogleMeetRedirect = () => {
     );
   }
 
-  // Approved - show join button
+  // Student approved - show join button
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="h-16 border-b bg-background flex items-center justify-between px-4">
