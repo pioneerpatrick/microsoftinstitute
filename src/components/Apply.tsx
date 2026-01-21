@@ -61,10 +61,25 @@ const Apply = () => {
 
       if (error) throw error;
 
+      // Send confirmation emails
+      try {
+        await supabase.functions.invoke("send-application-email", {
+          body: {
+            fullName: formData.fullName,
+            email: formData.email,
+            phone: formData.phone,
+            course: formData.course,
+            education: formData.education,
+          },
+        });
+      } catch (emailError) {
+        console.error("Email sending failed:", emailError);
+      }
+
       setIsSubmitted(true);
       toast({
         title: "Application Submitted!",
-        description: "Thank you for applying. Our admissions team will contact you within 24-48 hours.",
+        description: "Thank you for applying. Check your email for confirmation. Our admissions team will contact you within 24-48 hours.",
       });
     } catch (error) {
       console.error("Error submitting application:", error);

@@ -29,10 +29,19 @@ const Newsletter = () => {
           throw error;
         }
       } else {
+        // Send welcome email
+        try {
+          await supabase.functions.invoke("send-newsletter-welcome", {
+            body: { email },
+          });
+        } catch (emailError) {
+          console.error("Welcome email sending failed:", emailError);
+        }
+
         setEmail("");
         toast({
           title: "Subscribed!",
-          description: "Thank you for subscribing to our newsletter.",
+          description: "Thank you for subscribing! Check your email for a welcome message.",
         });
       }
     } catch (error) {

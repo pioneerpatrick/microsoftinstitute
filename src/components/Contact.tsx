@@ -31,10 +31,24 @@ const Contact = () => {
 
       if (error) throw error;
 
+      // Send confirmation emails
+      try {
+        await supabase.functions.invoke("send-contact-email", {
+          body: {
+            name: formData.name,
+            email: formData.email,
+            subject: formData.subject || "Website Inquiry",
+            message: formData.message,
+          },
+        });
+      } catch (emailError) {
+        console.error("Email sending failed:", emailError);
+      }
+
       setFormData({ name: "", email: "", subject: "", message: "" });
       toast({
         title: "Message Sent!",
-        description: "Thank you for reaching out. We'll get back to you soon.",
+        description: "Thank you for reaching out. Check your email for confirmation. We'll get back to you soon.",
       });
     } catch (error) {
       console.error("Error submitting contact form:", error);
