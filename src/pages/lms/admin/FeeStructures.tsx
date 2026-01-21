@@ -230,12 +230,12 @@ const FeeStructures = () => {
                 </div>
                 <div>
                   <Label>Course (Optional)</Label>
-                  <Select value={formData.course_id} onValueChange={(v) => setFormData({ ...formData, course_id: v })}>
+                  <Select value={formData.course_id || "general"} onValueChange={(v) => setFormData({ ...formData, course_id: v === "general" ? "" : v })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select course (or leave for general fee)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">General Fee (All Courses)</SelectItem>
+                      <SelectItem value="general">General Fee (All Courses)</SelectItem>
                       {courses.map((course) => (
                         <SelectItem key={course.id} value={course.id}>{course.title}</SelectItem>
                       ))}
