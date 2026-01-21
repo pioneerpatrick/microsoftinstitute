@@ -15,6 +15,10 @@ interface EnrollmentEmailRequest {
   courseTitle: string;
   courseDescription?: string;
   courseDuration?: number;
+  credentials?: {
+    email: string;
+    password: string;
+  };
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -23,7 +27,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { studentEmail, studentName, courseTitle, courseDescription, courseDuration }: EnrollmentEmailRequest = await req.json();
+    const { studentEmail, studentName, courseTitle, courseDescription, courseDuration, credentials }: EnrollmentEmailRequest = await req.json();
 
     console.log(`Sending enrollment email to ${studentEmail} for course: ${courseTitle}`);
 
@@ -67,6 +71,15 @@ const handler = async (req: Request): Promise<Response> => {
                 ${courseDescription ? `<p style="color: #666;">${courseDescription}</p>` : ''}
                 ${courseDuration ? `<p><strong>⏱️ Duration:</strong> ${courseDuration} hours</p>` : ''}
               </div>
+              
+              ${credentials ? `
+              <div style="background: #fff3cd; padding: 20px; border-radius: 10px; margin: 20px 0; border: 2px solid #f59e0b;">
+                <h3 style="margin-top: 0; color: #92400e;">🔐 Your Login Credentials</h3>
+                <p style="margin: 5px 0;"><strong>Email:</strong> ${credentials.email}</p>
+                <p style="margin: 5px 0;"><strong>Password:</strong> <code style="background: #fef3c7; padding: 2px 8px; border-radius: 4px;">${credentials.password}</code></p>
+                <p style="font-size: 12px; color: #92400e; margin-top: 10px;">⚠️ Please change your password after first login for security.</p>
+              </div>
+              ` : ''}
               
               <div class="tips">
                 <h3 style="margin-top: 0;">💡 Tips for Success:</h3>
