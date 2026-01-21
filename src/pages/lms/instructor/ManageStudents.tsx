@@ -41,6 +41,8 @@ interface Student {
 interface Course {
   id: string;
   title: string;
+  description: string | null;
+  duration_hours: number | null;
 }
 
 interface ExistingStudent {
@@ -96,7 +98,7 @@ const ManageStudents = () => {
   const fetchCourses = async () => {
     const { data } = await supabase
       .from('courses')
-      .select('id, title')
+      .select('id, title, description, duration_hours')
       .order('title');
     
     if (data) {
@@ -228,6 +230,22 @@ const ManageStudents = () => {
         if (enrollError) {
           console.error('Enrollment error:', enrollError);
           toast.error('User created but enrollment failed. Please enroll manually.');
+        } else {
+          // Send enrollment confirmation email
+          const course = courses.find(c => c.id === newStudent.course_id);
+          try {
+            await supabase.functions.invoke('send-enrollment-email', {
+              body: {
+                studentEmail: newStudent.email,
+                studentName: newStudent.full_name,
+                courseTitle: course?.title || 'New Course',
+                courseDescription: course?.description,
+                courseDuration: course?.duration_hours,
+              },
+            });
+          } catch (emailError) {
+            console.error('Enrollment email failed:', emailError);
+          }
         }
       }
 
@@ -281,7 +299,24 @@ const ManageStudents = () => {
 
       if (error) throw error;
 
-      toast.success('Student enrolled successfully!');
+      // Send enrollment confirmation email
+      const course = courses.find(c => c.id === existingEnrollment.course_id);
+      const student = existingStudents.find(s => s.id === existingEnrollment.student_id);
+      try {
+        await supabase.functions.invoke('send-enrollment-email', {
+          body: {
+            studentEmail: student?.email || '',
+            studentName: student?.full_name || student?.email || 'Student',
+            courseTitle: course?.title || 'New Course',
+            courseDescription: course?.description,
+            courseDuration: course?.duration_hours,
+          },
+        });
+      } catch (emailError) {
+        console.error('Enrollment email failed:', emailError);
+      }
+
+      toast.success('Student enrolled successfully! Confirmation email sent.');
       setExistingEnrollment({ student_id: '', course_id: '' });
       setDialogOpen(false);
       fetchStudents();

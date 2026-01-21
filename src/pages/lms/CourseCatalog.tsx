@@ -101,7 +101,23 @@ const CourseCatalog = () => {
       console.error('Enrollment error:', error);
       toast.error('Failed to enroll. Please try again.');
     } else {
-      toast.success('Successfully enrolled in the course!');
+      // Send enrollment confirmation email
+      const course = courses.find(c => c.id === courseId);
+      try {
+        await supabase.functions.invoke('send-enrollment-email', {
+          body: {
+            studentEmail: user.email,
+            studentName: user.user_metadata?.full_name || user.email,
+            courseTitle: course?.title || 'New Course',
+            courseDescription: course?.description,
+            courseDuration: course?.duration_hours,
+          },
+        });
+      } catch (emailError) {
+        console.error('Enrollment email failed:', emailError);
+      }
+
+      toast.success('Successfully enrolled! Check your email for confirmation.');
       setEnrolledCourseIds([...enrolledCourseIds, courseId]);
     }
 
