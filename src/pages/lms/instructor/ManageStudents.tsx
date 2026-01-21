@@ -231,7 +231,7 @@ const ManageStudents = () => {
           console.error('Enrollment error:', enrollError);
           toast.error('User created but enrollment failed. Please enroll manually.');
         } else {
-          // Send enrollment confirmation email
+          // Send enrollment confirmation email with credentials
           const course = courses.find(c => c.id === newStudent.course_id);
           try {
             await supabase.functions.invoke('send-enrollment-email', {
@@ -241,6 +241,10 @@ const ManageStudents = () => {
                 courseTitle: course?.title || 'New Course',
                 courseDescription: course?.description,
                 courseDuration: course?.duration_hours,
+                credentials: {
+                  email: newStudent.email,
+                  password: password,
+                },
               },
             });
           } catch (emailError) {
