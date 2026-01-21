@@ -39,6 +39,9 @@ import Grades from "./pages/lms/Grades";
 import FeeStructures from "./pages/lms/admin/FeeStructures";
 import Accounting from "./pages/lms/admin/Accounting";
 
+// Student Pages
+import StudentFees from "./pages/lms/StudentFees";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -68,8 +71,9 @@ const App = () => (
             <Route path="/lms/meet/:sessionId" element={<GoogleMeetRedirect />} />
             <Route path="/lms/profile" element={<ProfilePage />} />
             
-            {/* Student Grades */}
+            {/* Student Grades & Fees */}
             <Route path="/lms/grades" element={<Grades />} />
+            <Route path="/lms/fees" element={<StudentFees />} />
             
             {/* Instructor Routes */}
             <Route path="/lms/instructor" element={<InstructorDashboard />} />

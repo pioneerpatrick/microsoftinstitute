@@ -35,6 +35,7 @@ import {
   TrendingUp,
   DollarSign,
   Calculator,
+  Wallet,
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import { cn } from '@/lib/utils';
@@ -60,6 +61,7 @@ const LMSLayout = ({ children }: LMSLayoutProps) => {
     { icon: BookOpen, label: 'My Courses', href: '/lms/courses' },
     { icon: FileText, label: 'Assignments', href: '/lms/assignments' },
     { icon: TrendingUp, label: 'My Grades', href: '/lms/grades' },
+    { icon: Wallet, label: 'My Fees', href: '/lms/fees' },
     { icon: Award, label: 'Certificates', href: '/lms/certificates' },
     { icon: Calendar, label: 'Live Sessions', href: '/lms/live-sessions' },
     { icon: MessageSquare, label: 'Forums', href: '/lms/forums' },
