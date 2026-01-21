@@ -35,6 +35,10 @@ import ManageExams from "./pages/lms/instructor/ManageExams";
 import Reports from "./pages/lms/instructor/Reports";
 import Grades from "./pages/lms/Grades";
 
+// Admin Pages
+import FeeStructures from "./pages/lms/admin/FeeStructures";
+import Accounting from "./pages/lms/admin/Accounting";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -76,6 +80,10 @@ const App = () => (
             <Route path="/lms/instructor/live-sessions" element={<ManageLiveSessions />} />
             <Route path="/lms/instructor/exams" element={<ManageExams />} />
             <Route path="/lms/instructor/reports" element={<Reports />} />
+            
+            {/* Admin Routes */}
+            <Route path="/lms/admin/fees" element={<FeeStructures />} />
+            <Route path="/lms/admin/accounting" element={<Accounting />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

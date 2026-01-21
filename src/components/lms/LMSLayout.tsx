@@ -33,6 +33,8 @@ import {
   GraduationCap,
   ClipboardList,
   TrendingUp,
+  DollarSign,
+  Calculator,
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import { cn } from '@/lib/utils';
@@ -73,6 +75,11 @@ const LMSLayout = ({ children }: LMSLayoutProps) => {
     { icon: BarChart3, label: 'Reports', href: '/lms/instructor/reports' },
   ];
 
+  const adminNavItems = [
+    { icon: DollarSign, label: 'Fee Structures', href: '/lms/admin/fees' },
+    { icon: Calculator, label: 'Accounting', href: '/lms/admin/accounting' },
+  ];
+
   const navItems = isStaff ? [...staffNavItems, ...studentNavItems] : studentNavItems;
 
   const NavContent = () => (
@@ -85,6 +92,30 @@ const LMSLayout = ({ children }: LMSLayoutProps) => {
       </div>
 
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        {isAdmin && (
+          <>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 py-2">
+              Admin
+            </p>
+            {adminNavItems.map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                onClick={() => setSidebarOpen(false)}
+                className={cn(
+                  'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                  location.pathname === item.href
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                )}
+              >
+                <item.icon className="h-5 w-5" />
+                {item.label}
+              </Link>
+            ))}
+            <div className="my-4 border-t" />
+          </>
+        )}
         {isStaff && (
           <>
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 py-2">
