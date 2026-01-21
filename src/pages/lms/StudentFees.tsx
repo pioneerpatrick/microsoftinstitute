@@ -12,6 +12,7 @@ import { DollarSign, Download, Mail, FileText, CreditCard, Clock, CheckCircle, A
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { jsPDF } from 'jspdf';
+import PaymentInstructionsCard from '@/components/student/PaymentInstructionsCard';
 
 interface StudentFee {
   id: string;
@@ -265,6 +266,9 @@ const StudentFees = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Payment Instructions */}
+        {totalBalance > 0 && <PaymentInstructionsCard />}
 
         <Tabs defaultValue="fees" className="space-y-4">
           <TabsList>

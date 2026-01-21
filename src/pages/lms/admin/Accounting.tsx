@@ -13,9 +13,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, DollarSign, Users, TrendingUp, Receipt, Download, Search, CreditCard } from 'lucide-react';
+import { Plus, DollarSign, Users, TrendingUp, Receipt, Download, Search, CreditCard, Bell, Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import PaymentDetailsCard from '@/components/admin/PaymentDetailsCard';
 
 interface StudentFee {
   id: string;
@@ -52,6 +53,7 @@ interface FeeStructure {
   amount: number;
   currency: string;
   course_id: string | null;
+  payment_frequency: string | null;
 }
 
 interface Student {
@@ -59,6 +61,42 @@ interface Student {
   full_name: string | null;
   email: string | null;
 }
+
+// Course data from website for auto-generating fee structures
+const websiteCourses = [
+  { school: "School of ICT & Digital Technology", courses: [
+    { name: "Information Technology (IT)", level: "Certificate", fee: 29000 },
+    { name: "Computer Programming", level: "Certificate", fee: 30000 },
+    { name: "Web Design & Development", level: "Certificate", fee: 28000 },
+    { name: "Software Development", level: "Craft", fee: 30000 },
+    { name: "Mobile App Development", level: "Certificate", fee: 30000 },
+    { name: "Computer Applications", level: "Artisan", fee: 18000 },
+    { name: "Computerized Accounting", level: "Artisan", fee: 22000 },
+    { name: "Database Management", level: "Certificate", fee: 27000 },
+    { name: "Networking (Theory-Based)", level: "Certificate", fee: 27000 },
+    { name: "Cyber Security (Fundamentals)", level: "Certificate", fee: 30000 },
+  ]},
+  { school: "School of Business & Management", courses: [
+    { name: "Business Management", level: "Certificate", fee: 27500 },
+    { name: "Business Administration", level: "Certificate", fee: 28000 },
+    { name: "Human Resource Management", level: "Craft", fee: 29000 },
+    { name: "Accounting & Finance", level: "Certificate", fee: 29000 },
+    { name: "Banking & Finance", level: "Certificate", fee: 29000 },
+    { name: "Entrepreneurship", level: "Certificate", fee: 22000 },
+    { name: "Project Management", level: "Certificate", fee: 27000 },
+  ]},
+  { school: "Professional Courses", courses: [
+    { name: "Digital Marketing", level: "Professional", fee: 30000 },
+    { name: "Artificial Intelligence (AI)", level: "Professional", fee: 60000 },
+  ]},
+  { school: "Education, Administration & Office Skills", courses: [
+    { name: "Office Administration", level: "Certificate", fee: 27000 },
+    { name: "Secretarial Studies", level: "Certificate", fee: 27000 },
+    { name: "Records & Information Management", level: "Certificate", fee: 26000 },
+    { name: "Virtual Assistance", level: "Certificate", fee: 18000 },
+    { name: "Business Communication Skills", level: "Certificate", fee: 18000 },
+  ]},
+];
 
 const Accounting = () => {
   const { user, loading, isAdmin } = useAuth();
@@ -72,6 +110,8 @@ const Accounting = () => {
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [selectedStudentFee, setSelectedStudentFee] = useState<StudentFee | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sendingReminders, setSendingReminders] = useState(false);
+  const [generatingFees, setGeneratingFees] = useState(false);
 
   const [assignForm, setAssignForm] = useState({
     user_id: '',
@@ -167,10 +207,10 @@ const Accounting = () => {
   const fetchFeeStructures = async () => {
     const { data } = await supabase
       .from('fee_structures')
-      .select('id, name, amount, currency, course_id')
+      .select('id, name, amount, currency, course_id, payment_frequency')
       .eq('is_active', true);
 
-    if (data) setFeeStructures(data);
+    if (data) setFeeStructures(data as FeeStructure[]);
   };
 
   const fetchStudents = async () => {
@@ -301,6 +341,88 @@ const Accounting = () => {
     toast.success('Report exported');
   };
 
+  const sendOverdueReminders = async () => {
+    setSendingReminders(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-overdue-reminders', {
+        method: 'POST',
+      });
+
+      if (error) throw error;
+      
+      toast.success(`Sent ${data?.sent || 0} overdue payment reminders`);
+    } catch (error) {
+      console.error('Error sending reminders:', error);
+      toast.error('Failed to send reminders');
+    } finally {
+      setSendingReminders(false);
+    }
+  };
+
+  const generateBrandedFeeStructures = async () => {
+    setGeneratingFees(true);
+    try {
+      const existingFees = await supabase.from('fee_structures').select('name');
+      const existingNames = new Set(existingFees.data?.map(f => f.name) || []);
+
+      const feesToCreate: Array<{
+        name: string;
+        amount: number;
+        currency: string;
+        description: string;
+        payment_frequency: string;
+        is_active: boolean;
+      }> = [];
+
+      for (const school of websiteCourses) {
+        for (const course of school.courses) {
+          // Per Term fee
+          const termName = `${course.name} - ${course.level} (Per Term)`;
+          if (!existingNames.has(termName)) {
+            feesToCreate.push({
+              name: termName,
+              amount: course.fee,
+              currency: 'KES',
+              description: `${school.school} - ${course.level} level course. Fee per term (3 months).`,
+              payment_frequency: 'per_term',
+              is_active: true,
+            });
+          }
+
+          // Per Month fee (divide by 3)
+          const monthName = `${course.name} - ${course.level} (Per Month)`;
+          if (!existingNames.has(monthName)) {
+            feesToCreate.push({
+              name: monthName,
+              amount: Math.ceil(course.fee / 3),
+              currency: 'KES',
+              description: `${school.school} - ${course.level} level course. Monthly installment.`,
+              payment_frequency: 'per_month',
+              is_active: true,
+            });
+          }
+        }
+      }
+
+      if (feesToCreate.length === 0) {
+        toast.info('All fee structures already exist');
+        return;
+      }
+
+      const { error } = await supabase.from('fee_structures').insert(feesToCreate);
+
+      if (error) throw error;
+
+      toast.success(`Created ${feesToCreate.length} fee structures`);
+      fetchFeeStructures();
+    } catch (error) {
+      console.error('Error generating fee structures:', error);
+      toast.error('Failed to generate fee structures');
+    } finally {
+      setGeneratingFees(false);
+    }
+  };
+
   if (loading || isLoading) {
     return (
       <LMSLayout>
@@ -314,12 +436,36 @@ const Accounting = () => {
   return (
     <LMSLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Accounting</h1>
             <p className="text-muted-foreground">Manage student fees and payments</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="outline" 
+              onClick={sendOverdueReminders}
+              disabled={sendingReminders}
+            >
+              {sendingReminders ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Bell className="h-4 w-4 mr-2" />
+              )}
+              Send Reminders
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={generateBrandedFeeStructures}
+              disabled={generatingFees}
+            >
+              {generatingFees ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4 mr-2" />
+              )}
+              Auto-Generate Fees
+            </Button>
             <Button variant="outline" onClick={exportToCSV}>
               <Download className="h-4 w-4 mr-2" />
               Export
@@ -446,6 +592,9 @@ const Accounting = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Payment Details */}
+        <PaymentDetailsCard />
 
         <Tabs defaultValue="fees" className="space-y-4">
           <TabsList>

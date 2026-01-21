@@ -25,6 +25,7 @@ interface FeeStructure {
   description: string | null;
   is_active: boolean;
   created_at: string;
+  payment_frequency: string | null;
   courses?: { title: string } | null;
 }
 
@@ -48,6 +49,7 @@ const FeeStructures = () => {
     currency: 'KES',
     description: '',
     is_active: true,
+    payment_frequency: 'per_term',
   });
 
   useEffect(() => {
@@ -73,7 +75,7 @@ const FeeStructures = () => {
       .order('created_at', { ascending: false });
 
     if (!error && data) {
-      setFees(data);
+      setFees(data as FeeStructure[]);
     }
     setIsLoading(false);
   };
@@ -99,6 +101,7 @@ const FeeStructures = () => {
       currency: formData.currency,
       description: formData.description || null,
       is_active: formData.is_active,
+      payment_frequency: formData.payment_frequency,
     };
 
     if (editingFee) {
@@ -139,6 +142,7 @@ const FeeStructures = () => {
       currency: fee.currency,
       description: fee.description || '',
       is_active: fee.is_active,
+      payment_frequency: fee.payment_frequency || 'per_term',
     });
     setDialogOpen(true);
   };
@@ -178,8 +182,18 @@ const FeeStructures = () => {
       currency: 'KES',
       description: '',
       is_active: true,
+      payment_frequency: 'per_term',
     });
     setEditingFee(null);
+  };
+
+  const getFrequencyBadge = (frequency: string | null) => {
+    const labels: Record<string, string> = {
+      per_month: 'Monthly',
+      per_term: 'Per Term',
+      one_time: 'One Time',
+    };
+    return <Badge variant="outline">{labels[frequency || 'per_term'] || frequency}</Badge>;
   };
 
   const formatCurrency = (amount: number, currency: string) => {
@@ -269,6 +283,19 @@ const FeeStructures = () => {
                   </div>
                 </div>
                 <div>
+                  <Label>Payment Frequency</Label>
+                  <Select value={formData.payment_frequency} onValueChange={(v) => setFormData({ ...formData, payment_frequency: v })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="per_month">Per Month</SelectItem>
+                      <SelectItem value="per_term">Per Term (3 Months)</SelectItem>
+                      <SelectItem value="one_time">One Time</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
                   <Label>Description</Label>
                   <Textarea
                     value={formData.description}
@@ -340,6 +367,7 @@ const FeeStructures = () => {
                     <TableHead>Name</TableHead>
                     <TableHead>Course</TableHead>
                     <TableHead>Amount</TableHead>
+                    <TableHead>Frequency</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -367,6 +395,9 @@ const FeeStructures = () => {
                       </TableCell>
                       <TableCell className="font-semibold">
                         {formatCurrency(fee.amount, fee.currency)}
+                      </TableCell>
+                      <TableCell>
+                        {getFrequencyBadge(fee.payment_frequency)}
                       </TableCell>
                       <TableCell>
                         <Switch
