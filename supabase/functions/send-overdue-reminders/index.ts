@@ -88,17 +88,22 @@ const handler = async (req: Request): Promise<Response> => {
 
       const studentName = profile.full_name || 'Student';
       const totalBalance = userFees.reduce((sum, f) => sum + (f.balance || 0), 0);
-      const currency = userFees[0]?.fee_structures?.currency || 'KES';
+      const feeStructure = userFees[0]?.fee_structures as unknown as { name: string; currency: string } | null;
+      const currency = feeStructure?.currency || 'KES';
 
       // Build fee details table
-      const feeRows = userFees.map(fee => `
+      const feeRows = userFees.map(fee => {
+        const fs = fee.fee_structures as unknown as { name: string; currency: string } | null;
+        const course = fee.courses as unknown as { title: string } | null;
+        return `
         <tr>
-          <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">${fee.fee_structures?.name || 'Fee'}</td>
-          <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">${fee.courses?.title || 'General'}</td>
+          <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">${fs?.name || 'Fee'}</td>
+          <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">${course?.title || 'General'}</td>
           <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: right;">${formatCurrency(fee.balance || 0, currency)}</td>
           <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">${new Date(fee.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
         </tr>
-      `).join('');
+      `;
+      }).join('');
 
       try {
         await resend.emails.send({
