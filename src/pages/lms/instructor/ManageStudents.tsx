@@ -195,28 +195,75 @@ const ManageStudents = () => {
     const password = newStudent.password || generatePassword();
 
     try {
-      // Create user via edge function
-      const response = await supabase.functions.invoke('manage-users', {
-        body: {
-          action: 'create_user',
-          email: newStudent.email,
-          password: password,
-          full_name: newStudent.full_name,
-          role: 'student',
-        },
-      });
+      let userId: string | null = null;
+      let isExistingUser = false;
 
-      if (response.error) {
-        throw new Error(response.error.message);
+      // First, check if user already exists in profiles
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', newStudent.email)
+        .maybeSingle();
+
+      if (existingProfile) {
+        // User already exists - use their ID
+        userId = existingProfile.id;
+        isExistingUser = true;
+      } else {
+        // Create user via edge function
+        const response = await supabase.functions.invoke('manage-users', {
+          body: {
+            action: 'create_user',
+            email: newStudent.email,
+            password: password,
+            full_name: newStudent.full_name,
+            role: 'student',
+          },
+        });
+
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+
+        if (response.data.error) {
+          // Check if it's an "already registered" error
+          if (response.data.error.includes('already been registered')) {
+            // Try to find the user in profiles again (might have been created without profile sync)
+            const { data: retryProfile } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('email', newStudent.email)
+              .maybeSingle();
+            
+            if (retryProfile) {
+              userId = retryProfile.id;
+              isExistingUser = true;
+            } else {
+              throw new Error('User exists but profile not found. Please use the "Existing Student" tab to enroll them.');
+            }
+          } else {
+            throw new Error(response.data.error);
+          }
+        } else {
+          userId = response.data.user?.id;
+        }
       }
-
-      if (response.data.error) {
-        throw new Error(response.data.error);
-      }
-
-      const userId = response.data.user?.id;
 
       if (userId) {
+        // Check if already enrolled in this course
+        const { data: existingEnrollment } = await supabase
+          .from('enrollments')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('course_id', newStudent.course_id)
+          .maybeSingle();
+
+        if (existingEnrollment) {
+          toast.error('This student is already enrolled in this course');
+          setCreating(false);
+          return;
+        }
+
         // Enroll in course
         const { error: enrollError } = await supabase
           .from('enrollments')
@@ -231,7 +278,7 @@ const ManageStudents = () => {
           console.error('Enrollment error:', enrollError);
           toast.error('User created but enrollment failed. Please enroll manually.');
         } else {
-          // Send enrollment confirmation email with credentials
+          // Send enrollment confirmation email with credentials (only for new users)
           const course = courses.find(c => c.id === newStudent.course_id);
           try {
             await supabase.functions.invoke('send-enrollment-email', {
@@ -241,7 +288,7 @@ const ManageStudents = () => {
                 courseTitle: course?.title || 'New Course',
                 courseDescription: course?.description,
                 courseDuration: course?.duration_hours,
-                credentials: {
+                credentials: isExistingUser ? undefined : {
                   email: newStudent.email,
                   password: password,
                 },
@@ -253,10 +300,14 @@ const ManageStudents = () => {
         }
       }
 
-      // Show credentials
-      setCreatedCredentials({ email: newStudent.email, password });
-      
-      toast.success('Student account created and enrolled successfully!');
+      // Show credentials only for new users
+      if (!isExistingUser) {
+        setCreatedCredentials({ email: newStudent.email, password });
+        toast.success('Student account created and enrolled successfully!');
+      } else {
+        toast.success('Existing student enrolled in course successfully!');
+        setDialogOpen(false);
+      }
       
       // Reset form
       setNewStudent({ full_name: '', email: '', password: '', course_id: '' });
