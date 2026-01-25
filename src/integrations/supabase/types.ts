@@ -192,6 +192,44 @@ export type Database = {
           },
         ]
       }
+      attendance_records: {
+        Row: {
+          attendance_id: string
+          id: string
+          marked_at: string | null
+          marked_by: string | null
+          notes: string | null
+          status: string
+          student_id: string
+        }
+        Insert: {
+          attendance_id: string
+          id?: string
+          marked_at?: string | null
+          marked_by?: string | null
+          notes?: string | null
+          status?: string
+          student_id: string
+        }
+        Update: {
+          attendance_id?: string
+          id?: string
+          marked_at?: string | null
+          marked_by?: string | null
+          notes?: string | null
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_records_attendance_id_fkey"
+            columns: ["attendance_id"]
+            isOneToOne: false
+            referencedRelation: "class_attendance"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       certificates: {
         Row: {
           certificate_number: string
@@ -217,6 +255,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "certificates_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_attendance: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          instructor_id: string
+          session_date: string
+          session_time: string | null
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          instructor_id: string
+          session_date: string
+          session_time?: string | null
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          instructor_id?: string
+          session_date?: string
+          session_time?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_attendance_course_id_fkey"
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
@@ -763,6 +836,104 @@ export type Database = {
           },
         ]
       }
+      instructor_attendance: {
+        Row: {
+          check_in_time: string | null
+          check_out_time: string | null
+          created_at: string
+          date: string
+          id: string
+          instructor_id: string
+          notes: string | null
+          status: string | null
+        }
+        Insert: {
+          check_in_time?: string | null
+          check_out_time?: string | null
+          created_at?: string
+          date: string
+          id?: string
+          instructor_id: string
+          notes?: string | null
+          status?: string | null
+        }
+        Update: {
+          check_in_time?: string | null
+          check_out_time?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          instructor_id?: string
+          notes?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
+      instructor_reports: {
+        Row: {
+          attendance_summary: Json | null
+          content: string
+          course_id: string | null
+          created_at: string
+          feedback: string | null
+          id: string
+          instructor_id: string
+          performance_summary: Json | null
+          report_period_end: string
+          report_period_start: string
+          report_type: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+          student_count: number | null
+          submitted_at: string | null
+        }
+        Insert: {
+          attendance_summary?: Json | null
+          content: string
+          course_id?: string | null
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          instructor_id: string
+          performance_summary?: Json | null
+          report_period_end: string
+          report_period_start: string
+          report_type?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          student_count?: number | null
+          submitted_at?: string | null
+        }
+        Update: {
+          attendance_summary?: Json | null
+          content?: string
+          course_id?: string | null
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          instructor_id?: string
+          performance_summary?: Json | null
+          report_period_end?: string
+          report_period_start?: string
+          report_type?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          student_count?: number | null
+          submitted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instructor_reports_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_progress: {
         Row: {
           completed: boolean | null
@@ -1094,6 +1265,10 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          status_reason: string | null
+          status_updated_at: string | null
+          status_updated_by: string | null
+          student_status: string | null
           updated_at: string
         }
         Insert: {
@@ -1103,6 +1278,10 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          status_reason?: string | null
+          status_updated_at?: string | null
+          status_updated_by?: string | null
+          student_status?: string | null
           updated_at?: string
         }
         Update: {
@@ -1112,6 +1291,10 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          status_reason?: string | null
+          status_updated_at?: string | null
+          status_updated_by?: string | null
+          student_status?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1274,6 +1457,110 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      salary_payments: {
+        Row: {
+          amount: number
+          contract_id: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          payment_date: string
+          payment_method: string | null
+          recorded_by: string | null
+          status: string | null
+          transaction_reference: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          contract_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_date: string
+          payment_method?: string | null
+          recorded_by?: string | null
+          status?: string | null
+          transaction_reference?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          contract_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          payment_date?: string
+          payment_method?: string | null
+          recorded_by?: string | null
+          status?: string | null
+          transaction_reference?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salary_payments_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "staff_contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_contracts: {
+        Row: {
+          contract_type: string
+          created_at: string
+          created_by: string | null
+          department: string | null
+          end_date: string
+          id: string
+          payment_frequency: string | null
+          position: string | null
+          salary_amount: number
+          salary_currency: string
+          start_date: string
+          status: string | null
+          terms_accepted_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contract_type?: string
+          created_at?: string
+          created_by?: string | null
+          department?: string | null
+          end_date: string
+          id?: string
+          payment_frequency?: string | null
+          position?: string | null
+          salary_amount?: number
+          salary_currency?: string
+          start_date: string
+          status?: string | null
+          terms_accepted_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contract_type?: string
+          created_at?: string
+          created_by?: string | null
+          department?: string | null
+          end_date?: string
+          id?: string
+          payment_frequency?: string | null
+          position?: string | null
+          salary_amount?: number
+          salary_currency?: string
+          start_date?: string
+          status?: string | null
+          terms_accepted_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       student_fees: {
         Row: {

@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Eye, EyeOff, GraduationCap, ArrowLeft, BookOpen, Users, Award } from 'lucide-react';
+import { Eye, EyeOff, GraduationCap, ArrowLeft, BookOpen, Users, Award, KeyRound } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import { z } from 'zod';
 
@@ -36,6 +37,11 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  
+  // Password reset state
+  const [showResetForm, setShowResetForm] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
   
   // Signup state
   const [signupData, setSignupData] = useState({
@@ -113,6 +119,45 @@ const Login = () => {
     setSignupData({ fullName: '', email: '', password: '', confirmPassword: '' });
     setActiveTab('login');
     setIsSigningUp(false);
+  };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!resetEmail || !z.string().email().safeParse(resetEmail).success) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    setIsResetting(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/lms/reset-password`,
+      });
+
+      if (error) throw error;
+
+      // Also send our custom email
+      try {
+        await supabase.functions.invoke('send-password-reset', {
+          body: {
+            email: resetEmail,
+            resetUrl: `${window.location.origin}/lms/reset-password`,
+          },
+        });
+      } catch (emailError) {
+        console.error('Custom email failed, using Supabase default:', emailError);
+      }
+
+      toast.success('Password reset link sent! Check your email.');
+      setShowResetForm(false);
+      setResetEmail('');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send reset link');
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   if (loading) {
@@ -232,7 +277,54 @@ const Login = () => {
                   >
                     {isSubmitting ? 'Signing in...' : 'Sign In'}
                   </Button>
+
+                  <div className="text-center">
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="text-sm text-muted-foreground"
+                      onClick={() => setShowResetForm(true)}
+                    >
+                      <KeyRound className="h-3 w-3 mr-1" />
+                      Forgot your password?
+                    </Button>
+                  </div>
                 </form>
+
+                {showResetForm && (
+                  <div className="mt-4 p-4 bg-muted rounded-lg">
+                    <h4 className="font-medium mb-3 flex items-center gap-2">
+                      <KeyRound className="h-4 w-4" />
+                      Reset Password
+                    </h4>
+                    <form onSubmit={handlePasswordReset} className="space-y-3">
+                      <div>
+                        <Label htmlFor="resetEmail">Enter your email address</Label>
+                        <Input
+                          id="resetEmail"
+                          type="email"
+                          placeholder="your@email.com"
+                          value={resetEmail}
+                          onChange={(e) => setResetEmail(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button type="submit" size="sm" disabled={isResetting}>
+                          {isResetting ? 'Sending...' : 'Send Reset Link'}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowResetForm(false)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </form>
+                  </div>
+                )}
 
                 <div className="mt-4 p-3 bg-muted/50 rounded-lg">
                   <p className="text-xs text-muted-foreground text-center">
