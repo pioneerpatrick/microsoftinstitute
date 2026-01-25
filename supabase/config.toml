@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.send-session-approval]
 verify_jwt = false
+
+[functions.mpesa-webhook]
+verify_jwt = false
