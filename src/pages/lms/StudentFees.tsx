@@ -8,11 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DollarSign, Download, Mail, FileText, CreditCard, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { DollarSign, Download, Mail, FileText, CreditCard, Clock, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { jsPDF } from 'jspdf';
 import PaymentInstructionsCard from '@/components/student/PaymentInstructionsCard';
+import StudentPaymentForm from '@/components/student/StudentPaymentForm';
 
 interface StudentFee {
   id: string;
@@ -91,23 +92,30 @@ const StudentFees = () => {
     }
   };
 
+  const handlePaymentSuccess = () => {
+    fetchStudentFees();
+    fetchPaymentHistory();
+  };
+
   const formatCurrency = (amount: number, currency: string = 'KES') => {
     return new Intl.NumberFormat('en-KE', {
       style: 'currency',
       currency: currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'paid':
-        return <Badge className="bg-green-100 text-green-800"><CheckCircle className="h-3 w-3 mr-1" /> Paid</Badge>;
+        return <Badge className="bg-green-100 text-green-800 text-xs"><CheckCircle className="h-3 w-3 mr-1" /> Paid</Badge>;
       case 'partial':
-        return <Badge className="bg-yellow-100 text-yellow-800"><Clock className="h-3 w-3 mr-1" /> Partial</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-800 text-xs"><Clock className="h-3 w-3 mr-1" /> Partial</Badge>;
       case 'overdue':
-        return <Badge variant="destructive"><AlertCircle className="h-3 w-3 mr-1" /> Overdue</Badge>;
+        return <Badge variant="destructive" className="text-xs"><AlertCircle className="h-3 w-3 mr-1" /> Overdue</Badge>;
       default:
-        return <Badge variant="outline"><Clock className="h-3 w-3 mr-1" /> Pending</Badge>;
+        return <Badge variant="outline" className="text-xs"><Clock className="h-3 w-3 mr-1" /> Pending</Badge>;
     }
   };
 
@@ -224,111 +232,128 @@ const StudentFees = () => {
 
   return (
     <LMSLayout>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">My Fees & Payments</h1>
-          <p className="text-muted-foreground">View your fee balance and payment history</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">My Fees & Payments</h1>
+          <p className="text-sm text-muted-foreground">View your fee balance and make payments</p>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Summary Cards - Responsive Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
-                Total Fees
+            <CardHeader className="pb-2 p-4">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <DollarSign className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">Total Fees</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(totalDue)}</div>
+            <CardContent className="p-4 pt-0">
+              <div className="text-lg sm:text-2xl font-bold truncate">{formatCurrency(totalDue)}</div>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                Total Paid
+            <CardHeader className="pb-2 p-4">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-600 flex-shrink-0" />
+                <span className="truncate">Total Paid</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{formatCurrency(totalPaid)}</div>
+            <CardContent className="p-4 pt-0">
+              <div className="text-lg sm:text-2xl font-bold text-green-600 truncate">{formatCurrency(totalPaid)}</div>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <CreditCard className="h-4 w-4 text-orange-600" />
-                Outstanding Balance
+            <CardHeader className="pb-2 p-4">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-orange-600 flex-shrink-0" />
+                <span className="truncate">Balance</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">{formatCurrency(totalBalance)}</div>
+            <CardContent className="p-4 pt-0">
+              <div className="text-lg sm:text-2xl font-bold text-orange-600 truncate">{formatCurrency(totalBalance)}</div>
             </CardContent>
           </Card>
         </div>
 
         {/* Payment Instructions */}
-        {totalBalance > 0 && <PaymentInstructionsCard />}
+        {totalBalance > 0 && (
+          <PaymentInstructionsCard 
+            studentEmail={user?.email} 
+            balance={totalBalance}
+          />
+        )}
 
         <Tabs defaultValue="fees" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="fees">Fee Balance</TabsTrigger>
-            <TabsTrigger value="payments">Payment History</TabsTrigger>
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="fees" className="flex-1 sm:flex-none">Fee Balance</TabsTrigger>
+            <TabsTrigger value="payments" className="flex-1 sm:flex-none">Payment History</TabsTrigger>
           </TabsList>
 
           <TabsContent value="fees">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                   <FileText className="h-5 w-5" />
                   Current Fees
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 sm:p-6 pt-0">
                 {fees.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>No fees assigned to your account.</p>
                   </div>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Fee Type</TableHead>
-                        <TableHead>Course</TableHead>
-                        <TableHead>Amount Due</TableHead>
-                        <TableHead>Paid</TableHead>
-                        <TableHead>Balance</TableHead>
-                        <TableHead>Due Date</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {fees.map((fee) => (
-                        <TableRow key={fee.id}>
-                          <TableCell className="font-medium">
-                            {fee.fee_structures?.name || 'General Fee'}
-                          </TableCell>
-                          <TableCell>
-                            {fee.courses?.title || 'All Courses'}
-                          </TableCell>
-                          <TableCell>
-                            {formatCurrency(fee.amount_due, fee.fee_structures?.currency)}
-                          </TableCell>
-                          <TableCell className="text-green-600">
-                            {formatCurrency(fee.amount_paid, fee.fee_structures?.currency)}
-                          </TableCell>
-                          <TableCell className="font-semibold text-orange-600">
-                            {formatCurrency(fee.balance || 0, fee.fee_structures?.currency)}
-                          </TableCell>
-                          <TableCell>
-                            {fee.due_date ? format(new Date(fee.due_date), 'MMM dd, yyyy') : '-'}
-                          </TableCell>
-                          <TableCell>{getStatusBadge(fee.status)}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                  <div className="overflow-x-auto -mx-4 sm:mx-0">
+                    <div className="min-w-[600px] sm:min-w-0 px-4 sm:px-0">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="whitespace-nowrap">Fee Type</TableHead>
+                            <TableHead className="whitespace-nowrap">Due</TableHead>
+                            <TableHead className="whitespace-nowrap">Paid</TableHead>
+                            <TableHead className="whitespace-nowrap">Balance</TableHead>
+                            <TableHead className="whitespace-nowrap">Status</TableHead>
+                            <TableHead className="whitespace-nowrap">Action</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {fees.map((fee) => (
+                            <TableRow key={fee.id}>
+                              <TableCell>
+                                <div className="min-w-[120px]">
+                                  <p className="font-medium text-sm truncate">
+                                    {fee.fee_structures?.name || 'General Fee'}
+                                  </p>
+                                  {fee.courses && (
+                                    <p className="text-xs text-muted-foreground truncate">
+                                      {fee.courses.title}
+                                    </p>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="whitespace-nowrap text-sm">
+                                {formatCurrency(fee.amount_due, fee.fee_structures?.currency)}
+                              </TableCell>
+                              <TableCell className="text-green-600 whitespace-nowrap text-sm">
+                                {formatCurrency(fee.amount_paid, fee.fee_structures?.currency)}
+                              </TableCell>
+                              <TableCell className="font-semibold text-orange-600 whitespace-nowrap text-sm">
+                                {formatCurrency(fee.balance || 0, fee.fee_structures?.currency)}
+                              </TableCell>
+                              <TableCell>{getStatusBadge(fee.status)}</TableCell>
+                              <TableCell>
+                                <StudentPaymentForm 
+                                  fee={fee} 
+                                  onPaymentSuccess={handlePaymentSuccess}
+                                />
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -336,77 +361,87 @@ const StudentFees = () => {
 
           <TabsContent value="payments">
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                   <CreditCard className="h-5 w-5" />
                   Payment History
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 sm:p-6 pt-0">
                 {payments.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <CreditCard className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>No payment records found.</p>
                   </div>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Receipt #</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Fee Type</TableHead>
-                        <TableHead>Course</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Method</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {payments.map((payment) => (
-                        <TableRow key={payment.id}>
-                          <TableCell className="font-mono text-sm">
-                            {payment.receipt_number || payment.id.slice(0, 8).toUpperCase()}
-                          </TableCell>
-                          <TableCell>
-                            {format(new Date(payment.payment_date), 'MMM dd, yyyy')}
-                          </TableCell>
-                          <TableCell>
-                            {payment.student_fees?.fee_structures?.name || 'N/A'}
-                          </TableCell>
-                          <TableCell>
-                            {payment.student_fees?.courses?.title || 'General'}
-                          </TableCell>
-                          <TableCell className="font-semibold text-green-600">
-                            {formatCurrency(payment.amount, payment.student_fees?.fee_structures?.currency)}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{payment.payment_method || 'N/A'}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => generateReceiptPDF(payment)}
-                                title="Download Receipt"
-                              >
-                                <Download className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => emailReceipt(payment)}
-                                disabled={sendingEmail === payment.id}
-                                title="Email Receipt"
-                              >
-                                <Mail className={`h-4 w-4 ${sendingEmail === payment.id ? 'animate-pulse' : ''}`} />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                  <div className="overflow-x-auto -mx-4 sm:mx-0">
+                    <div className="min-w-[600px] sm:min-w-0 px-4 sm:px-0">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="whitespace-nowrap">Receipt #</TableHead>
+                            <TableHead className="whitespace-nowrap">Date</TableHead>
+                            <TableHead className="whitespace-nowrap">Fee Type</TableHead>
+                            <TableHead className="whitespace-nowrap">Amount</TableHead>
+                            <TableHead className="whitespace-nowrap">Method</TableHead>
+                            <TableHead className="whitespace-nowrap">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {payments.map((payment) => (
+                            <TableRow key={payment.id}>
+                              <TableCell className="font-mono text-xs whitespace-nowrap">
+                                {payment.receipt_number || payment.id.slice(0, 8).toUpperCase()}
+                              </TableCell>
+                              <TableCell className="whitespace-nowrap text-sm">
+                                {format(new Date(payment.payment_date), 'MMM dd, yyyy')}
+                              </TableCell>
+                              <TableCell className="min-w-[100px]">
+                                <span className="text-sm truncate block max-w-[150px]">
+                                  {payment.student_fees?.fee_structures?.name || 'N/A'}
+                                </span>
+                              </TableCell>
+                              <TableCell className="font-semibold text-green-600 whitespace-nowrap text-sm">
+                                {formatCurrency(payment.amount, payment.student_fees?.fee_structures?.currency)}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="text-xs whitespace-nowrap">
+                                  {payment.payment_method || 'N/A'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => generateReceiptPDF(payment)}
+                                    title="Download Receipt"
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => emailReceipt(payment)}
+                                    disabled={sendingEmail === payment.id}
+                                    title="Email Receipt"
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    {sendingEmail === payment.id ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      <Mail className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
                 )}
               </CardContent>
             </Card>
