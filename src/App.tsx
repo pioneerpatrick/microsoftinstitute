@@ -38,6 +38,11 @@ import Grades from "./pages/lms/Grades";
 // Admin Pages
 import FeeStructures from "./pages/lms/admin/FeeStructures";
 import Accounting from "./pages/lms/admin/Accounting";
+import ManageAllStudents from "./pages/lms/admin/ManageAllStudents";
+import StaffManagement from "./pages/lms/admin/StaffManagement";
+
+// Instructor Pages (continued)
+import Attendance from "./pages/lms/instructor/Attendance";
 
 // Student Pages
 import StudentFees from "./pages/lms/StudentFees";
@@ -84,10 +89,13 @@ const App = () => (
             <Route path="/lms/instructor/live-sessions" element={<ManageLiveSessions />} />
             <Route path="/lms/instructor/exams" element={<ManageExams />} />
             <Route path="/lms/instructor/reports" element={<Reports />} />
+            <Route path="/lms/instructor/attendance" element={<Attendance />} />
             
             {/* Admin Routes */}
             <Route path="/lms/admin/fees" element={<FeeStructures />} />
             <Route path="/lms/admin/accounting" element={<Accounting />} />
+            <Route path="/lms/admin/students" element={<ManageAllStudents />} />
+            <Route path="/lms/admin/staff" element={<StaffManagement />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
