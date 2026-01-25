@@ -6,16 +6,21 @@ import LMSLayout from '@/components/lms/LMSLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, DollarSign, Users, TrendingUp, Receipt, Download, Search, CreditCard, Bell, Loader2, Sparkles, FileText } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { 
+  Plus, DollarSign, Users, TrendingUp, Receipt, Download, Search, CreditCard, Bell, 
+  Loader2, Sparkles, FileText, PieChart, BarChart3, AlertTriangle, CheckCircle2,
+  Calendar, ArrowUpRight, ArrowDownRight
+} from 'lucide-react';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
 import PaymentDetailsCard from '@/components/admin/PaymentDetailsCard';
 import FeeStructurePDF from '@/components/admin/FeeStructurePDF';
 
@@ -63,7 +68,7 @@ interface Student {
   email: string | null;
 }
 
-// Course data from website for auto-generating fee structures (including English 5k and AI 15k monthly)
+// Course data from website
 const websiteCourses = [
   { school: "School of ICT & Digital Technology", courses: [
     { name: "Information Technology (IT)", level: "Certificate", fee: 29000 },
@@ -162,7 +167,6 @@ const Accounting = () => {
       .order('created_at', { ascending: false });
 
     if (feesData) {
-      // Fetch profiles separately
       const userIds = [...new Set(feesData.map(f => f.user_id))];
       const { data: profilesData } = await supabase
         .from('profiles')
@@ -188,7 +192,6 @@ const Accounting = () => {
       .limit(100);
 
     if (paymentsData) {
-      // Fetch profiles separately
       const userIds = [...new Set(paymentsData.map(p => p.user_id))];
       const { data: profilesData } = await supabase
         .from('profiles')
@@ -250,7 +253,6 @@ const Accounting = () => {
     }
   };
 
-  // Generate auto receipt number in format MT-YYYY-XXXXX
   const generateReceiptNumber = async (): Promise<string> => {
     const year = new Date().getFullYear();
     
@@ -271,11 +273,8 @@ const Accounting = () => {
     if (!selectedStudentFee) return;
 
     const amount = parseFloat(paymentForm.amount);
-    
-    // Auto-generate receipt number if not provided
     const receiptNumber = paymentForm.receipt_number || await generateReceiptNumber();
 
-    // Record the payment
     const { error: paymentError } = await supabase
       .from('fee_payments')
       .insert({
@@ -294,13 +293,13 @@ const Accounting = () => {
       return;
     }
 
-    // Update student fee
     const newAmountPaid = selectedStudentFee.amount_paid + amount;
-    const newStatus = newAmountPaid >= selectedStudentFee.amount_due ? 'paid' : 'partial';
+    const newBalance = selectedStudentFee.amount_due - newAmountPaid;
+    const newStatus = newBalance <= 0 ? 'paid' : 'partial';
 
     await supabase
       .from('student_fees')
-      .update({ amount_paid: newAmountPaid, status: newStatus })
+      .update({ amount_paid: newAmountPaid, balance: newBalance, status: newStatus })
       .eq('id', selectedStudentFee.id);
 
     toast.success(`Payment recorded. Receipt: ${receiptNumber}`);
@@ -324,19 +323,42 @@ const Accounting = () => {
       pending: 'outline',
       overdue: 'destructive',
     };
-    return <Badge variant={variants[status] || 'outline'}>{status}</Badge>;
+    return <Badge variant={variants[status] || 'outline'} className="text-xs">{status}</Badge>;
   };
 
   const formatCurrency = (amount: number, currency = 'KES') => {
     return new Intl.NumberFormat('en-KE', {
       style: 'currency',
       currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(amount);
   };
 
+  // Calculate analytics
   const totalDue = studentFees.reduce((sum, f) => sum + f.amount_due, 0);
   const totalPaid = studentFees.reduce((sum, f) => sum + f.amount_paid, 0);
   const totalBalance = studentFees.reduce((sum, f) => sum + f.balance, 0);
+  const collectionRate = totalDue > 0 ? (totalPaid / totalDue) * 100 : 0;
+  
+  const paidFees = studentFees.filter(f => f.status === 'paid').length;
+  const partialFees = studentFees.filter(f => f.status === 'partial').length;
+  const pendingFees = studentFees.filter(f => f.status === 'pending').length;
+  const overdueFees = studentFees.filter(f => f.status === 'overdue').length;
+
+  // This month payments
+  const monthStart = startOfMonth(new Date());
+  const monthEnd = endOfMonth(new Date());
+  const thisMonthPayments = payments.filter(p => {
+    const pDate = new Date(p.payment_date);
+    return pDate >= monthStart && pDate <= monthEnd;
+  });
+  const thisMonthTotal = thisMonthPayments.reduce((sum, p) => sum + p.amount, 0);
+
+  // Last 7 days payments
+  const last7Days = subDays(new Date(), 7);
+  const recentPayments = payments.filter(p => new Date(p.payment_date) >= last7Days);
+  const recentTotal = recentPayments.reduce((sum, p) => sum + p.amount, 0);
 
   const filteredFees = studentFees.filter(fee => {
     const name = fee.profiles?.full_name?.toLowerCase() || '';
@@ -370,7 +392,6 @@ const Accounting = () => {
       });
 
       if (error) throw error;
-      
       toast.success(`Sent ${data?.sent || 0} overdue payment reminders`);
     } catch (error) {
       console.error('Error sending reminders:', error);
@@ -400,7 +421,6 @@ const Accounting = () => {
           const courseData = course as { name: string; level: string; fee: number; isMonthly?: boolean };
           
           if (courseData.isMonthly) {
-            // Monthly-only courses (English, AI)
             const monthName = `${courseData.name} - ${courseData.level} (Per Month)`;
             if (!existingNames.has(monthName)) {
               feesToCreate.push({
@@ -413,7 +433,6 @@ const Accounting = () => {
               });
             }
           } else {
-            // Per Term fee
             const termName = `${courseData.name} - ${courseData.level} (Per Term)`;
             if (!existingNames.has(termName)) {
               feesToCreate.push({
@@ -426,7 +445,6 @@ const Accounting = () => {
               });
             }
 
-            // Per Month fee (divide by 3)
             const monthName = `${courseData.name} - ${courseData.level} (Per Month)`;
             if (!existingNames.has(monthName)) {
               feesToCreate.push({
@@ -448,7 +466,6 @@ const Accounting = () => {
       }
 
       const { error } = await supabase.from('fee_structures').insert(feesToCreate);
-
       if (error) throw error;
 
       toast.success(`Created ${feesToCreate.length} fee structures`);
@@ -473,15 +490,17 @@ const Accounting = () => {
 
   return (
     <LMSLayout>
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="space-y-4 sm:space-y-6">
+        {/* Header */}
+        <div className="flex flex-col gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Accounting</h1>
-            <p className="text-muted-foreground">Manage student fees and payments</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Accounting Dashboard</h1>
+            <p className="text-sm text-muted-foreground">Manage student fees, payments and financial reports</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button 
               variant="outline" 
+              size="sm"
               onClick={sendOverdueReminders}
               disabled={sendingReminders}
             >
@@ -490,10 +509,11 @@ const Accounting = () => {
               ) : (
                 <Bell className="h-4 w-4 mr-2" />
               )}
-              Send Reminders
+              <span className="hidden sm:inline">Send</span> Reminders
             </Button>
             <Button 
               variant="outline" 
+              size="sm"
               onClick={generateBrandedFeeStructures}
               disabled={generatingFees}
             >
@@ -502,21 +522,21 @@ const Accounting = () => {
               ) : (
                 <Sparkles className="h-4 w-4 mr-2" />
               )}
-              Auto-Generate Fees
+              <span className="hidden sm:inline">Auto-Generate</span> Fees
             </Button>
             <FeeStructurePDF />
-            <Button variant="outline" onClick={exportToCSV}>
-              <Download className="h-4 w-4 mr-2" />
-              Export CSV
+            <Button variant="outline" size="sm" onClick={exportToCSV}>
+              <Download className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Export</span>
             </Button>
             <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
               <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Assign Fee
+                <Button size="sm">
+                  <Plus className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Assign Fee</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-md mx-4">
                 <DialogHeader>
                   <DialogTitle>Assign Fee to Student</DialogTitle>
                 </DialogHeader>
@@ -584,61 +604,164 @@ const Accounting = () => {
           </div>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Financial Overview Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
-                Total Due
+            <CardHeader className="pb-2 p-3 sm:p-4">
+              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                <DollarSign className="h-3.5 w-3.5 flex-shrink-0" />
+                <span className="truncate">Total Due</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(totalDue)}</div>
+            <CardContent className="p-3 sm:p-4 pt-0">
+              <div className="text-base sm:text-xl lg:text-2xl font-bold truncate">{formatCurrency(totalDue)}</div>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <TrendingUp className="h-4 w-4" />
-                Total Collected
+            <CardHeader className="pb-2 p-3 sm:p-4">
+              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                <TrendingUp className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
+                <span className="truncate">Collected</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{formatCurrency(totalPaid)}</div>
+            <CardContent className="p-3 sm:p-4 pt-0">
+              <div className="text-base sm:text-xl lg:text-2xl font-bold text-green-600 truncate">{formatCurrency(totalPaid)}</div>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Receipt className="h-4 w-4" />
-                Outstanding
+            <CardHeader className="pb-2 p-3 sm:p-4">
+              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                <Receipt className="h-3.5 w-3.5 text-orange-600 flex-shrink-0" />
+                <span className="truncate">Outstanding</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600">{formatCurrency(totalBalance)}</div>
+            <CardContent className="p-3 sm:p-4 pt-0">
+              <div className="text-base sm:text-xl lg:text-2xl font-bold text-orange-600 truncate">{formatCurrency(totalBalance)}</div>
             </CardContent>
           </Card>
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Students with Fees
+            <CardHeader className="pb-2 p-3 sm:p-4">
+              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5 flex-shrink-0" />
+                <span className="truncate">Students</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{new Set(studentFees.map(f => f.user_id)).size}</div>
+            <CardContent className="p-3 sm:p-4 pt-0">
+              <div className="text-base sm:text-xl lg:text-2xl font-bold truncate">{new Set(studentFees.map(f => f.user_id)).size}</div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Analytics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Collection Rate */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <PieChart className="h-4 w-4 text-primary" />
+                Collection Rate
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <div className="text-2xl font-bold">{collectionRate.toFixed(1)}%</div>
+                  <Progress value={collectionRate} className="mt-2" />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                {formatCurrency(totalPaid)} collected of {formatCurrency(totalDue)}
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* This Month */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary" />
+                This Month
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">{formatCurrency(thisMonthTotal)}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {thisMonthPayments.length} payments received
+              </p>
+              <div className="flex items-center gap-1 mt-2 text-xs text-green-600">
+                <ArrowUpRight className="h-3 w-3" />
+                <span>{format(new Date(), 'MMMM yyyy')}</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Last 7 Days */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-primary" />
+                Last 7 Days
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrency(recentTotal)}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {recentPayments.length} recent transactions
+              </p>
+              <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                <Calendar className="h-3 w-3" />
+                <span>{format(last7Days, 'MMM dd')} - {format(new Date(), 'MMM dd')}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Fee Status Summary */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Fee Status Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950/30 rounded-lg">
+                <CheckCircle2 className="h-8 w-8 text-green-600" />
+                <div>
+                  <p className="text-xl font-bold text-green-700 dark:text-green-400">{paidFees}</p>
+                  <p className="text-xs text-green-600">Fully Paid</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-yellow-50 dark:bg-yellow-950/30 rounded-lg">
+                <CreditCard className="h-8 w-8 text-yellow-600" />
+                <div>
+                  <p className="text-xl font-bold text-yellow-700 dark:text-yellow-400">{partialFees}</p>
+                  <p className="text-xs text-yellow-600">Partial</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+                <FileText className="h-8 w-8 text-blue-600" />
+                <div>
+                  <p className="text-xl font-bold text-blue-700 dark:text-blue-400">{pendingFees}</p>
+                  <p className="text-xs text-blue-600">Pending</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-950/30 rounded-lg">
+                <AlertTriangle className="h-8 w-8 text-red-600" />
+                <div>
+                  <p className="text-xl font-bold text-red-700 dark:text-red-400">{overdueFees}</p>
+                  <p className="text-xs text-red-600">Overdue</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Payment Details */}
         <PaymentDetailsCard />
 
         <Tabs defaultValue="fees" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="fees">Student Fees</TabsTrigger>
-            <TabsTrigger value="payments">Payment History</TabsTrigger>
+          <TabsList className="w-full sm:w-auto overflow-x-auto">
+            <TabsTrigger value="fees" className="text-xs sm:text-sm">Student Fees</TabsTrigger>
+            <TabsTrigger value="payments" className="text-xs sm:text-sm">Payments</TabsTrigger>
           </TabsList>
 
           <TabsContent value="fees" className="space-y-4">
@@ -646,7 +769,7 @@ const Accounting = () => {
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search by student name or email..."
+                  placeholder="Search students..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -655,64 +778,68 @@ const Accounting = () => {
             </div>
 
             <Card>
-              <CardContent className="pt-6">
+              <CardContent className="p-4 sm:p-6">
                 {filteredFees.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>No student fees assigned yet.</p>
                   </div>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Student</TableHead>
-                        <TableHead>Fee Type</TableHead>
-                        <TableHead>Due</TableHead>
-                        <TableHead>Paid</TableHead>
-                        <TableHead>Balance</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredFees.map((fee) => (
-                        <TableRow key={fee.id}>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">{fee.profiles?.full_name || 'Unknown'}</p>
-                              <p className="text-sm text-muted-foreground">{fee.profiles?.email}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">{fee.fee_structures?.name || 'Custom'}</p>
-                              {fee.courses && (
-                                <p className="text-sm text-muted-foreground">{fee.courses.title}</p>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className="font-semibold">
-                            {formatCurrency(fee.amount_due, fee.fee_structures?.currency)}
-                          </TableCell>
-                          <TableCell className="text-green-600">
-                            {formatCurrency(fee.amount_paid, fee.fee_structures?.currency)}
-                          </TableCell>
-                          <TableCell className="font-semibold text-orange-600">
-                            {formatCurrency(fee.balance, fee.fee_structures?.currency)}
-                          </TableCell>
-                          <TableCell>{getStatusBadge(fee.status)}</TableCell>
-                          <TableCell>
-                            {fee.balance > 0 && (
-                              <Button size="sm" onClick={() => openPaymentDialog(fee)}>
-                                <CreditCard className="h-4 w-4 mr-1" />
-                                Pay
-                              </Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                  <div className="overflow-x-auto -mx-4 sm:mx-0">
+                    <div className="min-w-[700px] px-4 sm:px-0">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Student</TableHead>
+                            <TableHead>Fee Type</TableHead>
+                            <TableHead className="text-right">Due</TableHead>
+                            <TableHead className="text-right">Paid</TableHead>
+                            <TableHead className="text-right">Balance</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredFees.map((fee) => (
+                            <TableRow key={fee.id}>
+                              <TableCell>
+                                <div className="min-w-[120px]">
+                                  <p className="font-medium text-sm truncate">{fee.profiles?.full_name || 'Unknown'}</p>
+                                  <p className="text-xs text-muted-foreground truncate">{fee.profiles?.email}</p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="min-w-[100px]">
+                                  <p className="font-medium text-sm truncate">{fee.fee_structures?.name || 'Custom'}</p>
+                                  {fee.courses && (
+                                    <p className="text-xs text-muted-foreground truncate">{fee.courses.title}</p>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right font-semibold text-sm whitespace-nowrap">
+                                {formatCurrency(fee.amount_due, fee.fee_structures?.currency)}
+                              </TableCell>
+                              <TableCell className="text-right text-green-600 text-sm whitespace-nowrap">
+                                {formatCurrency(fee.amount_paid, fee.fee_structures?.currency)}
+                              </TableCell>
+                              <TableCell className="text-right font-semibold text-orange-600 text-sm whitespace-nowrap">
+                                {formatCurrency(fee.balance, fee.fee_structures?.currency)}
+                              </TableCell>
+                              <TableCell>{getStatusBadge(fee.status)}</TableCell>
+                              <TableCell>
+                                {fee.balance > 0 && (
+                                  <Button size="sm" onClick={() => openPaymentDialog(fee)}>
+                                    <CreditCard className="h-4 w-4 sm:mr-1" />
+                                    <span className="hidden sm:inline">Pay</span>
+                                  </Button>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -721,48 +848,58 @@ const Accounting = () => {
           <TabsContent value="payments">
             <Card>
               <CardHeader>
-                <CardTitle>Recent Payments</CardTitle>
+                <CardTitle className="text-base sm:text-lg">Recent Payments</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 sm:p-6">
                 {payments.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>No payments recorded yet.</p>
                   </div>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Student</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Method</TableHead>
-                        <TableHead>Reference</TableHead>
-                        <TableHead>Receipt</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {payments.map((payment) => (
-                        <TableRow key={payment.id}>
-                          <TableCell>{format(new Date(payment.payment_date), 'MMM d, yyyy')}</TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">{payment.profiles?.full_name || 'Unknown'}</p>
-                              <p className="text-sm text-muted-foreground">{payment.profiles?.email}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell className="font-semibold text-green-600">
-                            {formatCurrency(payment.amount)}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{payment.payment_method || 'N/A'}</Badge>
-                          </TableCell>
-                          <TableCell className="text-sm">{payment.transaction_reference || '-'}</TableCell>
-                          <TableCell className="text-sm">{payment.receipt_number || '-'}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                  <div className="overflow-x-auto -mx-4 sm:mx-0">
+                    <div className="min-w-[600px] px-4 sm:px-0">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Student</TableHead>
+                            <TableHead className="text-right">Amount</TableHead>
+                            <TableHead>Method</TableHead>
+                            <TableHead>Reference</TableHead>
+                            <TableHead>Receipt</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {payments.map((payment) => (
+                            <TableRow key={payment.id}>
+                              <TableCell className="whitespace-nowrap text-sm">
+                                {format(new Date(payment.payment_date), 'MMM d, yyyy')}
+                              </TableCell>
+                              <TableCell>
+                                <div className="min-w-[100px]">
+                                  <p className="font-medium text-sm truncate">{payment.profiles?.full_name || 'Unknown'}</p>
+                                  <p className="text-xs text-muted-foreground truncate">{payment.profiles?.email}</p>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-right font-semibold text-green-600 whitespace-nowrap text-sm">
+                                {formatCurrency(payment.amount)}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="text-xs">{payment.payment_method || 'N/A'}</Badge>
+                              </TableCell>
+                              <TableCell className="text-xs font-mono truncate max-w-[100px]">
+                                {payment.transaction_reference || '-'}
+                              </TableCell>
+                              <TableCell className="text-xs font-mono">
+                                {payment.receipt_number || '-'}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -771,7 +908,7 @@ const Accounting = () => {
 
         {/* Payment Dialog */}
         <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
-          <DialogContent>
+          <DialogContent className="max-w-md mx-4">
             <DialogHeader>
               <DialogTitle>Record Payment</DialogTitle>
             </DialogHeader>
@@ -817,10 +954,11 @@ const Accounting = () => {
                   />
                 </div>
                 <div>
-                  <Label>Receipt Number</Label>
+                  <Label>Receipt Number (auto-generated if empty)</Label>
                   <Input
                     value={paymentForm.receipt_number}
                     onChange={(e) => setPaymentForm({ ...paymentForm, receipt_number: e.target.value })}
+                    placeholder="Auto-generated"
                   />
                 </div>
                 <div>
