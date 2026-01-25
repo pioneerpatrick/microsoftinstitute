@@ -13,10 +13,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, DollarSign, Users, TrendingUp, Receipt, Download, Search, CreditCard, Bell, Loader2, Sparkles } from 'lucide-react';
+import { Plus, DollarSign, Users, TrendingUp, Receipt, Download, Search, CreditCard, Bell, Loader2, Sparkles, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import PaymentDetailsCard from '@/components/admin/PaymentDetailsCard';
+import FeeStructurePDF from '@/components/admin/FeeStructurePDF';
 
 interface StudentFee {
   id: string;
@@ -62,7 +63,7 @@ interface Student {
   email: string | null;
 }
 
-// Course data from website for auto-generating fee structures
+// Course data from website for auto-generating fee structures (including English 5k and AI 15k monthly)
 const websiteCourses = [
   { school: "School of ICT & Digital Technology", courses: [
     { name: "Information Technology (IT)", level: "Certificate", fee: 29000 },
@@ -85,9 +86,10 @@ const websiteCourses = [
     { name: "Entrepreneurship", level: "Certificate", fee: 22000 },
     { name: "Project Management", level: "Certificate", fee: 27000 },
   ]},
-  { school: "Professional Courses", courses: [
+  { school: "Professional & Specialized Courses", courses: [
     { name: "Digital Marketing", level: "Professional", fee: 30000 },
-    { name: "Artificial Intelligence (AI)", level: "Professional", fee: 60000 },
+    { name: "Artificial Intelligence (AI)", level: "Professional", fee: 15000, isMonthly: true },
+    { name: "English Language Learning", level: "Certificate", fee: 5000, isMonthly: true },
   ]},
   { school: "Education, Administration & Office Skills", courses: [
     { name: "Office Administration", level: "Certificate", fee: 27000 },
@@ -248,11 +250,30 @@ const Accounting = () => {
     }
   };
 
+  // Generate auto receipt number in format MT-YYYY-XXXXX
+  const generateReceiptNumber = async (): Promise<string> => {
+    const year = new Date().getFullYear();
+    
+    const { count } = await supabase
+      .from('fee_payments')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', `${year}-01-01`)
+      .lte('created_at', `${year}-12-31`);
+
+    const nextNumber = (count || 0) + 1;
+    const paddedNumber = nextNumber.toString().padStart(5, '0');
+    
+    return `MT-${year}-${paddedNumber}`;
+  };
+
   const handleRecordPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedStudentFee) return;
 
     const amount = parseFloat(paymentForm.amount);
+    
+    // Auto-generate receipt number if not provided
+    const receiptNumber = paymentForm.receipt_number || await generateReceiptNumber();
 
     // Record the payment
     const { error: paymentError } = await supabase
@@ -263,7 +284,7 @@ const Accounting = () => {
         amount,
         payment_method: paymentForm.payment_method,
         transaction_reference: paymentForm.transaction_reference || null,
-        receipt_number: paymentForm.receipt_number || null,
+        receipt_number: receiptNumber,
         notes: paymentForm.notes || null,
         recorded_by: user?.id,
       });
@@ -282,7 +303,7 @@ const Accounting = () => {
       .update({ amount_paid: newAmountPaid, status: newStatus })
       .eq('id', selectedStudentFee.id);
 
-    toast.success('Payment recorded successfully');
+    toast.success(`Payment recorded. Receipt: ${receiptNumber}`);
     fetchStudentFees();
     fetchPayments();
     setPaymentDialogOpen(false);
@@ -376,30 +397,47 @@ const Accounting = () => {
 
       for (const school of websiteCourses) {
         for (const course of school.courses) {
-          // Per Term fee
-          const termName = `${course.name} - ${course.level} (Per Term)`;
-          if (!existingNames.has(termName)) {
-            feesToCreate.push({
-              name: termName,
-              amount: course.fee,
-              currency: 'KES',
-              description: `${school.school} - ${course.level} level course. Fee per term (3 months).`,
-              payment_frequency: 'per_term',
-              is_active: true,
-            });
-          }
+          const courseData = course as { name: string; level: string; fee: number; isMonthly?: boolean };
+          
+          if (courseData.isMonthly) {
+            // Monthly-only courses (English, AI)
+            const monthName = `${courseData.name} - ${courseData.level} (Per Month)`;
+            if (!existingNames.has(monthName)) {
+              feesToCreate.push({
+                name: monthName,
+                amount: courseData.fee,
+                currency: 'KES',
+                description: `${school.school} - ${courseData.level} level course. Monthly fee.`,
+                payment_frequency: 'per_month',
+                is_active: true,
+              });
+            }
+          } else {
+            // Per Term fee
+            const termName = `${courseData.name} - ${courseData.level} (Per Term)`;
+            if (!existingNames.has(termName)) {
+              feesToCreate.push({
+                name: termName,
+                amount: courseData.fee,
+                currency: 'KES',
+                description: `${school.school} - ${courseData.level} level course. Fee per term (3 months).`,
+                payment_frequency: 'per_term',
+                is_active: true,
+              });
+            }
 
-          // Per Month fee (divide by 3)
-          const monthName = `${course.name} - ${course.level} (Per Month)`;
-          if (!existingNames.has(monthName)) {
-            feesToCreate.push({
-              name: monthName,
-              amount: Math.ceil(course.fee / 3),
-              currency: 'KES',
-              description: `${school.school} - ${course.level} level course. Monthly installment.`,
-              payment_frequency: 'per_month',
-              is_active: true,
-            });
+            // Per Month fee (divide by 3)
+            const monthName = `${courseData.name} - ${courseData.level} (Per Month)`;
+            if (!existingNames.has(monthName)) {
+              feesToCreate.push({
+                name: monthName,
+                amount: Math.ceil(courseData.fee / 3),
+                currency: 'KES',
+                description: `${school.school} - ${courseData.level} level course. Monthly installment.`,
+                payment_frequency: 'per_month',
+                is_active: true,
+              });
+            }
           }
         }
       }
@@ -466,9 +504,10 @@ const Accounting = () => {
               )}
               Auto-Generate Fees
             </Button>
+            <FeeStructurePDF />
             <Button variant="outline" onClick={exportToCSV}>
               <Download className="h-4 w-4 mr-2" />
-              Export
+              Export CSV
             </Button>
             <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
               <DialogTrigger asChild>
