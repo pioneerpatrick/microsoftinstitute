@@ -74,12 +74,19 @@ const LMSLayout = ({ children }: LMSLayoutProps) => {
     { icon: FileText, label: 'Assignments', href: '/lms/instructor/assignments' },
     { icon: ClipboardList, label: 'Exams', href: '/lms/instructor/exams' },
     { icon: Calendar, label: 'Live Sessions', href: '/lms/instructor/live-sessions' },
+    { icon: ClipboardList, label: 'Attendance', href: '/lms/instructor/attendance' },
     { icon: BarChart3, label: 'Reports', href: '/lms/instructor/reports' },
+    { icon: FileText, label: 'Submit Reports', href: '/lms/instructor/submit-report' },
   ];
 
   const adminNavItems = [
+    { icon: BarChart3, label: 'Admin Reports', href: '/lms/admin/reports' },
+    { icon: GraduationCap, label: 'All Students', href: '/lms/admin/students' },
+    { icon: Users, label: 'All Staff', href: '/lms/admin/all-staff' },
+    { icon: Users, label: 'Staff Contracts', href: '/lms/admin/staff' },
     { icon: DollarSign, label: 'Fee Structures', href: '/lms/admin/fees' },
     { icon: Calculator, label: 'Accounting', href: '/lms/admin/accounting' },
+    { icon: Settings, label: 'Settings', href: '/lms/admin/settings' },
   ];
 
   const navItems = isStaff ? [...staffNavItems, ...studentNavItems] : studentNavItems;

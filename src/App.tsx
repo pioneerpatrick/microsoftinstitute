@@ -40,9 +40,14 @@ import FeeStructures from "./pages/lms/admin/FeeStructures";
 import Accounting from "./pages/lms/admin/Accounting";
 import ManageAllStudents from "./pages/lms/admin/ManageAllStudents";
 import StaffManagement from "./pages/lms/admin/StaffManagement";
+import AdminSettings from "./pages/lms/admin/Settings";
+import MasterStudents from "./pages/lms/admin/MasterStudents";
+import MasterStaff from "./pages/lms/admin/MasterStaff";
+import AdminReports from "./pages/lms/admin/AdminReports";
 
 // Instructor Pages (continued)
 import Attendance from "./pages/lms/instructor/Attendance";
+import SubmitReport from "./pages/lms/instructor/SubmitReport";
 
 // Student Pages
 import StudentFees from "./pages/lms/StudentFees";
@@ -90,12 +95,17 @@ const App = () => (
             <Route path="/lms/instructor/exams" element={<ManageExams />} />
             <Route path="/lms/instructor/reports" element={<Reports />} />
             <Route path="/lms/instructor/attendance" element={<Attendance />} />
+            <Route path="/lms/instructor/submit-report" element={<SubmitReport />} />
             
             {/* Admin Routes */}
             <Route path="/lms/admin/fees" element={<FeeStructures />} />
             <Route path="/lms/admin/accounting" element={<Accounting />} />
             <Route path="/lms/admin/students" element={<ManageAllStudents />} />
             <Route path="/lms/admin/staff" element={<StaffManagement />} />
+            <Route path="/lms/admin/settings" element={<AdminSettings />} />
+            <Route path="/lms/admin/master-students" element={<MasterStudents />} />
+            <Route path="/lms/admin/all-staff" element={<MasterStaff />} />
+            <Route path="/lms/admin/reports" element={<AdminReports />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
