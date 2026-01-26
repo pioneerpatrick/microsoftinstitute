@@ -96,9 +96,12 @@ const ManageStudents = () => {
   }, [user, isStaff]);
 
   const fetchCourses = async () => {
+    // Fetch all published courses from the website database
     const { data } = await supabase
       .from('courses')
-      .select('id, title, description, duration_hours')
+      .select('id, title, description, duration_hours, category')
+      .eq('is_published', true)
+      .order('category')
       .order('title');
     
     if (data) {
@@ -526,27 +529,32 @@ const ManageStudents = () => {
                         onValueChange={(value) => setNewStudent({ ...newStudent, course_id: value })}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a course or type below" />
+                          <SelectValue placeholder="Select a published course" />
                         </SelectTrigger>
-                        <SelectContent>
-                          {courses.map((course) => (
-                            <SelectItem key={course.id} value={course.id}>
-                              {course.title}
-                            </SelectItem>
-                          ))}
+                        <SelectContent className="max-h-[300px]">
+                          {courses.length === 0 ? (
+                            <div className="p-4 text-center text-sm text-muted-foreground">
+                              No published courses available
+                            </div>
+                          ) : (
+                            courses.map((course) => (
+                              <SelectItem key={course.id} value={course.id}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{course.title}</span>
+                                  {course.duration_hours && (
+                                    <span className="text-xs text-muted-foreground">
+                                      {course.duration_hours} hours
+                                    </span>
+                                  )}
+                                </div>
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
-                      <p className="text-xs text-muted-foreground">Or search by typing course name:</p>
-                      <Input
-                        placeholder="Type to search courses..."
-                        onChange={(e) => {
-                          const search = e.target.value.toLowerCase();
-                          const found = courses.find(c => c.title.toLowerCase().includes(search));
-                          if (found) {
-                            setNewStudent({ ...newStudent, course_id: found.id });
-                          }
-                        }}
-                      />
+                      <p className="text-xs text-muted-foreground">
+                        Showing all published courses from the website ({courses.length} courses)
+                      </p>
                     </div>
                     <Button onClick={createStudentAndEnroll} disabled={creating} className="w-full">
                       {creating ? (
@@ -589,14 +597,27 @@ const ManageStudents = () => {
                         onValueChange={(value) => setExistingEnrollment({ ...existingEnrollment, course_id: value })}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a course or type below" />
+                          <SelectValue placeholder="Select a published course" />
                         </SelectTrigger>
-                        <SelectContent>
-                          {courses.map((course) => (
-                            <SelectItem key={course.id} value={course.id}>
-                              {course.title}
-                            </SelectItem>
-                          ))}
+                        <SelectContent className="max-h-[300px]">
+                          {courses.length === 0 ? (
+                            <div className="p-4 text-center text-sm text-muted-foreground">
+                              No published courses available
+                            </div>
+                          ) : (
+                            courses.map((course) => (
+                              <SelectItem key={course.id} value={course.id}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{course.title}</span>
+                                  {course.duration_hours && (
+                                    <span className="text-xs text-muted-foreground">
+                                      {course.duration_hours} hours
+                                    </span>
+                                  )}
+                                </div>
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                       <p className="text-xs text-muted-foreground">Or search by typing course name:</p>
