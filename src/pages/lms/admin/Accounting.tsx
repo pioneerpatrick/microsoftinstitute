@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
 import PaymentDetailsCard from '@/components/admin/PaymentDetailsCard';
 import FeeStructurePDF from '@/components/admin/FeeStructurePDF';
+import ExpensesSection from '@/components/admin/ExpensesSection';
 
 interface StudentFee {
   id: string;
@@ -762,6 +763,7 @@ const Accounting = () => {
           <TabsList className="w-full sm:w-auto overflow-x-auto">
             <TabsTrigger value="fees" className="text-xs sm:text-sm">Student Fees</TabsTrigger>
             <TabsTrigger value="payments" className="text-xs sm:text-sm">Payments</TabsTrigger>
+            <TabsTrigger value="expenses" className="text-xs sm:text-sm">Expenses</TabsTrigger>
           </TabsList>
 
           <TabsContent value="fees" className="space-y-4">
@@ -830,7 +832,7 @@ const Accounting = () => {
                                 {fee.balance > 0 && (
                                   <Button size="sm" onClick={() => openPaymentDialog(fee)}>
                                     <CreditCard className="h-4 w-4 sm:mr-1" />
-                                    <span className="hidden sm:inline">Pay</span>
+                                    <span className="hidden sm:inline">Receive</span>
                                   </Button>
                                 )}
                               </TableCell>
@@ -904,13 +906,17 @@ const Accounting = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="expenses">
+            <ExpensesSection />
+          </TabsContent>
         </Tabs>
 
         {/* Payment Dialog */}
         <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
           <DialogContent className="max-w-md mx-4">
             <DialogHeader>
-              <DialogTitle>Record Payment</DialogTitle>
+              <DialogTitle>Receive Payment</DialogTitle>
             </DialogHeader>
             {selectedStudentFee && (
               <form onSubmit={handleRecordPayment} className="space-y-4">
@@ -968,7 +974,7 @@ const Accounting = () => {
                     onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
                   />
                 </div>
-                <Button type="submit" className="w-full">Record Payment</Button>
+                <Button type="submit" className="w-full">Receive Payment</Button>
               </form>
             )}
           </DialogContent>

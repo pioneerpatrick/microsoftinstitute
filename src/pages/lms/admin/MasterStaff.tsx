@@ -11,10 +11,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { 
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle 
+} from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Search, Users, Download, Eye, Shield, UserPlus, Briefcase,
-  ArrowUpRight, Clock, DollarSign
+  ArrowUpRight, Clock, DollarSign, Trash2, Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -48,6 +52,8 @@ const MasterStaff = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
+  const [staffToDelete, setStaffToDelete] = useState<StaffMember | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [promoteDialogOpen, setPromoteDialogOpen] = useState(false);
   const [promoteForm, setPromoteForm] = useState({
     user_id: '',
@@ -224,6 +230,86 @@ const MasterStaff = () => {
     }
   };
 
+  const deleteStaffMember = async () => {
+    if (!staffToDelete) return;
+    
+    setIsDeleting(true);
+    
+    try {
+      // Delete in order of dependencies (cascade manually)
+      // 1. Delete instructor reports
+      await supabase
+        .from('instructor_reports')
+        .delete()
+        .eq('instructor_id', staffToDelete.id);
+      
+      // 2. Delete instructor attendance
+      await supabase
+        .from('instructor_attendance')
+        .delete()
+        .eq('instructor_id', staffToDelete.id);
+      
+      // 3. Delete salary payments
+      await supabase
+        .from('salary_payments')
+        .delete()
+        .eq('user_id', staffToDelete.id);
+      
+      // 4. Delete staff contracts
+      await supabase
+        .from('staff_contracts')
+        .delete()
+        .eq('user_id', staffToDelete.id);
+      
+      // 5. Delete live sessions (as instructor)
+      await supabase
+        .from('live_sessions')
+        .delete()
+        .eq('instructor_id', staffToDelete.id);
+      
+      // 6. Update courses to remove instructor
+      await supabase
+        .from('courses')
+        .update({ instructor_id: null })
+        .eq('instructor_id', staffToDelete.id);
+      
+      // 7. Delete messages
+      await supabase
+        .from('messages')
+        .delete()
+        .or(`sender_id.eq.${staffToDelete.id},recipient_id.eq.${staffToDelete.id}`);
+      
+      // 8. Delete user role
+      await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', staffToDelete.id);
+      
+      // 9. Delete profile
+      await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', staffToDelete.id);
+      
+      // 10. Delete auth user via edge function
+      await supabase.functions.invoke('manage-users', {
+        body: {
+          action: 'delete_user',
+          user_id: staffToDelete.id,
+        },
+      });
+      
+      toast.success('Staff member and all related data deleted successfully');
+      setStaffToDelete(null);
+      fetchData();
+    } catch (error: any) {
+      console.error('Delete error:', error);
+      toast.error('Failed to delete staff: ' + (error.message || 'Unknown error'));
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const getRoleBadge = (role: string) => {
     const variants: Record<string, 'default' | 'secondary'> = {
       admin: 'default',
@@ -304,55 +390,55 @@ const MasterStaff = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Shield className="h-5 w-5 text-purple-600" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <Card className="overflow-hidden">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-2 bg-purple-100 rounded-lg flex-shrink-0">
+                  <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{adminsCount}</p>
-                  <p className="text-sm text-muted-foreground">Admins</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Users className="h-5 w-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{instructorsCount}</p>
-                  <p className="text-sm text-muted-foreground">Instructors</p>
+                <div className="min-w-0">
+                  <p className="text-lg sm:text-2xl font-bold truncate">{adminsCount}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Admins</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <DollarSign className="h-5 w-5 text-green-600" />
+          <Card className="overflow-hidden">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                  <Users className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{formatCurrency(totalSalary)}</p>
-                  <p className="text-sm text-muted-foreground">Total Salaries</p>
+                <div className="min-w-0">
+                  <p className="text-lg sm:text-2xl font-bold truncate">{instructorsCount}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Instructors</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <Clock className="h-5 w-5 text-orange-600" />
+          <Card className="overflow-hidden">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
+                  <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{staff.filter(s => s.contract).length}</p>
-                  <p className="text-sm text-muted-foreground">With Contracts</p>
+                <div className="min-w-0">
+                  <p className="text-sm sm:text-lg lg:text-xl font-bold break-all">{formatCurrency(totalSalary)}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Total Salaries</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="overflow-hidden">
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-2 bg-orange-100 rounded-lg flex-shrink-0">
+                  <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-lg sm:text-2xl font-bold truncate">{staff.filter(s => s.contract).length}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">With Contracts</p>
                 </div>
               </div>
             </CardContent>
@@ -438,6 +524,14 @@ const MasterStaff = () => {
                               onClick={() => setSelectedStaff(member)}
                             >
                               <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => setStaffToDelete(member)}
+                            >
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>
@@ -608,6 +702,43 @@ const MasterStaff = () => {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Delete Staff Confirmation */}
+        <AlertDialog open={!!staffToDelete} onOpenChange={() => setStaffToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-destructive">Delete Staff Member</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete <strong>{staffToDelete?.full_name || staffToDelete?.email}</strong>? 
+                This will permanently remove all their data including:
+                <ul className="list-disc pl-5 mt-2 space-y-1 text-sm">
+                  <li>Staff contracts and salary payments</li>
+                  <li>Instructor reports and attendance records</li>
+                  <li>All messages sent and received</li>
+                  <li>Course assignments (courses will remain unassigned)</li>
+                </ul>
+                <p className="mt-3 font-semibold text-destructive">This action cannot be undone.</p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={deleteStaffMember}
+                disabled={isDeleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete Permanently'
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </LMSLayout>
   );

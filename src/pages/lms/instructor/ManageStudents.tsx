@@ -43,6 +43,7 @@ interface Course {
   title: string;
   description: string | null;
   duration_hours: number | null;
+  category?: string | null;
 }
 
 interface ExistingStudent {
@@ -291,6 +292,8 @@ const ManageStudents = () => {
                 courseTitle: course?.title || 'New Course',
                 courseDescription: course?.description,
                 courseDuration: course?.duration_hours,
+                courseCategory: course?.category,
+                courseSchedule: 'Classes held Monday to Friday, 8:00 AM - 5:00 PM EAT',
                 credentials: isExistingUser ? undefined : {
                   email: newStudent.email,
                   password: password,
@@ -368,6 +371,8 @@ const ManageStudents = () => {
             courseTitle: course?.title || 'New Course',
             courseDescription: course?.description,
             courseDuration: course?.duration_hours,
+            courseCategory: course?.category,
+            courseSchedule: 'Classes held Monday to Friday, 8:00 AM - 5:00 PM EAT',
           },
         });
       } catch (emailError) {

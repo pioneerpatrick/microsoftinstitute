@@ -15,6 +15,9 @@ interface EnrollmentEmailRequest {
   courseTitle: string;
   courseDescription?: string;
   courseDuration?: number;
+  courseCategory?: string;
+  courseSchedule?: string;
+  startDate?: string;
   credentials?: {
     email: string;
     password: string;
@@ -40,7 +43,10 @@ const handler = async (req: Request): Promise<Response> => {
       studentName, 
       courseTitle, 
       courseDescription, 
-      courseDuration, 
+      courseDuration,
+      courseCategory,
+      courseSchedule,
+      startDate,
       credentials,
       enrollmentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
     }: EnrollmentEmailRequest = await req.json();
@@ -138,12 +144,31 @@ const handler = async (req: Request): Promise<Response> => {
                     <div class="detail-value">${courseDuration} Hours</div>
                   </div>
                   ` : ''}
+                  ${courseCategory ? `
+                  <div class="detail-item">
+                    <div class="detail-label">Category</div>
+                    <div class="detail-value">${courseCategory}</div>
+                  </div>
+                  ` : ''}
+                  ${startDate ? `
+                  <div class="detail-item">
+                    <div class="detail-label">Start Date</div>
+                    <div class="detail-value">${startDate}</div>
+                  </div>
+                  ` : ''}
                   <div class="detail-item">
                     <div class="detail-label">Status</div>
                     <div class="detail-value" style="color: #16a34a;">✓ Active</div>
                   </div>
                 </div>
                 ${courseDescription ? `<p style="margin-top: 15px; font-style: italic; color: #666;">${courseDescription}</p>` : ''}
+                ${courseSchedule ? `
+                <div style="margin-top: 15px; padding: 12px; background: #f0f9ff; border-radius: 8px; border-left: 4px solid #0284c7;">
+                  <p style="margin: 0; font-weight: 600; color: #0369a1;">📅 Schedule Information</p>
+                  <p style="margin: 8px 0 0; color: #0c4a6e;">${courseSchedule}</p>
+                </div>
+                ` : ''}
+              </div>
               </div>
               
               ${credentials ? `
