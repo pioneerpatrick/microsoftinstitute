@@ -82,8 +82,9 @@ const LMSLayout = ({ children }: LMSLayoutProps) => {
 
   const adminNavItems = [
     { icon: BarChart3, label: 'Admin Reports', href: '/lms/admin/reports' },
-    { icon: GraduationCap, label: 'All Students', href: '/lms/admin/students' },
-    { icon: Users, label: 'All Staff', href: '/lms/admin/all-staff' },
+    { icon: GraduationCap, label: 'Master Students', href: '/lms/admin/master-students' },
+    { icon: GraduationCap, label: 'Manage Students', href: '/lms/admin/students' },
+    { icon: Users, label: 'Master Staff', href: '/lms/admin/all-staff' },
     { icon: Users, label: 'Staff Contracts', href: '/lms/admin/staff' },
     { icon: DollarSign, label: 'Fee Structures', href: '/lms/admin/fees' },
     { icon: Calculator, label: 'Accounting', href: '/lms/admin/accounting' },
