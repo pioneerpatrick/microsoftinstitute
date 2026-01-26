@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -11,13 +11,15 @@ import {
   GraduationCap, 
   Clock, 
   Award, 
-  Users, 
   Calendar,
   Bell,
   Play,
   ChevronRight
 } from 'lucide-react';
 import LMSLayout from '@/components/lms/LMSLayout';
+import AttendanceCard from '@/components/lms/dashboard/AttendanceCard';
+import PendingFeesCard from '@/components/lms/dashboard/PendingFeesCard';
+import UpcomingAssignmentsCard from '@/components/lms/dashboard/UpcomingAssignmentsCard';
 
 interface Enrollment {
   id: string;
@@ -182,64 +184,73 @@ const Dashboard = () => {
           )}
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Quick Stats Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <BookOpen className="h-6 w-6 text-blue-600" />
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="p-2 sm:p-3 bg-blue-100 rounded-lg shrink-0">
+                  <BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Enrolled Courses</p>
-                  <p className="text-2xl font-bold">{stats.totalCourses}</p>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Enrolled Courses</p>
+                  <p className="text-xl sm:text-2xl font-bold">{stats.totalCourses}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <GraduationCap className="h-6 w-6 text-green-600" />
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="p-2 sm:p-3 bg-green-100 rounded-lg shrink-0">
+                  <GraduationCap className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Completed</p>
-                  <p className="text-2xl font-bold">{stats.completedCourses}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-yellow-100 rounded-lg">
-                  <Award className="h-6 w-6 text-yellow-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Certificates</p>
-                  <p className="text-2xl font-bold">{stats.totalCertificates}</p>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Completed</p>
+                  <p className="text-xl sm:text-2xl font-bold">{stats.completedCourses}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-purple-100 rounded-lg">
-                  <Clock className="h-6 w-6 text-purple-600" />
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="p-2 sm:p-3 bg-yellow-100 rounded-lg shrink-0">
+                  <Award className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Hours Learned</p>
-                  <p className="text-2xl font-bold">{stats.hoursLearned}</p>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Certificates</p>
+                  <p className="text-xl sm:text-2xl font-bold">{stats.totalCertificates}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="p-2 sm:p-3 bg-purple-100 rounded-lg shrink-0">
+                  <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Hours Learned</p>
+                  <p className="text-xl sm:text-2xl font-bold">{stats.hoursLearned}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Key Metrics Row - Attendance, Fees, Assignments */}
+        {user && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <AttendanceCard userId={user.id} />
+            <PendingFeesCard userId={user.id} />
+            <UpcomingAssignmentsCard userId={user.id} />
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Continue Learning */}
