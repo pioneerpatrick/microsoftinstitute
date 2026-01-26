@@ -97,11 +97,10 @@ const ManageStudents = () => {
   }, [user, isStaff]);
 
   const fetchCourses = async () => {
-    // Fetch all published courses from the website database
+    // Fetch all courses from the database (including unpublished)
     const { data } = await supabase
       .from('courses')
-      .select('id, title, description, duration_hours, category')
-      .eq('is_published', true)
+      .select('id, title, description, duration_hours, category, is_published')
       .order('category')
       .order('title');
     
