@@ -33,6 +33,7 @@ import ManageAssignments from "./pages/lms/instructor/ManageAssignments";
 import ManageLiveSessions from "./pages/lms/instructor/ManageLiveSessions";
 import ManageExams from "./pages/lms/instructor/ManageExams";
 import Reports from "./pages/lms/instructor/Reports";
+import AttendanceReports from "./pages/lms/instructor/AttendanceReports";
 import Grades from "./pages/lms/Grades";
 
 // Admin Pages
@@ -95,6 +96,7 @@ const App = () => (
             <Route path="/lms/instructor/exams" element={<ManageExams />} />
             <Route path="/lms/instructor/reports" element={<Reports />} />
             <Route path="/lms/instructor/attendance" element={<Attendance />} />
+            <Route path="/lms/instructor/attendance-reports" element={<AttendanceReports />} />
             <Route path="/lms/instructor/submit-report" element={<SubmitReport />} />
             
             {/* Admin Routes */}

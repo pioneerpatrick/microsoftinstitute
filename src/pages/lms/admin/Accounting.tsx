@@ -606,149 +606,149 @@ const Accounting = () => {
 
         {/* Financial Overview Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <Card>
+          <Card className="overflow-hidden">
             <CardHeader className="pb-2 p-3 sm:p-4">
               <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
                 <DollarSign className="h-3.5 w-3.5 flex-shrink-0" />
-                <span className="truncate">Total Due</span>
+                <span>Total Due</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-4 pt-0">
-              <div className="text-base sm:text-xl lg:text-2xl font-bold truncate">{formatCurrency(totalDue)}</div>
+              <div className="text-sm sm:text-lg lg:text-xl font-bold break-all">{formatCurrency(totalDue)}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="overflow-hidden">
             <CardHeader className="pb-2 p-3 sm:p-4">
               <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
                 <TrendingUp className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
-                <span className="truncate">Collected</span>
+                <span>Collected</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-4 pt-0">
-              <div className="text-base sm:text-xl lg:text-2xl font-bold text-green-600 truncate">{formatCurrency(totalPaid)}</div>
+              <div className="text-sm sm:text-lg lg:text-xl font-bold text-green-600 break-all">{formatCurrency(totalPaid)}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="overflow-hidden">
             <CardHeader className="pb-2 p-3 sm:p-4">
               <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
                 <Receipt className="h-3.5 w-3.5 text-orange-600 flex-shrink-0" />
-                <span className="truncate">Outstanding</span>
+                <span>Outstanding</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-4 pt-0">
-              <div className="text-base sm:text-xl lg:text-2xl font-bold text-orange-600 truncate">{formatCurrency(totalBalance)}</div>
+              <div className="text-sm sm:text-lg lg:text-xl font-bold text-orange-600 break-all">{formatCurrency(totalBalance)}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="overflow-hidden">
             <CardHeader className="pb-2 p-3 sm:p-4">
               <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
                 <Users className="h-3.5 w-3.5 flex-shrink-0" />
-                <span className="truncate">Students</span>
+                <span>Students</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-4 pt-0">
-              <div className="text-base sm:text-xl lg:text-2xl font-bold truncate">{new Set(studentFees.map(f => f.user_id)).size}</div>
+              <div className="text-sm sm:text-lg lg:text-xl font-bold">{new Set(studentFees.map(f => f.user_id)).size}</div>
             </CardContent>
           </Card>
         </div>
 
         {/* Analytics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Collection Rate */}
-          <Card>
-            <CardHeader className="pb-2">
+          <Card className="overflow-hidden">
+            <CardHeader className="pb-2 p-3 sm:p-4">
               <CardTitle className="text-sm flex items-center gap-2">
-                <PieChart className="h-4 w-4 text-primary" />
-                Collection Rate
+                <PieChart className="h-4 w-4 text-primary flex-shrink-0" />
+                <span>Collection Rate</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 sm:p-4 pt-0">
               <div className="flex items-center gap-4">
-                <div className="flex-1">
-                  <div className="text-2xl font-bold">{collectionRate.toFixed(1)}%</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xl sm:text-2xl font-bold">{collectionRate.toFixed(1)}%</div>
                   <Progress value={collectionRate} className="mt-2" />
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                {formatCurrency(totalPaid)} collected of {formatCurrency(totalDue)}
+              <p className="text-xs text-muted-foreground mt-2 truncate">
+                {formatCurrency(totalPaid)} of {formatCurrency(totalDue)}
               </p>
             </CardContent>
           </Card>
 
           {/* This Month */}
-          <Card>
-            <CardHeader className="pb-2">
+          <Card className="overflow-hidden">
+            <CardHeader className="pb-2 p-3 sm:p-4">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-primary" />
-                This Month
+                <Calendar className="h-4 w-4 text-primary flex-shrink-0" />
+                <span>This Month</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{formatCurrency(thisMonthTotal)}</div>
+            <CardContent className="p-3 sm:p-4 pt-0">
+              <div className="text-xl sm:text-2xl font-bold text-green-600 break-all">{formatCurrency(thisMonthTotal)}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 {thisMonthPayments.length} payments received
               </p>
               <div className="flex items-center gap-1 mt-2 text-xs text-green-600">
-                <ArrowUpRight className="h-3 w-3" />
-                <span>{format(new Date(), 'MMMM yyyy')}</span>
+                <ArrowUpRight className="h-3 w-3 flex-shrink-0" />
+                <span className="truncate">{format(new Date(), 'MMMM yyyy')}</span>
               </div>
             </CardContent>
           </Card>
 
           {/* Last 7 Days */}
-          <Card>
-            <CardHeader className="pb-2">
+          <Card className="overflow-hidden sm:col-span-2 lg:col-span-1">
+            <CardHeader className="pb-2 p-3 sm:p-4">
               <CardTitle className="text-sm flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-primary" />
-                Last 7 Days
+                <BarChart3 className="h-4 w-4 text-primary flex-shrink-0" />
+                <span>Last 7 Days</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(recentTotal)}</div>
+            <CardContent className="p-3 sm:p-4 pt-0">
+              <div className="text-xl sm:text-2xl font-bold break-all">{formatCurrency(recentTotal)}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                {recentPayments.length} recent transactions
+                {recentPayments.length} transactions
               </p>
               <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
-                <Calendar className="h-3 w-3" />
-                <span>{format(last7Days, 'MMM dd')} - {format(new Date(), 'MMM dd')}</span>
+                <Calendar className="h-3 w-3 flex-shrink-0" />
+                <span className="truncate">{format(last7Days, 'MMM dd')} - {format(new Date(), 'MMM dd')}</span>
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Fee Status Summary */}
-        <Card>
-          <CardHeader className="pb-2">
+        <Card className="overflow-hidden">
+          <CardHeader className="pb-2 p-3 sm:p-4">
             <CardTitle className="text-sm">Fee Status Summary</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950/30 rounded-lg">
-                <CheckCircle2 className="h-8 w-8 text-green-600" />
-                <div>
-                  <p className="text-xl font-bold text-green-700 dark:text-green-400">{paidFees}</p>
-                  <p className="text-xs text-green-600">Fully Paid</p>
+          <CardContent className="p-3 sm:p-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-green-50 dark:bg-green-950/30 rounded-lg">
+                <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-lg sm:text-xl font-bold text-green-700 dark:text-green-400">{paidFees}</p>
+                  <p className="text-xs text-green-600 truncate">Paid</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-3 bg-yellow-50 dark:bg-yellow-950/30 rounded-lg">
-                <CreditCard className="h-8 w-8 text-yellow-600" />
-                <div>
-                  <p className="text-xl font-bold text-yellow-700 dark:text-yellow-400">{partialFees}</p>
-                  <p className="text-xs text-yellow-600">Partial</p>
+              <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-yellow-50 dark:bg-yellow-950/30 rounded-lg">
+                <CreditCard className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600 flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-lg sm:text-xl font-bold text-yellow-700 dark:text-yellow-400">{partialFees}</p>
+                  <p className="text-xs text-yellow-600 truncate">Partial</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
-                <FileText className="h-8 w-8 text-blue-600" />
-                <div>
-                  <p className="text-xl font-bold text-blue-700 dark:text-blue-400">{pendingFees}</p>
-                  <p className="text-xs text-blue-600">Pending</p>
+              <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+                <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-lg sm:text-xl font-bold text-blue-700 dark:text-blue-400">{pendingFees}</p>
+                  <p className="text-xs text-blue-600 truncate">Pending</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-950/30 rounded-lg">
-                <AlertTriangle className="h-8 w-8 text-red-600" />
-                <div>
-                  <p className="text-xl font-bold text-red-700 dark:text-red-400">{overdueFees}</p>
-                  <p className="text-xs text-red-600">Overdue</p>
+              <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-red-50 dark:bg-red-950/30 rounded-lg">
+                <AlertTriangle className="h-6 w-6 sm:h-8 sm:w-8 text-red-600 flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-lg sm:text-xl font-bold text-red-700 dark:text-red-400">{overdueFees}</p>
+                  <p className="text-xs text-red-600 truncate">Overdue</p>
                 </div>
               </div>
             </div>
