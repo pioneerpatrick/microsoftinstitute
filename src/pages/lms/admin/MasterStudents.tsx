@@ -12,9 +12,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   Search, Users, Download, Eye, GraduationCap, AlertTriangle, 
-  CheckCircle, XCircle, Clock, Filter
+  CheckCircle, XCircle, Clock, Filter, Trash2, Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
 
 interface Student {
@@ -44,6 +45,8 @@ const MasterStudents = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -161,6 +164,130 @@ const MasterStudents = () => {
     a.click();
     URL.revokeObjectURL(url);
     toast.success('Student data exported');
+  };
+
+  const handleDeleteStudent = async () => {
+    if (!studentToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      // Delete all related data in order (cascade delete)
+      
+      // 1. Delete assignment submissions
+      await supabase
+        .from('assignment_submissions')
+        .delete()
+        .eq('user_id', studentToDelete.id);
+      
+      // 2. Delete lesson progress
+      await supabase
+        .from('lesson_progress')
+        .delete()
+        .eq('user_id', studentToDelete.id);
+      
+      // 3. Delete quiz attempts
+      await supabase
+        .from('quiz_attempts')
+        .delete()
+        .eq('user_id', studentToDelete.id);
+      
+      // 4. Delete exam attempts
+      await supabase
+        .from('exam_attempts')
+        .delete()
+        .eq('user_id', studentToDelete.id);
+      
+      // 5. Delete fee payments
+      await supabase
+        .from('fee_payments')
+        .delete()
+        .eq('user_id', studentToDelete.id);
+      
+      // 6. Delete student fees
+      await supabase
+        .from('student_fees')
+        .delete()
+        .eq('user_id', studentToDelete.id);
+      
+      // 7. Delete certificates
+      await supabase
+        .from('certificates')
+        .delete()
+        .eq('user_id', studentToDelete.id);
+      
+      // 8. Delete enrollments
+      await supabase
+        .from('enrollments')
+        .delete()
+        .eq('user_id', studentToDelete.id);
+      
+      // 9. Delete attendance records
+      await supabase
+        .from('attendance_records')
+        .delete()
+        .eq('student_id', studentToDelete.id);
+      
+      // 10. Delete live session attendance
+      await supabase
+        .from('live_session_attendance')
+        .delete()
+        .eq('user_id', studentToDelete.id);
+      
+      // 11. Delete live session requests
+      await supabase
+        .from('live_session_requests')
+        .delete()
+        .eq('user_id', studentToDelete.id);
+      
+      // 12. Delete forum replies
+      await supabase
+        .from('forum_replies')
+        .delete()
+        .eq('user_id', studentToDelete.id);
+      
+      // 13. Delete forum topics
+      await supabase
+        .from('forum_topics')
+        .delete()
+        .eq('user_id', studentToDelete.id);
+      
+      // 14. Delete messages (sent and received)
+      await supabase
+        .from('messages')
+        .delete()
+        .or(`sender_id.eq.${studentToDelete.id},recipient_id.eq.${studentToDelete.id}`);
+      
+      // 15. Delete user roles
+      await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', studentToDelete.id);
+      
+      // 16. Delete profile
+      await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', studentToDelete.id);
+      
+      // 17. Delete the auth user via edge function
+      const { error: deleteError } = await supabase.functions.invoke('manage-users', {
+        body: {
+          action: 'delete_user',
+          user_id: studentToDelete.id,
+        },
+      });
+      
+      if (deleteError) throw deleteError;
+      
+      toast.success(`Student ${studentToDelete.full_name || studentToDelete.email} deleted successfully`);
+      setStudentToDelete(null);
+      fetchStudents();
+    } catch (error: any) {
+      console.error('Error deleting student:', error);
+      toast.error('Failed to delete student: ' + error.message);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   // Stats
@@ -342,13 +469,23 @@ const MasterStudents = () => {
                             {format(new Date(student.created_at), 'MMM d, yyyy')}
                           </TableCell>
                           <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setSelectedStudent(student)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setSelectedStudent(student)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setStudentToDelete(student)}
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
@@ -454,6 +591,45 @@ const MasterStudents = () => {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={!!studentToDelete} onOpenChange={() => setStudentToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Student</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete <strong>{studentToDelete?.full_name || studentToDelete?.email}</strong>? 
+                This will permanently remove all their data including:
+                <ul className="list-disc list-inside mt-2 text-sm">
+                  <li>Profile and account</li>
+                  <li>Course enrollments</li>
+                  <li>Fees and payment history</li>
+                  <li>Assignment submissions</li>
+                  <li>Certificates</li>
+                  <li>Forum posts and messages</li>
+                </ul>
+                <p className="mt-2 font-semibold text-destructive">This action cannot be undone.</p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteStudent}
+                disabled={isDeleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  'Delete Student'
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </LMSLayout>
   );
