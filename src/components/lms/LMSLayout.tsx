@@ -74,8 +74,9 @@ const LMSLayout = ({ children }: LMSLayoutProps) => {
     { icon: FileText, label: 'Assignments', href: '/lms/instructor/assignments' },
     { icon: ClipboardList, label: 'Exams', href: '/lms/instructor/exams' },
     { icon: Calendar, label: 'Live Sessions', href: '/lms/instructor/live-sessions' },
-    { icon: ClipboardList, label: 'Attendance', href: '/lms/instructor/attendance' },
-    { icon: BarChart3, label: 'Reports', href: '/lms/instructor/reports' },
+    { icon: ClipboardList, label: 'Take Attendance', href: '/lms/instructor/attendance' },
+    { icon: BarChart3, label: 'Attendance Reports', href: '/lms/instructor/attendance-reports' },
+    { icon: BarChart3, label: 'Performance Reports', href: '/lms/instructor/reports' },
     { icon: FileText, label: 'Submit Reports', href: '/lms/instructor/submit-report' },
   ];
 
