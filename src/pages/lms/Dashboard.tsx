@@ -164,10 +164,10 @@ const Dashboard = () => {
 
   return (
     <LMSLayout>
-      <div className="space-y-8">
+      <div className="space-y-8 w-full min-w-0 overflow-hidden">
         {/* Welcome Section */}
-        <div className="bg-gradient-to-r from-primary to-primary/80 rounded-2xl p-8 text-primary-foreground">
-          <h1 className="text-3xl font-bold mb-2">
+        <div className="bg-gradient-to-r from-primary to-primary/80 rounded-2xl p-4 sm:p-8 text-primary-foreground overflow-hidden">
+          <h1 className="text-xl sm:text-3xl font-bold mb-2 break-words">
             Welcome back{user?.user_metadata?.full_name ? `, ${user.user_metadata.full_name}` : ''}!
           </h1>
           <p className="text-primary-foreground/80">
@@ -252,9 +252,9 @@ const Dashboard = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8 w-full min-w-0">
           {/* Continue Learning */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-4 min-w-0 overflow-hidden">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Continue Learning</h2>
               <Button variant="ghost" onClick={() => navigate('/lms/my-courses')}>
@@ -281,7 +281,7 @@ const Dashboard = () => {
                     onClick={() => navigate(`/lms/course/${enrollment.course_id}`)}
                   >
                     <CardContent className="p-4">
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4 min-w-0">
                         <div className="w-24 h-16 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
                           {enrollment.courses?.thumbnail_url ? (
                             <img 
@@ -293,8 +293,8 @@ const Dashboard = () => {
                             <BookOpen className="h-8 w-8 text-muted-foreground" />
                           )}
                         </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold">{enrollment.courses?.title}</h3>
+                        <div className="flex-1 min-w-0 overflow-hidden">
+                          <h3 className="font-semibold truncate">{enrollment.courses?.title}</h3>
                           <div className="flex items-center gap-2 mt-1">
                             {enrollment.courses?.category && (
                               <Badge variant="secondary" className="text-xs">
@@ -327,7 +327,7 @@ const Dashboard = () => {
           </div>
 
           {/* Right Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-6 min-w-0 overflow-hidden">
             {/* Upcoming Sessions */}
             <Card>
               <CardHeader>

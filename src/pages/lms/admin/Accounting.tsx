@@ -491,7 +491,7 @@ const Accounting = () => {
 
   return (
     <LMSLayout>
-      <div className="space-y-4 sm:space-y-6">
+      <div className="space-y-4 sm:space-y-6 w-full min-w-0 overflow-hidden">
         {/* Header */}
         <div className="flex flex-col gap-4">
           <div>

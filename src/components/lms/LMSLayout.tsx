@@ -289,8 +289,10 @@ const LMSLayout = ({ children }: LMSLayoutProps) => {
           </div>
         </header>
 
-        <div className="p-4 lg:p-8">
-          {children}
+        <div className="p-4 lg:p-8 overflow-x-hidden">
+          <div className="w-full min-w-0 overflow-hidden">
+            {children}
+          </div>
         </div>
       </main>
     </div>
