@@ -225,7 +225,7 @@ const ManageCourses = () => {
                             <Edit className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate(`/lms/course/${course.id}`)}>
+                          <DropdownMenuItem onClick={() => navigate(`/lms/courses/${course.id}`)}>
                             <Eye className="h-4 w-4 mr-2" />
                             Preview
                           </DropdownMenuItem>
