@@ -160,7 +160,7 @@ const MyCourses = () => {
 
   return (
     <LMSLayout>
-      <div className="space-y-6">
+      <div className="space-y-6 w-full min-w-0 overflow-hidden">
         <div>
           <h1 className="text-2xl font-bold">My Courses</h1>
           <p className="text-muted-foreground">Track your learning progress</p>

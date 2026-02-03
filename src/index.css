@@ -95,5 +95,22 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
+  }
+
+  /* Prevent content overflow in cards and containers */
+  .overflow-hidden {
+    overflow: hidden;
+  }
+  
+  /* Ensure tables and long content don't break layouts */
+  table {
+    table-layout: auto;
+  }
+  
+  /* Utility for text truncation */
+  .break-words {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 }

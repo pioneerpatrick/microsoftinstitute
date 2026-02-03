@@ -107,7 +107,7 @@ const InstructorDashboard = () => {
 
   return (
     <LMSLayout>
-      <div className="space-y-8">
+      <div className="space-y-8 w-full min-w-0 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
