@@ -257,7 +257,7 @@ const Dashboard = () => {
           <div className="lg:col-span-2 space-y-4 min-w-0 overflow-hidden">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Continue Learning</h2>
-              <Button variant="ghost" onClick={() => navigate('/lms/my-courses')}>
+              <Button variant="ghost" onClick={() => navigate('/lms/courses')}>
                 View All <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
@@ -278,7 +278,7 @@ const Dashboard = () => {
                   <Card 
                     key={enrollment.id} 
                     className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => navigate(`/lms/course/${enrollment.course_id}`)}
+                    onClick={() => navigate(`/lms/courses/${enrollment.course_id}`)}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-center gap-4 min-w-0">

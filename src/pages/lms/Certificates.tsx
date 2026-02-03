@@ -85,7 +85,7 @@ const Certificates = () => {
               <p className="text-muted-foreground mb-6">
                 Complete your courses to earn certificates. Keep learning!
               </p>
-              <Button onClick={() => navigate('/lms/my-courses')}>
+              <Button onClick={() => navigate('/lms/courses')}>
                 View My Courses
               </Button>
             </CardContent>

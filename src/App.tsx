@@ -71,8 +71,10 @@ const App = () => (
             <Route path="/lms/login" element={<LMSLogin />} />
             <Route path="/lms/dashboard" element={<LMSDashboard />} />
             <Route path="/lms/courses" element={<MyCourses />} />
+            <Route path="/lms/my-courses" element={<MyCourses />} /> {/* Alias for backward compatibility */}
             <Route path="/lms/catalog" element={<CourseCatalog />} />
             <Route path="/lms/courses/:courseId" element={<CourseView />} />
+            <Route path="/lms/course/:courseId" element={<CourseView />} /> {/* Alias for backward compatibility */}
             <Route path="/lms/certificates" element={<Certificates />} />
             <Route path="/lms/live-sessions" element={<LiveSessions />} />
             <Route path="/lms/forums" element={<Forums />} />

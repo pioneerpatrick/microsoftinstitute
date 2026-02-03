@@ -206,7 +206,7 @@ const CourseView = () => {
       <LMSLayout>
         <div className="text-center py-12">
           <h2 className="text-xl font-semibold">Course not found</h2>
-          <Button onClick={() => navigate('/lms/my-courses')} className="mt-4">
+          <Button onClick={() => navigate('/lms/courses')} className="mt-4">
             Back to My Courses
           </Button>
         </div>
@@ -219,7 +219,7 @@ const CourseView = () => {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/lms/my-courses')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/lms/courses')}>
             <ChevronLeft className="h-5 w-5" />
           </Button>
           <div className="flex-1">

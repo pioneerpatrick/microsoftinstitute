@@ -208,10 +208,10 @@ const InstructorDashboard = () => {
               <Button 
                 variant="outline" 
                 className="w-full justify-start"
-                onClick={() => navigate('/lms/instructor/quizzes')}
+                onClick={() => navigate('/lms/instructor/exams')}
               >
                 <Award className="h-4 w-4 mr-2" />
-                Manage Quizzes
+                Manage Quizzes & Exams
                 <ChevronRight className="h-4 w-4 ml-auto" />
               </Button>
               <Button 

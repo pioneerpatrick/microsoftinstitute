@@ -262,7 +262,7 @@ const CourseCatalog = () => {
                   {isEnrolled(course.id) ? (
                     <Button
                       className="w-full"
-                      onClick={() => navigate(`/lms/course/${course.id}`)}
+                      onClick={() => navigate(`/lms/courses/${course.id}`)}
                     >
                       Continue Learning
                     </Button>

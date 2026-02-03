@@ -83,7 +83,7 @@ const MyCourses = () => {
   const CourseCard = ({ enrollment }: { enrollment: Enrollment }) => (
     <Card 
       className="cursor-pointer hover:shadow-lg transition-all duration-300 overflow-hidden group"
-      onClick={() => navigate(`/lms/course/${enrollment.course_id}`)}
+      onClick={() => navigate(`/lms/courses/${enrollment.course_id}`)}
     >
       <div className="aspect-video bg-muted relative overflow-hidden">
         {enrollment.courses?.thumbnail_url ? (
