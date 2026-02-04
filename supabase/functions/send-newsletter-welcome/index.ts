@@ -22,7 +22,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { email }: NewsletterEmailRequest = await req.json();
 
     const emailResponse = await resend.emails.send({
-      from: "Microsoft Institute Africa <admissions@microsoftinstitute.africa>",
+      from: "Microsoft Institute Africa <onboarding@resend.dev>",
       to: [email],
       subject: "Welcome to Microsoft Institute Africa Newsletter! 🎓",
       html: `

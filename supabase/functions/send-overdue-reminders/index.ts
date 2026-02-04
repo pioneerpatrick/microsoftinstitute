@@ -107,7 +107,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       try {
         await resend.emails.send({
-          from: "Microsoft Institute Africa <admissions@microsoftinstitute.africa>",
+          from: "Microsoft Institute Africa <onboarding@resend.dev>",
           to: [profile.email],
           subject: `⚠️ Payment Reminder - Outstanding Balance: ${formatCurrency(totalBalance, currency)}`,
           html: `
