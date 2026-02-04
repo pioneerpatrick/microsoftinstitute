@@ -56,7 +56,7 @@ const handler = async (req: Request): Promise<Response> => {
     }: ReceiptEmailRequest = await req.json();
 
     const emailResponse = await resend.emails.send({
-      from: "Microsoft Institute Africa <admissions@microsoftinstitute.africa>",
+      from: "Microsoft Institute Africa <onboarding@resend.dev>",
       to: [email],
       subject: `Payment Receipt - ${receiptNumber}`,
       html: `
