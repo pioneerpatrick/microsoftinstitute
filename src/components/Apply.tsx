@@ -63,7 +63,7 @@ const Apply = () => {
 
       // Send confirmation emails
       try {
-        await supabase.functions.invoke("send-application-email", {
+        const { data: emailResult } = await supabase.functions.invoke("send-application-email", {
           body: {
             fullName: formData.fullName,
             email: formData.email,
@@ -72,6 +72,7 @@ const Apply = () => {
             education: formData.education,
           },
         });
+        console.log("Email result:", emailResult);
       } catch (emailError) {
         console.error("Email sending failed:", emailError);
       }
