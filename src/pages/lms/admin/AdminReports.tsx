@@ -208,54 +208,54 @@ const AdminReports = () => {
 
         {/* Overview Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
+          <Card className="overflow-hidden">
             <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2 bg-blue-100 rounded-lg shrink-0">
                   <Users className="h-5 w-5 text-blue-600" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.totalStudents}</p>
-                  <p className="text-sm text-muted-foreground">Students</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xl sm:text-2xl font-bold truncate">{stats.totalStudents}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Students</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="overflow-hidden">
             <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2 bg-purple-100 rounded-lg shrink-0">
                   <UserCheck className="h-5 w-5 text-purple-600" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.totalInstructors}</p>
-                  <p className="text-sm text-muted-foreground">Instructors</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xl sm:text-2xl font-bold truncate">{stats.totalInstructors}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Instructors</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="overflow-hidden">
             <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2 bg-green-100 rounded-lg shrink-0">
                   <DollarSign className="h-5 w-5 text-green-600" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</p>
-                  <p className="text-sm text-muted-foreground">Total Revenue</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-lg sm:text-2xl font-bold truncate">{formatCurrency(stats.totalRevenue)}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Total Revenue</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="overflow-hidden">
             <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-orange-100 rounded-lg">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2 bg-orange-100 rounded-lg shrink-0">
                   <TrendingUp className="h-5 w-5 text-orange-600" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.avgAttendance}%</p>
-                  <p className="text-sm text-muted-foreground">Avg Attendance</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xl sm:text-2xl font-bold truncate">{stats.avgAttendance}%</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Avg Attendance</p>
                 </div>
               </div>
             </CardContent>
@@ -264,71 +264,74 @@ const AdminReports = () => {
 
         {/* Monthly Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
+          <Card className="overflow-hidden">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">This Month</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">New Enrollments</span>
-                <Badge variant="outline">{stats.monthlyEnrollments}</Badge>
+              <div className="flex justify-between items-center gap-2 min-w-0">
+                <span className="text-sm text-muted-foreground shrink-0">Enrollments</span>
+                <Badge variant="outline" className="truncate max-w-[50%]">{stats.monthlyEnrollments}</Badge>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Payments Received</span>
-                <Badge variant="outline">{formatCurrency(stats.monthlyPayments)}</Badge>
+              <div className="flex justify-between items-center gap-2 min-w-0">
+                <span className="text-sm text-muted-foreground shrink-0">Payments</span>
+                <Badge variant="outline" className="truncate max-w-[60%] text-xs">{formatCurrency(stats.monthlyPayments)}</Badge>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Active Courses</span>
-                <Badge variant="outline">{stats.totalCourses}</Badge>
+              <div className="flex justify-between items-center gap-2 min-w-0">
+                <span className="text-sm text-muted-foreground shrink-0">Courses</span>
+                <Badge variant="outline" className="truncate max-w-[50%]">{stats.totalCourses}</Badge>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="overflow-hidden">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">Pending Reviews</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-yellow-100 rounded-full">
-                  <FileText className="h-8 w-8 text-yellow-600" />
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="p-3 bg-yellow-100 rounded-full shrink-0">
+                  <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600" />
                 </div>
-                <div>
-                  <p className="text-3xl font-bold">{stats.totalPendingReports}</p>
-                  <p className="text-sm text-muted-foreground">Reports awaiting review</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-2xl sm:text-3xl font-bold truncate">{stats.totalPendingReports}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Reports awaiting review</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="overflow-hidden">
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <Button 
-                className="w-full justify-start" 
+                className="w-full justify-start text-sm" 
                 variant="outline"
+                size="sm"
                 onClick={() => navigate('/lms/admin/students')}
               >
-                <Users className="h-4 w-4 mr-2" />
-                Manage Students
+                <Users className="h-4 w-4 mr-2 shrink-0" />
+                <span className="truncate">Manage Students</span>
               </Button>
               <Button 
-                className="w-full justify-start" 
+                className="w-full justify-start text-sm" 
                 variant="outline"
+                size="sm"
                 onClick={() => navigate('/lms/admin/staff')}
               >
-                <UserCheck className="h-4 w-4 mr-2" />
-                Manage Staff
+                <UserCheck className="h-4 w-4 mr-2 shrink-0" />
+                <span className="truncate">Manage Staff</span>
               </Button>
               <Button 
-                className="w-full justify-start" 
+                className="w-full justify-start text-sm" 
                 variant="outline"
+                size="sm"
                 onClick={() => navigate('/lms/admin/accounting')}
               >
-                <DollarSign className="h-4 w-4 mr-2" />
-                View Accounting
+                <DollarSign className="h-4 w-4 mr-2 shrink-0" />
+                <span className="truncate">View Accounting</span>
               </Button>
             </CardContent>
           </Card>
