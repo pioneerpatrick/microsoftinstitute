@@ -53,14 +53,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Sending enrollment email to ${studentEmail} for course: ${courseTitle}`);
 
-    const institutionName = "Microsoft Institute Africa";
+    const institutionName = "Microsoft Training Institute";
     const institutionPhone = "+254 723 821 798";
     const institutionEmail = "admissions@microsoftinstitute.africa";
     const institutionAddress = "Nairobi, Kenya";
     const lmsUrl = "https://microsoftinstitute.lovable.app/lms/login";
 
     const emailResponse = await resend.emails.send({
-      from: "Microsoft Institute Africa <onboarding@resend.dev>",
+      from: "Microsoft Training Institute <onboarding@resend.dev>",
       to: [studentEmail],
       subject: `🎓 Welcome to ${institutionName} - Enrollment Confirmed!`,
       html: `
@@ -118,7 +118,7 @@ const handler = async (req: Request): Promise<Response> => {
             <div class="header">
               <div class="header-logo">🎓</div>
               <h1>Welcome to ${institutionName}!</h1>
-              <p>Your journey to success begins here</p>
+              <p>"Quest for Excellence"</p>
               <div class="welcome-badge">📚 Enrollment Confirmed</div>
             </div>
             
@@ -169,7 +169,6 @@ const handler = async (req: Request): Promise<Response> => {
                 </div>
                 ` : ''}
               </div>
-              </div>
               
               ${credentials ? `
               <div class="credentials-box">
@@ -215,7 +214,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <h4>📞 Need Help?</h4>
                 <p style="margin: 0;">Our support team is here to assist you throughout your learning journey.</p>
                 <p style="margin: 10px 0 0;">
-                  📧 Email: <a href="mailto:${institutionEmail}">${institutionEmail}</a><br>
+                  📧 Email: <a href="mailto:support@microsoftinstitute.africa">support@microsoftinstitute.africa</a><br>
                   📱 Phone: <a href="tel:${institutionPhone.replace(/\s/g, '')}">${institutionPhone}</a>
                 </p>
               </div>
@@ -231,7 +230,7 @@ const handler = async (req: Request): Promise<Response> => {
             <div class="footer">
               <p><strong>${institutionName}</strong></p>
               <p>${institutionAddress}</p>
-              <p>📧 ${institutionEmail} | 📱 ${institutionPhone}</p>
+              <p>📧 support@microsoftinstitute.africa | 📱 ${institutionPhone}</p>
               <div class="social-links">
                 <a href="${lmsUrl}">🌐 Visit Portal</a>
               </div>
