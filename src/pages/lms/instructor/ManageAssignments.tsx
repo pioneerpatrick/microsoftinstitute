@@ -15,13 +15,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Plus, 
-  Edit, 
   Trash2, 
   FileText, 
   Users, 
-  CheckCircle,
-  Clock,
-  Save
+  Clock
 } from 'lucide-react';
 import { toast } from 'sonner';
 import LMSLayout from '@/components/lms/LMSLayout';
@@ -70,9 +67,7 @@ const ManageAssignments = () => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [gradeDialogOpen, setGradeDialogOpen] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
-  const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [newAssignment, setNewAssignment] = useState({
     title: '',
     description: '',
@@ -80,10 +75,6 @@ const ManageAssignments = () => {
     due_date: '',
     max_score: 100,
     is_published: false
-  });
-  const [grading, setGrading] = useState({
-    score: 0,
-    feedback: ''
   });
 
   useEffect(() => {
@@ -211,33 +202,6 @@ const ManageAssignments = () => {
         max_score: 100,
         is_published: false
       });
-      fetchAssignments();
-    }
-  };
-
-  const gradeSubmission = async () => {
-    if (!selectedSubmission) return;
-
-    const { error } = await supabase
-      .from('assignment_submissions')
-      .update({
-        score: grading.score,
-        feedback: grading.feedback,
-        status: 'graded',
-        graded_at: new Date().toISOString(),
-        graded_by: user?.id
-      })
-      .eq('id', selectedSubmission.id);
-
-    if (error) {
-      toast.error('Failed to grade submission');
-    } else {
-      toast.success('Submission graded');
-      setGradeDialogOpen(false);
-      setGrading({ score: 0, feedback: '' });
-      if (selectedAssignment) {
-        fetchSubmissions(selectedAssignment.id);
-      }
       fetchAssignments();
     }
   };
@@ -515,72 +479,13 @@ const ManageAssignments = () => {
                               }
                             </TableCell>
                             <TableCell>
-                              <Dialog open={gradeDialogOpen && selectedSubmission?.id === submission.id} onOpenChange={(open) => {
-                                setGradeDialogOpen(open);
-                                if (open) {
-                                  setSelectedSubmission(submission);
-                                  setGrading({
-                                    score: submission.score || 0,
-                                    feedback: submission.feedback || ''
-                                  });
-                                }
-                              }}>
-                                <DialogTrigger asChild>
-                                  <Button size="sm" variant="outline">
-                                    {submission.status === 'graded' ? 'Edit Grade' : 'Grade'}
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-lg">
-                                  <DialogHeader>
-                                    <DialogTitle>Grade Submission</DialogTitle>
-                                  </DialogHeader>
-                                  <div className="space-y-4 pt-4">
-                                    <div>
-                                      <Label className="text-sm font-medium">Student Answer</Label>
-                                      <Card className="mt-2">
-                                        <CardContent className="p-4">
-                                          <p className="text-sm whitespace-pre-wrap">
-                                            {submission.content || 'No text content'}
-                                          </p>
-                                          {submission.file_url && (
-                                            <a 
-                                              href={submission.file_url} 
-                                              target="_blank" 
-                                              rel="noopener noreferrer"
-                                              className="text-primary text-sm hover:underline mt-2 block"
-                                            >
-                                              View attached file
-                                            </a>
-                                          )}
-                                        </CardContent>
-                                      </Card>
-                                    </div>
-                                    <div className="space-y-2">
-                                      <Label>Score (out of {selectedAssignment?.max_score})</Label>
-                                      <Input
-                                        type="number"
-                                        min={0}
-                                        max={selectedAssignment?.max_score}
-                                        value={grading.score}
-                                        onChange={(e) => setGrading({ ...grading, score: parseInt(e.target.value) })}
-                                      />
-                                    </div>
-                                    <div className="space-y-2">
-                                      <Label>Feedback</Label>
-                                      <Textarea
-                                        value={grading.feedback}
-                                        onChange={(e) => setGrading({ ...grading, feedback: e.target.value })}
-                                        placeholder="Provide feedback to the student..."
-                                        rows={4}
-                                      />
-                                    </div>
-                                    <Button onClick={gradeSubmission} className="w-full">
-                                      <Save className="h-4 w-4 mr-2" />
-                                      Save Grade
-                                    </Button>
-                                  </div>
-                                </DialogContent>
-                              </Dialog>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => navigate(`/lms/instructor/grade/${submission.id}`)}
+                              >
+                                {submission.status === 'graded' ? 'Edit Grade' : 'Grade'}
+                              </Button>
                             </TableCell>
                           </TableRow>
                         ))}
