@@ -218,22 +218,28 @@ export const generateReceiptPDF = async (
 
   yPos += 38;
 
-  // ===== PAID STAMP - Positioned inline =====
+  // ===== PAID STAMP - Positioned BELOW fee summary, centered =====
   if (isPaidInFull) {
+    const stampWidth = 50;
+    const stampHeight = 18;
+    const stampX = (pageWidth - stampWidth) / 2;
+    
     doc.setDrawColor(...greenColor);
-    doc.setLineWidth(1.2);
-    doc.roundedRect(pageWidth - margins.right - 40, yPos - 6, 36, 14, 2, 2, 'S');
+    doc.setLineWidth(1.5);
+    doc.roundedRect(stampX, yPos, stampWidth, stampHeight, 3, 3, 'S');
     
     doc.setTextColor(...greenColor);
-    doc.setFontSize(14);
+    doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text('PAID', pageWidth - margins.right - 22, yPos + 3, { align: 'center' });
+    doc.text('PAID', pageWidth / 2, yPos + 10, { align: 'center' });
     
-    doc.setFontSize(4);
-    doc.text('MICROSOFT TRAINING INSTITUTE', pageWidth - margins.right - 22, yPos + 7, { align: 'center' });
+    doc.setFontSize(5);
+    doc.text('MICROSOFT TRAINING INSTITUTE', pageWidth / 2, yPos + 15, { align: 'center' });
+    
+    yPos += stampHeight + 6;
   }
 
-  yPos += 12;
+  yPos += 4;
 
   // ===== PAYMENT HISTORY =====
   if (paymentHistory.length > 0) {
