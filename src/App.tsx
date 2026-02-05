@@ -30,6 +30,7 @@ import ManageCourses from "./pages/lms/instructor/ManageCourses";
 import CourseEditor from "./pages/lms/instructor/CourseEditor";
 import ManageStudents from "./pages/lms/instructor/ManageStudents";
 import ManageAssignments from "./pages/lms/instructor/ManageAssignments";
+import GradeSubmission from "./pages/lms/instructor/GradeSubmission";
 import ManageLiveSessions from "./pages/lms/instructor/ManageLiveSessions";
 import ManageExams from "./pages/lms/instructor/ManageExams";
 import Reports from "./pages/lms/instructor/Reports";
@@ -94,6 +95,7 @@ const App = () => (
             <Route path="/lms/instructor/courses/:courseId" element={<CourseEditor />} />
             <Route path="/lms/instructor/students" element={<ManageStudents />} />
             <Route path="/lms/instructor/assignments" element={<ManageAssignments />} />
+            <Route path="/lms/instructor/grade/:submissionId" element={<GradeSubmission />} />
             <Route path="/lms/instructor/live-sessions" element={<ManageLiveSessions />} />
             <Route path="/lms/instructor/exams" element={<ManageExams />} />
             <Route path="/lms/instructor/reports" element={<Reports />} />

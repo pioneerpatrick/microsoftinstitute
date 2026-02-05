@@ -16,9 +16,10 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle 
 } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Search, Users, Download, Eye, Shield, UserPlus, Briefcase,
-  ArrowUpRight, Clock, DollarSign, Trash2, Loader2
+  ArrowUpRight, Clock, DollarSign, Trash2, Loader2, BookOpen
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -41,6 +42,13 @@ interface StaffMember {
   } | null;
   courses_count: number;
   reports_count: number;
+  assigned_courses?: string[];
+}
+
+interface Course {
+  id: string;
+  title: string;
+  instructor_id: string | null;
 }
 
 const MasterStaff = () => {
@@ -48,6 +56,7 @@ const MasterStaff = () => {
   const navigate = useNavigate();
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [allUsers, setAllUsers] = useState<Array<{ id: string; full_name: string | null; email: string | null }>>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -55,6 +64,9 @@ const MasterStaff = () => {
   const [staffToDelete, setStaffToDelete] = useState<StaffMember | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [promoteDialogOpen, setPromoteDialogOpen] = useState(false);
+  const [courseAssignDialogOpen, setCourseAssignDialogOpen] = useState(false);
+  const [staffForCourseAssign, setStaffForCourseAssign] = useState<StaffMember | null>(null);
+  const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
   const [promoteForm, setPromoteForm] = useState({
     user_id: '',
     role: 'instructor' as 'admin' | 'instructor',
@@ -159,6 +171,14 @@ const MasterStaff = () => {
       .order('full_name');
 
     setAllUsers(allProfilesData || []);
+
+    // Get all courses for assignment
+    const { data: allCoursesData } = await supabase
+      .from('courses')
+      .select('id, title, instructor_id')
+      .order('title');
+
+    setCourses(allCoursesData || []);
     setIsLoading(false);
   };
 
@@ -210,6 +230,55 @@ const MasterStaff = () => {
           },
         });
       }
+    }
+  };
+
+  const openCourseAssignDialog = (member: StaffMember) => {
+    setStaffForCourseAssign(member);
+    const assignedCourseIds = courses
+      .filter(c => c.instructor_id === member.id)
+      .map(c => c.id);
+    setSelectedCourses(assignedCourseIds);
+    setCourseAssignDialogOpen(true);
+  };
+
+  const handleCourseAssignment = async () => {
+    if (!staffForCourseAssign) return;
+
+    try {
+      // Get currently assigned courses
+      const currentlyAssigned = courses
+        .filter(c => c.instructor_id === staffForCourseAssign.id)
+        .map(c => c.id);
+
+      // Courses to unassign (were assigned, now not selected)
+      const toUnassign = currentlyAssigned.filter(id => !selectedCourses.includes(id));
+      
+      // Courses to assign (now selected, were not assigned)
+      const toAssign = selectedCourses.filter(id => !currentlyAssigned.includes(id));
+
+      // Unassign courses
+      if (toUnassign.length > 0) {
+        await supabase
+          .from('courses')
+          .update({ instructor_id: null })
+          .in('id', toUnassign);
+      }
+
+      // Assign courses
+      if (toAssign.length > 0) {
+        await supabase
+          .from('courses')
+          .update({ instructor_id: staffForCourseAssign.id })
+          .in('id', toAssign);
+      }
+
+      toast.success('Courses updated successfully');
+      setCourseAssignDialogOpen(false);
+      setStaffForCourseAssign(null);
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to update courses');
     }
   };
 
@@ -521,6 +590,14 @@ const MasterStaff = () => {
                             <Button
                               variant="ghost"
                               size="sm"
+                              onClick={() => openCourseAssignDialog(member)}
+                              title="Assign Courses"
+                            >
+                              <BookOpen className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
                               onClick={() => setSelectedStaff(member)}
                             >
                               <Eye className="h-4 w-4" />
@@ -739,6 +816,83 @@ const MasterStaff = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Course Assignment Dialog */}
+        <Dialog open={courseAssignDialogOpen} onOpenChange={setCourseAssignDialogOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5" />
+                Assign Courses
+              </DialogTitle>
+            </DialogHeader>
+            {staffForCourseAssign && (
+              <div className="space-y-4 pt-2">
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="font-medium">{staffForCourseAssign.full_name || 'Staff Member'}</p>
+                  <p className="text-sm text-muted-foreground">{staffForCourseAssign.email}</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Select Courses to Assign</Label>
+                  <div className="border rounded-lg max-h-64 overflow-y-auto">
+                    {courses.length === 0 ? (
+                      <div className="p-4 text-center text-muted-foreground">
+                        No courses available
+                      </div>
+                    ) : (
+                      courses.map((course) => {
+                        const isAssignedToOther = course.instructor_id && course.instructor_id !== staffForCourseAssign.id;
+                        const otherInstructor = isAssignedToOther 
+                          ? staff.find(s => s.id === course.instructor_id)?.full_name 
+                          : null;
+                        
+                        return (
+                          <div 
+                            key={course.id} 
+                            className="flex items-center gap-3 p-3 border-b last:border-b-0 hover:bg-muted/50"
+                          >
+                            <Checkbox
+                              id={course.id}
+                              checked={selectedCourses.includes(course.id)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedCourses([...selectedCourses, course.id]);
+                                } else {
+                                  setSelectedCourses(selectedCourses.filter(id => id !== course.id));
+                                }
+                              }}
+                            />
+                            <div className="flex-1 min-w-0">
+                              <label 
+                                htmlFor={course.id} 
+                                className="font-medium cursor-pointer block truncate"
+                              >
+                                {course.title}
+                              </label>
+                              {isAssignedToOther && (
+                                <p className="text-xs text-amber-600">
+                                  Currently assigned to: {otherInstructor || 'Another instructor'}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedCourses.length} course(s) selected
+                  </p>
+                </div>
+
+                <Button onClick={handleCourseAssignment} className="w-full">
+                  Save Assignments
+                </Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </LMSLayout>
   );

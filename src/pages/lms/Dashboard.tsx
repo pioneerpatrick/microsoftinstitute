@@ -33,7 +33,11 @@ interface Enrollment {
     thumbnail_url: string | null;
     category: string | null;
     difficulty_level: string | null;
+    instructor_id: string | null;
   };
+  instructor?: {
+    full_name: string | null;
+  } | null;
 }
 
 interface Announcement {
@@ -96,14 +100,35 @@ const Dashboard = () => {
           title,
           thumbnail_url,
           category,
-          difficulty_level
+          difficulty_level,
+          instructor_id
         )
       `)
       .eq('user_id', user.id)
       .order('enrolled_at', { ascending: false });
 
     if (enrollmentData) {
-      setEnrollments(enrollmentData as Enrollment[]);
+      // Fetch instructor profiles for courses
+      const instructorIds = enrollmentData
+        .map(e => e.courses?.instructor_id)
+        .filter((id): id is string => !!id);
+      
+      let instructorMap = new Map<string, { full_name: string | null }>();
+      if (instructorIds.length > 0) {
+        const { data: instructorProfiles } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', instructorIds);
+        
+        instructorMap = new Map(instructorProfiles?.map(p => [p.id, { full_name: p.full_name }]) || []);
+      }
+
+      const enrichedEnrollments = enrollmentData.map(e => ({
+        ...e,
+        instructor: e.courses?.instructor_id ? instructorMap.get(e.courses.instructor_id) : null
+      })) as Enrollment[];
+
+      setEnrollments(enrichedEnrollments);
       setStats(prev => ({
         ...prev,
         totalCourses: enrollmentData.length,
@@ -295,7 +320,7 @@ const Dashboard = () => {
                         </div>
                         <div className="flex-1 min-w-0 overflow-hidden">
                           <h3 className="font-semibold truncate">{enrollment.courses?.title}</h3>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
                             {enrollment.courses?.category && (
                               <Badge variant="secondary" className="text-xs">
                                 {enrollment.courses.category}
@@ -307,6 +332,11 @@ const Dashboard = () => {
                               </Badge>
                             )}
                           </div>
+                          {enrollment.instructor?.full_name && (
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Instructor: {enrollment.instructor.full_name}
+                            </p>
+                          )}
                           <div className="mt-2">
                             <div className="flex items-center justify-between text-sm mb-1">
                               <span className="text-muted-foreground">Progress</span>
