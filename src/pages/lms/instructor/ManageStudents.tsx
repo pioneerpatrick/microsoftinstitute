@@ -46,6 +46,14 @@ interface Course {
   category?: string | null;
 }
 
+interface FeeStructure {
+  id: string;
+  name: string;
+  course_id: string | null;
+  amount: number;
+  currency: string;
+}
+
 interface ExistingStudent {
   id: string;
   full_name: string | null;
@@ -58,6 +66,7 @@ const ManageStudents = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [existingStudents, setExistingStudents] = useState<ExistingStudent[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
+  const [feeStructures, setFeeStructures] = useState<FeeStructure[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -93,6 +102,7 @@ const ManageStudents = () => {
       fetchStudents();
       fetchCourses();
       fetchExistingStudents();
+      fetchFeeStructures();
     }
   }, [user, isStaff]);
 
@@ -106,6 +116,19 @@ const ManageStudents = () => {
     
     if (data) {
       setCourses(data);
+    }
+  };
+
+  const fetchFeeStructures = async () => {
+    // Fetch all active fee structures for course selection
+    const { data } = await supabase
+      .from('fee_structures')
+      .select('id, name, course_id, amount, currency')
+      .eq('is_active', true)
+      .order('name');
+    
+    if (data) {
+      setFeeStructures(data);
     }
   };
 
@@ -533,23 +556,21 @@ const ManageStudents = () => {
                         onValueChange={(value) => setNewStudent({ ...newStudent, course_id: value })}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a published course" />
+                          <SelectValue placeholder="Select a course/fee structure" />
                         </SelectTrigger>
                         <SelectContent className="max-h-[300px]">
-                          {courses.length === 0 ? (
+                          {feeStructures.length === 0 ? (
                             <div className="p-4 text-center text-sm text-muted-foreground">
-                              No published courses available
+                              No fee structures available
                             </div>
                           ) : (
-                            courses.map((course) => (
-                              <SelectItem key={course.id} value={course.id}>
+                            feeStructures.map((fee) => (
+                              <SelectItem key={fee.id} value={fee.id}>
                                 <div className="flex flex-col">
-                                  <span className="font-medium">{course.title}</span>
-                                  {course.duration_hours && (
-                                    <span className="text-xs text-muted-foreground">
-                                      {course.duration_hours} hours
-                                    </span>
-                                  )}
+                                  <span className="font-medium">{fee.name}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {fee.currency} {fee.amount.toLocaleString()}
+                                  </span>
                                 </div>
                               </SelectItem>
                             ))
@@ -557,7 +578,7 @@ const ManageStudents = () => {
                         </SelectContent>
                       </Select>
                       <p className="text-xs text-muted-foreground">
-                        Showing all published courses from the website ({courses.length} courses)
+                        Showing all fee structures ({feeStructures.length} available)
                       </p>
                     </div>
                     <Button onClick={createStudentAndEnroll} disabled={creating} className="w-full">
@@ -601,35 +622,33 @@ const ManageStudents = () => {
                         onValueChange={(value) => setExistingEnrollment({ ...existingEnrollment, course_id: value })}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a published course" />
+                          <SelectValue placeholder="Select a course/fee structure" />
                         </SelectTrigger>
                         <SelectContent className="max-h-[300px]">
-                          {courses.length === 0 ? (
+                          {feeStructures.length === 0 ? (
                             <div className="p-4 text-center text-sm text-muted-foreground">
-                              No published courses available
+                              No fee structures available
                             </div>
                           ) : (
-                            courses.map((course) => (
-                              <SelectItem key={course.id} value={course.id}>
+                            feeStructures.map((fee) => (
+                              <SelectItem key={fee.id} value={fee.id}>
                                 <div className="flex flex-col">
-                                  <span className="font-medium">{course.title}</span>
-                                  {course.duration_hours && (
-                                    <span className="text-xs text-muted-foreground">
-                                      {course.duration_hours} hours
-                                    </span>
-                                  )}
+                                  <span className="font-medium">{fee.name}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {fee.currency} {fee.amount.toLocaleString()}
+                                  </span>
                                 </div>
                               </SelectItem>
                             ))
                           )}
                         </SelectContent>
                       </Select>
-                      <p className="text-xs text-muted-foreground">Or search by typing course name:</p>
+                      <p className="text-xs text-muted-foreground">Or search by typing fee structure name:</p>
                       <Input
-                        placeholder="Type to search courses..."
+                        placeholder="Type to search fee structures..."
                         onChange={(e) => {
                           const search = e.target.value.toLowerCase();
-                          const found = courses.find(c => c.title.toLowerCase().includes(search));
+                          const found = feeStructures.find(f => f.name.toLowerCase().includes(search));
                           if (found) {
                             setExistingEnrollment({ ...existingEnrollment, course_id: found.id });
                           }
