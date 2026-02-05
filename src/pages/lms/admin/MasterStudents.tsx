@@ -6,13 +6,15 @@ import LMSLayout from '@/components/lms/LMSLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Search, Users, Download, Eye, GraduationCap, AlertTriangle, 
-  CheckCircle, XCircle, Clock, Filter, Trash2, Loader2, Mail, RefreshCw
+  CheckCircle, XCircle, Clock, Filter, Trash2, Loader2, Mail, RefreshCw, UserPlus, Copy
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -37,10 +39,35 @@ interface Student {
   }>;
 }
 
+interface Course {
+  id: string;
+  title: string;
+  description: string | null;
+  duration_hours: number | null;
+  category?: string | null;
+}
+
+interface FeeStructure {
+  id: string;
+  name: string;
+  course_id: string | null;
+  amount: number;
+  currency: string;
+}
+
+interface ExistingProfile {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+}
+
 const MasterStudents = () => {
   const { user, loading, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [students, setStudents] = useState<Student[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [feeStructures, setFeeStructures] = useState<FeeStructure[]>([]);
+  const [existingProfiles, setExistingProfiles] = useState<ExistingProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -48,6 +75,27 @@ const MasterStudents = () => {
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
+  
+  // Enrollment dialog
+  const [enrollDialogOpen, setEnrollDialogOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
+  const [copiedCredentials, setCopiedCredentials] = useState(false);
+  const [createdCredentials, setCreatedCredentials] = useState<{ email: string; password: string } | null>(null);
+  
+  // New student form
+  const [newStudent, setNewStudent] = useState({
+    full_name: '',
+    email: '',
+    password: '',
+    fee_structure_id: '',
+  });
+
+  // Existing student enrollment
+  const [existingEnrollment, setExistingEnrollment] = useState({
+    student_id: '',
+    fee_structure_id: '',
+  });
 
   useEffect(() => {
     if (!loading && !user) {
@@ -61,8 +109,272 @@ const MasterStudents = () => {
   useEffect(() => {
     if (user && isAdmin) {
       fetchStudents();
+      fetchFeeStructures();
+      fetchCourses();
+      fetchExistingProfiles();
     }
   }, [user, isAdmin]);
+
+  const fetchFeeStructures = async () => {
+    const { data } = await supabase
+      .from('fee_structures')
+      .select('id, name, course_id, amount, currency')
+      .eq('is_active', true)
+      .order('name');
+    if (data) setFeeStructures(data);
+  };
+
+  const fetchCourses = async () => {
+    const { data } = await supabase
+      .from('courses')
+      .select('id, title, description, duration_hours, category')
+      .order('title');
+    if (data) setCourses(data);
+  };
+
+  const fetchExistingProfiles = async () => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, full_name, email')
+      .order('full_name');
+    if (data) setExistingProfiles(data);
+  };
+
+  const generatePassword = () => {
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  };
+
+  const copyCredentials = () => {
+    if (createdCredentials) {
+      navigator.clipboard.writeText(
+        `Email: ${createdCredentials.email}\nPassword: ${createdCredentials.password}`
+      );
+      setCopiedCredentials(true);
+      toast.success('Credentials copied to clipboard!');
+      setTimeout(() => setCopiedCredentials(false), 2000);
+    }
+  };
+
+  const createStudentAndEnroll = async () => {
+    if (!newStudent.full_name || !newStudent.email || !newStudent.fee_structure_id) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    setCreating(true);
+    const password = newStudent.password || generatePassword();
+
+    try {
+      let userId: string | null = null;
+      let isExistingUser = false;
+
+      // Check if user already exists
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', newStudent.email)
+        .maybeSingle();
+
+      if (existingProfile) {
+        userId = existingProfile.id;
+        isExistingUser = true;
+      } else {
+        // Create user via edge function
+        const response = await supabase.functions.invoke('manage-users', {
+          body: {
+            action: 'create_user',
+            email: newStudent.email,
+            password: password,
+            full_name: newStudent.full_name,
+            role: 'student',
+          },
+        });
+
+        if (response.error) throw new Error(response.error.message);
+        if (response.data.error) {
+          if (response.data.error.includes('already been registered')) {
+            const { data: retryProfile } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('email', newStudent.email)
+              .maybeSingle();
+            if (retryProfile) {
+              userId = retryProfile.id;
+              isExistingUser = true;
+            } else {
+              throw new Error('User exists but profile not found.');
+            }
+          } else {
+            throw new Error(response.data.error);
+          }
+        } else {
+          userId = response.data.user?.id;
+        }
+      }
+
+      if (userId) {
+        const selectedFeeStructure = feeStructures.find(f => f.id === newStudent.fee_structure_id);
+        const course = selectedFeeStructure?.course_id 
+          ? courses.find(c => c.id === selectedFeeStructure.course_id)
+          : null;
+
+        // Enroll in course if fee structure has a course
+        if (selectedFeeStructure?.course_id) {
+          const { data: existingEnroll } = await supabase
+            .from('enrollments')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('course_id', selectedFeeStructure.course_id)
+            .maybeSingle();
+
+          if (!existingEnroll) {
+            await supabase.from('enrollments').insert({
+              user_id: userId,
+              course_id: selectedFeeStructure.course_id,
+              status: 'active',
+              progress_percentage: 0,
+            });
+          }
+        }
+
+        // Create student fee record
+        if (selectedFeeStructure) {
+          await supabase.from('student_fees').insert({
+            user_id: userId,
+            fee_structure_id: selectedFeeStructure.id,
+            course_id: selectedFeeStructure.course_id,
+            amount_due: selectedFeeStructure.amount,
+            amount_paid: 0,
+            balance: selectedFeeStructure.amount,
+            status: 'pending',
+          });
+        }
+
+        // Send enrollment email
+        try {
+          await supabase.functions.invoke('send-enrollment-email', {
+            body: {
+              studentEmail: newStudent.email,
+              studentName: newStudent.full_name,
+              courseTitle: course?.title || selectedFeeStructure?.name || 'New Program',
+              courseDescription: course?.description,
+              courseDuration: course?.duration_hours,
+              courseCategory: course?.category,
+              courseSchedule: 'Classes held Monday to Friday, 8:00 AM - 5:00 PM EAT',
+              credentials: isExistingUser ? undefined : { email: newStudent.email, password },
+              feeStructure: selectedFeeStructure ? {
+                name: selectedFeeStructure.name,
+                amount: selectedFeeStructure.amount,
+                currency: selectedFeeStructure.currency,
+              } : undefined,
+            },
+          });
+        } catch (emailError) {
+          console.error('Enrollment email failed:', emailError);
+        }
+      }
+
+      if (!isExistingUser) {
+        setCreatedCredentials({ email: newStudent.email, password });
+        toast.success('Student account created and enrolled successfully!');
+      } else {
+        toast.success('Existing student enrolled successfully!');
+        setEnrollDialogOpen(false);
+      }
+
+      setNewStudent({ full_name: '', email: '', password: '', fee_structure_id: '' });
+      fetchStudents();
+      fetchExistingProfiles();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create student account');
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const enrollExistingStudent = async () => {
+    if (!existingEnrollment.student_id || !existingEnrollment.fee_structure_id) {
+      toast.error('Please select a student and fee structure');
+      return;
+    }
+
+    setEnrolling(true);
+
+    try {
+      const selectedFeeStructure = feeStructures.find(f => f.id === existingEnrollment.fee_structure_id);
+      const student = existingProfiles.find(s => s.id === existingEnrollment.student_id);
+      const course = selectedFeeStructure?.course_id 
+        ? courses.find(c => c.id === selectedFeeStructure.course_id)
+        : null;
+
+      // Enroll in course if applicable
+      if (selectedFeeStructure?.course_id) {
+        const { data: existing } = await supabase
+          .from('enrollments')
+          .select('id')
+          .eq('user_id', existingEnrollment.student_id)
+          .eq('course_id', selectedFeeStructure.course_id)
+          .maybeSingle();
+
+        if (existing) {
+          toast.error('Student is already enrolled in this course');
+          setEnrolling(false);
+          return;
+        }
+
+        await supabase.from('enrollments').insert({
+          user_id: existingEnrollment.student_id,
+          course_id: selectedFeeStructure.course_id,
+          status: 'active',
+          progress_percentage: 0,
+        });
+      }
+
+      // Create fee record
+      if (selectedFeeStructure) {
+        await supabase.from('student_fees').insert({
+          user_id: existingEnrollment.student_id,
+          fee_structure_id: selectedFeeStructure.id,
+          course_id: selectedFeeStructure.course_id,
+          amount_due: selectedFeeStructure.amount,
+          amount_paid: 0,
+          balance: selectedFeeStructure.amount,
+          status: 'pending',
+        });
+      }
+
+      // Send enrollment email
+      try {
+        await supabase.functions.invoke('send-enrollment-email', {
+          body: {
+            studentEmail: student?.email || '',
+            studentName: student?.full_name || 'Student',
+            courseTitle: course?.title || selectedFeeStructure?.name || 'New Program',
+            courseDescription: course?.description,
+            courseDuration: course?.duration_hours,
+            courseCategory: course?.category,
+            courseSchedule: 'Classes held Monday to Friday, 8:00 AM - 5:00 PM EAT',
+          },
+        });
+      } catch (emailError) {
+        console.error('Enrollment email failed:', emailError);
+      }
+
+      toast.success('Student enrolled successfully! Confirmation email sent.');
+      setExistingEnrollment({ student_id: '', fee_structure_id: '' });
+      setEnrollDialogOpen(false);
+      fetchStudents();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to enroll student');
+    } finally {
+      setEnrolling(false);
+    }
+  };
 
   const fetchStudents = async () => {
     // Get all enrolled students (from enrollments table) and students with fees
@@ -339,7 +651,7 @@ const MasterStudents = () => {
   return (
     <LMSLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <GraduationCap className="h-6 w-6" />
@@ -347,10 +659,202 @@ const MasterStudents = () => {
             </h1>
             <p className="text-muted-foreground">Comprehensive view of all students in the system</p>
           </div>
-          <Button onClick={exportToCSV} variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Export CSV
-          </Button>
+          <div className="flex items-center gap-2">
+            <Dialog open={enrollDialogOpen} onOpenChange={(open) => {
+              setEnrollDialogOpen(open);
+              if (!open) setCreatedCredentials(null);
+            }}>
+              <DialogTrigger asChild>
+                <Button>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Enroll Student
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Enroll Student</DialogTitle>
+                </DialogHeader>
+                
+                {createdCredentials ? (
+                  <div className="space-y-4 py-4">
+                    <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                      <div className="flex items-center gap-2 text-green-700 dark:text-green-300 mb-3">
+                        <CheckCircle className="h-5 w-5" />
+                        <span className="font-semibold">Account Created Successfully!</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Share these login credentials with the student:
+                      </p>
+                      <div className="bg-background rounded-md p-3 font-mono text-sm space-y-1">
+                        <p><strong>Email:</strong> {createdCredentials.email}</p>
+                        <p><strong>Password:</strong> {createdCredentials.password}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button onClick={copyCredentials} variant="outline" className="flex-1">
+                        {copiedCredentials ? (
+                          <>
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-4 w-4 mr-2" />
+                            Copy Credentials
+                          </>
+                        )}
+                      </Button>
+                      <Button onClick={() => {
+                        setCreatedCredentials(null);
+                        setEnrollDialogOpen(false);
+                      }} className="flex-1">
+                        Done
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Tabs defaultValue="new" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="new">New Student</TabsTrigger>
+                      <TabsTrigger value="existing">Existing Student</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="new" className="space-y-4 pt-4">
+                      <div className="space-y-2">
+                        <Label>Full Name *</Label>
+                        <Input
+                          value={newStudent.full_name}
+                          onChange={(e) => setNewStudent({ ...newStudent, full_name: e.target.value })}
+                          placeholder="John Doe"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Email Address *</Label>
+                        <Input
+                          type="email"
+                          value={newStudent.email}
+                          onChange={(e) => setNewStudent({ ...newStudent, email: e.target.value })}
+                          placeholder="student@email.com"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Password (leave empty to auto-generate)</Label>
+                        <Input
+                          type="text"
+                          value={newStudent.password}
+                          onChange={(e) => setNewStudent({ ...newStudent, password: e.target.value })}
+                          placeholder="Auto-generated if empty"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Fee Structure / Program *</Label>
+                        <Select
+                          value={newStudent.fee_structure_id}
+                          onValueChange={(value) => setNewStudent({ ...newStudent, fee_structure_id: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a fee structure" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-[300px]">
+                            {feeStructures.length === 0 ? (
+                              <div className="p-4 text-center text-sm text-muted-foreground">
+                                No fee structures available
+                              </div>
+                            ) : (
+                              feeStructures.map((fee) => (
+                                <SelectItem key={fee.id} value={fee.id}>
+                                  <div className="flex flex-col">
+                                    <span className="font-medium">{fee.name}</span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {fee.currency} {fee.amount.toLocaleString()}
+                                    </span>
+                                  </div>
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button onClick={createStudentAndEnroll} disabled={creating} className="w-full">
+                        {creating ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Creating Account...
+                          </>
+                        ) : (
+                          <>
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Create & Enroll Student
+                          </>
+                        )}
+                      </Button>
+                    </TabsContent>
+                    
+                    <TabsContent value="existing" className="space-y-4 pt-4">
+                      <div className="space-y-2">
+                        <Label>Select Student</Label>
+                        <Select
+                          value={existingEnrollment.student_id}
+                          onValueChange={(value) => setExistingEnrollment({ ...existingEnrollment, student_id: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a student" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {existingProfiles.map((student) => (
+                              <SelectItem key={student.id} value={student.id}>
+                                {student.full_name || student.email || student.id}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Fee Structure / Program</Label>
+                        <Select
+                          value={existingEnrollment.fee_structure_id}
+                          onValueChange={(value) => setExistingEnrollment({ ...existingEnrollment, fee_structure_id: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a fee structure" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {feeStructures.map((fee) => (
+                              <SelectItem key={fee.id} value={fee.id}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{fee.name}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {fee.currency} {fee.amount.toLocaleString()}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button onClick={enrollExistingStudent} disabled={enrolling} className="w-full">
+                        {enrolling ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Enrolling...
+                          </>
+                        ) : (
+                          <>
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Enroll Student
+                          </>
+                        )}
+                      </Button>
+                    </TabsContent>
+                  </Tabs>
+                )}
+              </DialogContent>
+            </Dialog>
+            <Button onClick={exportToCSV} variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Export CSV
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}

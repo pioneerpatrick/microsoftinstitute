@@ -27,14 +27,14 @@ const Navbar = () => {
       {/* Top Bar */}
       <div className="bg-primary text-primary-foreground py-2 px-4">
         <div className="container mx-auto flex flex-wrap justify-center md:justify-between items-center text-sm gap-2">
-          <div className="flex items-center gap-4">
-            <a href="tel:+254723821798" className="flex items-center gap-1 hover:text-secondary transition-colors">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <a href="tel:+254723821798" className="flex items-center gap-1 hover:text-secondary transition-colors" title="+254 723 821 798">
               <Phone className="h-4 w-4" />
-              <span>+254 723 821 798</span>
+              <span className="hidden sm:inline">+254 723 821 798</span>
             </a>
-            <a href="mailto:admissions@microsoftinstitute.africa" className="flex items-center gap-1 hover:text-secondary transition-colors">
+            <a href="mailto:admissions@microsoftinstitute.africa" className="flex items-center gap-1 hover:text-secondary transition-colors" title="admissions@microsoftinstitute.africa">
               <Mail className="h-4 w-4" />
-              <span>admissions@microsoftinstitute.africa</span>
+              <span className="hidden sm:inline">admissions@microsoftinstitute.africa</span>
             </a>
           </div>
           <div className="flex items-center gap-4">
