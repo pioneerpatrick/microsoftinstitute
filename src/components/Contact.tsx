@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Phone, Mail, MapPin, Send, Clock } from "lucide-react";
+import { Phone, Mail, MapPin, Send, Clock, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -97,6 +97,9 @@ const Contact = () => {
     <section id="contact" className="py-20 bg-background">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-6">
+            <MessageCircle className="h-8 w-8 text-primary" />
+          </div>
           <h2 className="text-3xl md:text-4xl font-heading font-bold text-foreground mb-4">
             Get in <span className="text-primary">Touch</span>
           </h2>
@@ -113,7 +116,7 @@ const Contact = () => {
               {contactInfo.map((item, index) => (
                 <div
                   key={index}
-                  className="bg-card rounded-xl p-6 border border-border hover:shadow-md transition-shadow"
+                  className="bg-card rounded-xl p-6 border border-border hover:shadow-lg hover:border-primary/20 transition-all duration-300"
                 >
                   <div className="inline-flex items-center justify-center w-12 h-12 bg-primary/10 rounded-lg mb-4">
                     <item.icon className="h-6 w-6 text-primary" />
@@ -124,7 +127,7 @@ const Contact = () => {
                       <a
                         key={detailIndex}
                         href={item.link}
-                        className="block text-muted-foreground hover:text-primary transition-colors"
+                        className="block text-muted-foreground hover:text-primary transition-colors text-sm break-all"
                       >
                         {detail}
                       </a>
@@ -139,21 +142,24 @@ const Contact = () => {
             </div>
 
             {/* Quick Links */}
-            <div className="mt-8 bg-primary/5 rounded-xl p-6">
-              <h3 className="font-heading font-semibold text-foreground mb-4">Quick Actions</h3>
-              <div className="flex flex-wrap gap-3">
+            <div className="mt-8 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-xl p-6 border border-primary/10">
+              <h3 className="font-heading font-semibold text-foreground mb-4">Quick Connect</h3>
+              <p className="text-sm text-muted-foreground mb-4">Need immediate assistance? Reach us directly:</p>
+              <div className="flex flex-col sm:flex-row gap-3">
                 <a
                   href="https://wa.me/254723821798"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-accent text-accent-foreground px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity"
+                  className="inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground px-5 py-3 rounded-lg font-medium hover:opacity-90 transition-all shadow-sm hover:shadow-md flex-1"
                 >
+                  <MessageCircle className="h-4 w-4" />
                   WhatsApp Us
                 </a>
                 <a
                   href="tel:+254723821798"
-                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg font-medium hover:opacity-90 transition-opacity"
+                  className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-5 py-3 rounded-lg font-medium hover:opacity-90 transition-all shadow-sm hover:shadow-md flex-1"
                 >
+                  <Phone className="h-4 w-4" />
                   Call Now
                 </a>
               </div>
@@ -161,10 +167,13 @@ const Contact = () => {
           </div>
 
           {/* Contact Form */}
-          <div className="bg-card rounded-2xl p-8 border border-border shadow-sm">
-            <h3 className="text-xl font-heading font-semibold text-foreground mb-6">
+          <div className="bg-card rounded-2xl p-8 border border-border shadow-lg">
+            <h3 className="text-xl font-heading font-semibold text-foreground mb-2">
               Send Us a Message
             </h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Fill out the form below and we'll get back to you within 24 hours.
+            </p>
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <Label htmlFor="name" className="text-foreground">Your Name *</Label>

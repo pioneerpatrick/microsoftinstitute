@@ -188,6 +188,21 @@ const ManageAllStudents = () => {
 
       if (error) throw error;
 
+      // If student is suspended or expelled, remove their fees from accounting
+      if (newStatus === 'suspended' || newStatus === 'expelled') {
+        // First delete fee payments
+        await supabase
+          .from('fee_payments')
+          .delete()
+          .eq('user_id', selectedStudent.id);
+        
+        // Then delete student fees
+        await supabase
+          .from('student_fees')
+          .delete()
+          .eq('user_id', selectedStudent.id);
+      }
+
       // Send notification email
       try {
         await supabase.functions.invoke('send-student-status-notification', {
