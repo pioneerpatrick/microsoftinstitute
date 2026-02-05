@@ -23,12 +23,10 @@ interface EnrollmentEmailRequest {
     password: string;
   };
   enrollmentDate?: string;
-  institutionDetails?: {
+  feeStructure?: {
     name: string;
-    website: string;
-    phone: string;
-    email: string;
-    address: string;
+    amount: number;
+    currency: string;
   };
 }
 
@@ -49,15 +47,18 @@ const handler = async (req: Request): Promise<Response> => {
       startDate,
       credentials,
       enrollmentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+      feeStructure,
     }: EnrollmentEmailRequest = await req.json();
 
     console.log(`Sending enrollment email to ${studentEmail} for course: ${courseTitle}`);
 
     const institutionName = "Microsoft Training Institute";
     const institutionPhone = "+254 723 821 798";
-    const institutionEmail = "admissions@microsoftinstitute.africa";
-    const institutionAddress = "Nairobi, Kenya";
     const lmsUrl = "https://microsoftinstitute.lovable.app/lms/login";
+
+    const formatCurrency = (amount: number, currency: string) => {
+      return `${currency} ${amount.toLocaleString('en-KE')}`;
+    };
 
     const emailResponse = await resend.emails.send({
       from: "Microsoft Training Institute <onboarding@resend.dev>",
@@ -88,6 +89,10 @@ const handler = async (req: Request): Promise<Response> => {
             .credential-label { font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
             .credential-value { font-family: 'Consolas', monospace; font-size: 16px; font-weight: bold; color: #1e3a5f; }
             .warning-text { font-size: 13px; color: #92400e; margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.5); border-radius: 6px; }
+            .fee-card { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 25px; border-radius: 12px; margin: 25px 0; border: 2px solid #3b82f6; }
+            .fee-card h3 { margin: 0 0 15px; color: #1e40af; font-size: 18px; }
+            .fee-amount { font-size: 28px; font-weight: bold; color: #1e3a5f; margin: 10px 0; }
+            .fee-note { font-size: 13px; color: #1e40af; background: rgba(255,255,255,0.5); padding: 10px; border-radius: 6px; margin-top: 15px; }
             .steps-card { background: #e0f2fe; padding: 25px; border-radius: 12px; margin: 25px 0; }
             .steps-card h3 { margin: 0 0 15px; color: #0369a1; }
             .steps-list { list-style: none; padding: 0; margin: 0; }
@@ -169,6 +174,21 @@ const handler = async (req: Request): Promise<Response> => {
                 </div>
                 ` : ''}
               </div>
+
+              ${feeStructure ? `
+              <div class="fee-card">
+                <h3>💰 Fee Structure Information</h3>
+                <p style="margin: 0; color: #1e40af;">Your enrolled program fee:</p>
+                <div class="fee-amount">${formatCurrency(feeStructure.amount, feeStructure.currency)}</div>
+                <p style="margin: 5px 0 0; color: #3b82f6;">${feeStructure.name}</p>
+                <div class="fee-note">
+                  <strong>Payment Options:</strong><br>
+                  📱 M-Pesa: Paybill 889100, Account: 9067620016<br>
+                  🏦 Bank Transfer: NCBA Bank, Branch 216, Account: 9067620016<br><br>
+                  Please ensure to use your email or student ID as reference when making payments.
+                </div>
+              </div>
+              ` : ''}
               
               ${credentials ? `
               <div class="credentials-box">
@@ -215,6 +235,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <p style="margin: 0;">Our support team is here to assist you throughout your learning journey.</p>
                 <p style="margin: 10px 0 0;">
                   📧 Email: <a href="mailto:support@microsoftinstitute.africa">support@microsoftinstitute.africa</a><br>
+                  💰 Finance: <a href="mailto:finance@microsoftinstitute.africa">finance@microsoftinstitute.africa</a><br>
                   📱 Phone: <a href="tel:${institutionPhone.replace(/\s/g, '')}">${institutionPhone}</a>
                 </p>
               </div>
@@ -229,8 +250,9 @@ const handler = async (req: Request): Promise<Response> => {
             
             <div class="footer">
               <p><strong>${institutionName}</strong></p>
-              <p>${institutionAddress}</p>
-              <p>📧 support@microsoftinstitute.africa | 📱 ${institutionPhone}</p>
+              <p>Nairobi, Kenya</p>
+              <p>📧 support@microsoftinstitute.africa | 💰 finance@microsoftinstitute.africa</p>
+              <p>📱 ${institutionPhone}</p>
               <div class="social-links">
                 <a href="${lmsUrl}">🌐 Visit Portal</a>
               </div>

@@ -304,14 +304,38 @@ const ManageStudents = () => {
           console.error('Enrollment error:', enrollError);
           toast.error('User created but enrollment failed. Please enroll manually.');
         } else {
-          // Send enrollment confirmation email with credentials (only for new users)
+          // Find the fee structure for this course to create student fee
+          const selectedFeeStructure = feeStructures.find(f => f.id === newStudent.course_id);
           const course = courses.find(c => c.id === newStudent.course_id);
+          
+          // Create student fee record if fee structure exists
+          let feeAmount = 0;
+          let feeName = '';
+          let feeCurrency = 'KES';
+          
+          if (selectedFeeStructure) {
+            feeAmount = selectedFeeStructure.amount;
+            feeName = selectedFeeStructure.name;
+            feeCurrency = selectedFeeStructure.currency;
+            
+            await supabase.from('student_fees').insert({
+              user_id: userId,
+              fee_structure_id: selectedFeeStructure.id,
+              course_id: selectedFeeStructure.course_id,
+              amount_due: feeAmount,
+              amount_paid: 0,
+              balance: feeAmount,
+              status: 'pending',
+            });
+          }
+          
+          // Send enrollment confirmation email with credentials and fee info
           try {
             await supabase.functions.invoke('send-enrollment-email', {
               body: {
                 studentEmail: newStudent.email,
                 studentName: newStudent.full_name,
-                courseTitle: course?.title || 'New Course',
+                courseTitle: course?.title || selectedFeeStructure?.name || 'New Course',
                 courseDescription: course?.description,
                 courseDuration: course?.duration_hours,
                 courseCategory: course?.category,
@@ -320,6 +344,11 @@ const ManageStudents = () => {
                   email: newStudent.email,
                   password: password,
                 },
+                feeStructure: feeAmount > 0 ? {
+                  name: feeName,
+                  amount: feeAmount,
+                  currency: feeCurrency,
+                } : undefined,
               },
             });
           } catch (emailError) {

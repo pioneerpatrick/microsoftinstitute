@@ -65,37 +65,31 @@ const MasterStudents = () => {
   }, [user, isAdmin]);
 
   const fetchStudents = async () => {
-    // Get all students (those with student role)
-    const { data: rolesData } = await supabase
-      .from('user_roles')
-      .select('user_id')
-      .eq('role', 'student');
+    // Get all enrolled students (from enrollments table) and students with fees
+    const { data: enrollmentsData } = await supabase
+      .from('enrollments')
+      .select('user_id, course_id, status, courses(title)');
 
-    const studentIds = rolesData?.map(r => r.user_id) || [];
+    const { data: feesData } = await supabase
+      .from('student_fees')
+      .select('user_id, amount_due, amount_paid, balance, status');
 
-    if (studentIds.length === 0) {
+    // Collect all unique student IDs from enrollments and fees
+    const enrolledUserIds = enrollmentsData?.map(e => e.user_id) || [];
+    const feeUserIds = feesData?.map(f => f.user_id) || [];
+    const allStudentIds = [...new Set([...enrolledUserIds, ...feeUserIds])];
+
+    if (allStudentIds.length === 0) {
       setStudents([]);
       setIsLoading(false);
       return;
     }
 
-    // Get profiles
+    // Get profiles for these students
     const { data: profilesData } = await supabase
       .from('profiles')
       .select('id, full_name, email, student_status, created_at')
-      .in('id', studentIds);
-
-    // Get enrollments
-    const { data: enrollmentsData } = await supabase
-      .from('enrollments')
-      .select('user_id, course_id, status, courses(title)')
-      .in('user_id', studentIds);
-
-    // Get fees
-    const { data: feesData } = await supabase
-      .from('student_fees')
-      .select('user_id, amount_due, amount_paid, balance, status')
-      .in('user_id', studentIds);
+      .in('id', allStudentIds);
 
     // Combine data
     const studentsData: Student[] = (profilesData || []).map(profile => ({
