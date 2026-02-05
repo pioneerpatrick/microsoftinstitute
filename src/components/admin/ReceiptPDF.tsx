@@ -1,6 +1,5 @@
 import { jsPDF } from 'jspdf';
 import { supabase } from '@/integrations/supabase/client';
-import logoImage from '@/assets/logo.png';
 
 interface PaymentData {
   id: string;
@@ -45,125 +44,88 @@ export const generateReceiptPDF = async (
   const isPaidInFull = fee.balance <= 0;
   
   // Colors matching email design
-  const primaryBlue = [30, 58, 95] as [number, number, number]; // #1e3a5f
-  const secondaryBlue = [45, 90, 135] as [number, number, number]; // #2d5a87
-  const accentOrange = [245, 158, 11] as [number, number, number]; // #f59e0b
-  const darkOrange = [217, 119, 6] as [number, number, number]; // #d97706
-  const greenColor = [16, 185, 129] as [number, number, number]; // #10b981
-  const redColor = [239, 68, 68] as [number, number, number]; // #ef4444
-  const grayText = [100, 116, 139] as [number, number, number]; // #64748b
-  const lightGray = [248, 250, 252] as [number, number, number]; // #f8fafc
-  const borderGray = [226, 232, 240] as [number, number, number]; // #e2e8f0
+  const primaryBlue = [30, 58, 95] as [number, number, number];
+  const accentOrange = [245, 158, 11] as [number, number, number];
+  const darkOrange = [217, 119, 6] as [number, number, number];
+  const greenColor = [16, 185, 129] as [number, number, number];
+  const redColor = [239, 68, 68] as [number, number, number];
+  const grayText = [100, 116, 139] as [number, number, number];
+  const lightGray = [248, 250, 252] as [number, number, number];
+  const borderGray = [226, 232, 240] as [number, number, number];
   
-  // Format currency
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-KE', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 0,
-    }).format(amount);
+    return `${currency} ${amount.toLocaleString('en-KE', { minimumFractionDigits: 0 })}`;
   };
 
-  // Format date
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric',
     });
   };
 
-  const margins = { left: 20, right: 20 };
+  const margins = { left: 15, right: 15 };
   const contentWidth = pageWidth - margins.left - margins.right;
 
-  // ===== HEADER - Gradient style matching email =====
+  // ===== HEADER =====
   doc.setFillColor(...primaryBlue);
-  doc.rect(0, 0, pageWidth, 45, 'F');
+  doc.rect(0, 0, pageWidth, 32, 'F');
   
-  // Load and add logo
-  let logoBase64 = '';
-  try {
-    const response = await fetch(logoImage);
-    const blob = await response.blob();
-    logoBase64 = await new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.readAsDataURL(blob);
-    });
-  } catch (e) {
-    console.error('Could not load logo:', e);
-  }
-
-  if (logoBase64) {
-    try {
-      doc.setFillColor(255, 255, 255);
-      doc.circle(25, 22.5, 12, 'F');
-      doc.addImage(logoBase64, 'PNG', 15, 12.5, 20, 20);
-    } catch (e) {
-      console.error('Could not add logo to PDF:', e);
-    }
-  }
-
-  // Header text - matching email style
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(18);
+  doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
-  doc.text('Microsoft Training Institute', pageWidth / 2 + 10, 20, { align: 'center' });
+  doc.text('Microsoft Training Institute', pageWidth / 2, 14, { align: 'center' });
   
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'italic');
-  doc.text('"Quest for Excellence"', pageWidth / 2 + 10, 28, { align: 'center' });
+  doc.text('"Quest for Excellence"', pageWidth / 2, 22, { align: 'center' });
 
-  // ===== RECEIPT TITLE BAR - Orange like email =====
+  // ===== RECEIPT TITLE BAR =====
   doc.setFillColor(...accentOrange);
-  doc.rect(0, 45, pageWidth, 15, 'F');
+  doc.rect(0, 32, pageWidth, 10, 'F');
   
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(14);
+  doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.text('PAYMENT RECEIPT', pageWidth / 2, 54, { align: 'center' });
+  doc.text('PAYMENT RECEIPT', pageWidth / 2, 39, { align: 'center' });
 
-  let yPos = 70;
+  let yPos = 48;
 
-  // ===== STATUS BADGE - Matching email design =====
-  const badgeWidth = 50;
-  const badgeX = (pageWidth - badgeWidth) / 2;
+  // ===== STATUS BADGE =====
   const badgeColor = isPaidInFull ? greenColor : accentOrange;
   doc.setFillColor(badgeColor[0], badgeColor[1], badgeColor[2]);
-  doc.roundedRect(badgeX, yPos, badgeWidth, 10, 5, 5, 'F');
+  doc.roundedRect(pageWidth / 2 - 22, yPos, 44, 8, 4, 4, 'F');
   
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(9);
+  doc.setFontSize(7);
   doc.setFont('helvetica', 'bold');
-  doc.text(isPaidInFull ? 'PAID IN FULL' : 'PARTIAL PAYMENT', pageWidth / 2, yPos + 7, { align: 'center' });
+  doc.text(isPaidInFull ? 'PAID IN FULL' : 'PARTIAL PAYMENT', pageWidth / 2, yPos + 5.5, { align: 'center' });
 
-  yPos += 20;
+  yPos += 14;
 
-  // ===== RECEIVED FROM Section - Card style like email =====
+  // ===== RECEIVED FROM Section =====
   doc.setFillColor(...lightGray);
-  doc.roundedRect(margins.left, yPos, contentWidth, 28, 3, 3, 'F');
+  doc.roundedRect(margins.left, yPos, contentWidth, 18, 2, 2, 'F');
+  
+  doc.setFontSize(7);
+  doc.setTextColor(...grayText);
+  doc.setFont('helvetica', 'normal');
+  doc.text('RECEIVED FROM', margins.left + 4, yPos + 5);
+  
+  doc.setFontSize(11);
+  doc.setTextColor(...primaryBlue);
+  doc.setFont('helvetica', 'bold');
+  doc.text(student.full_name || 'Student', margins.left + 4, yPos + 12);
   
   doc.setFontSize(8);
   doc.setTextColor(...grayText);
   doc.setFont('helvetica', 'normal');
-  doc.text('RECEIVED FROM', margins.left + 5, yPos + 8);
-  
-  doc.setFontSize(14);
-  doc.setTextColor(...primaryBlue);
-  doc.setFont('helvetica', 'bold');
-  doc.text(student.full_name || 'Student', margins.left + 5, yPos + 18);
-  
-  doc.setFontSize(9);
-  doc.setTextColor(...grayText);
-  doc.setFont('helvetica', 'normal');
-  doc.text(student.email || '', margins.left + 5, yPos + 24);
+  doc.text(student.email || '', pageWidth - margins.right - 4, yPos + 12, { align: 'right' });
 
-  yPos += 35;
+  yPos += 22;
 
-  // ===== RECEIPT DETAILS Section - Table style like email =====
-  doc.setFillColor(...lightGray);
-  doc.roundedRect(margins.left, yPos, contentWidth, 60, 3, 3, 'F');
-
+  // ===== RECEIPT DETAILS =====
   const detailsData = [
     ['Receipt Number', payment.receipt_number || 'N/A'],
     ['Date', formatDate(payment.payment_date)],
@@ -176,188 +138,181 @@ export const generateReceiptPDF = async (
     detailsData.push(['Transaction Ref', payment.transaction_reference]);
   }
 
-  let detailY = yPos + 10;
-  doc.setFontSize(9);
+  doc.setFillColor(...lightGray);
+  const detailsHeight = detailsData.length * 7 + 4;
+  doc.roundedRect(margins.left, yPos, contentWidth, detailsHeight, 2, 2, 'F');
+
+  let detailY = yPos + 6;
+  doc.setFontSize(8);
   
   detailsData.forEach(([label, value]) => {
     doc.setTextColor(...grayText);
     doc.setFont('helvetica', 'normal');
-    doc.text(label, margins.left + 5, detailY);
+    doc.text(label, margins.left + 4, detailY);
     
     doc.setTextColor(...primaryBlue);
     doc.setFont('helvetica', 'bold');
-    const truncatedValue = String(value).length > 35 ? String(value).substring(0, 32) + '...' : String(value);
-    doc.text(truncatedValue, pageWidth - margins.right - 5, detailY, { align: 'right' });
+    const truncVal = String(value).length > 40 ? String(value).substring(0, 37) + '...' : String(value);
+    doc.text(truncVal, pageWidth - margins.right - 4, detailY, { align: 'right' });
     
-    detailY += 9;
+    detailY += 7;
   });
 
-  yPos += 68;
+  yPos += detailsHeight + 6;
 
-  // ===== AMOUNT PAID Box - Orange gradient style like email =====
+  // ===== AMOUNT PAID Box =====
   doc.setFillColor(...accentOrange);
-  doc.roundedRect(margins.left, yPos, contentWidth, 30, 3, 3, 'F');
-  
-  // Bottom shadow effect
+  doc.roundedRect(margins.left, yPos, contentWidth, 20, 2, 2, 'F');
   doc.setFillColor(...darkOrange);
-  doc.roundedRect(margins.left, yPos + 27, contentWidth, 3, 0, 0, 'F');
+  doc.roundedRect(margins.left, yPos + 18, contentWidth, 2, 0, 0, 'F');
   
-  doc.setTextColor(255, 255, 255, 0.9);
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Amount Paid', margins.left + 10, yPos + 12);
-  
-  doc.setFontSize(22);
-  doc.setFont('helvetica', 'bold');
   doc.setTextColor(255, 255, 255);
-  doc.text(formatCurrency(payment.amount), pageWidth - margins.right - 10, yPos + 20, { align: 'right' });
-
-  yPos += 40;
-
-  // ===== FEE SUMMARY Section - Border box like email =====
-  doc.setDrawColor(...borderGray);
-  doc.setLineWidth(0.5);
-  doc.roundedRect(margins.left, yPos, contentWidth, 42, 3, 3, 'S');
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Amount Paid', margins.left + 6, yPos + 8);
   
-  doc.setFontSize(9);
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.text(formatCurrency(payment.amount), pageWidth - margins.right - 6, yPos + 14, { align: 'right' });
+
+  yPos += 26;
+
+  // ===== FEE SUMMARY =====
+  doc.setDrawColor(...borderGray);
+  doc.setLineWidth(0.4);
+  doc.roundedRect(margins.left, yPos, contentWidth, 32, 2, 2, 'S');
+  
+  doc.setFontSize(8);
   doc.setTextColor(...primaryBlue);
   doc.setFont('helvetica', 'bold');
-  doc.text('FEE SUMMARY', margins.left + 5, yPos + 10);
+  doc.text('FEE SUMMARY', margins.left + 4, yPos + 7);
   
-  // Summary rows
   const summaryData = [
     { label: 'Total Fees', value: formatCurrency(fee.amount_due), color: [0, 0, 0] as [number, number, number] },
     { label: 'Total Paid', value: formatCurrency(fee.amount_paid), color: greenColor },
     { label: 'Balance Due', value: formatCurrency(fee.balance), color: isPaidInFull ? greenColor : redColor },
   ];
 
-  let summaryY = yPos + 18;
+  let summaryY = yPos + 13;
   summaryData.forEach((row, index) => {
     if (index === 2) {
-      // Dashed line before balance
       doc.setDrawColor(...borderGray);
-      doc.setLineDashPattern([2, 1], 0);
-      doc.line(margins.left + 5, summaryY - 2, pageWidth - margins.right - 5, summaryY - 2);
+      doc.setLineDashPattern([1.5, 1], 0);
+      doc.line(margins.left + 4, summaryY, pageWidth - margins.right - 4, summaryY);
       doc.setLineDashPattern([], 0);
-      summaryY += 3;
+      summaryY += 2;
     }
     
     doc.setTextColor(...grayText);
     doc.setFont('helvetica', 'normal');
-    doc.text(row.label, margins.left + 5, summaryY + 4);
+    doc.setFontSize(8);
+    doc.text(row.label, margins.left + 4, summaryY + 4);
     
     doc.setTextColor(...row.color);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(index === 2 ? 12 : 9);
-    doc.text(row.value, pageWidth - margins.right - 5, summaryY + 4, { align: 'right' });
-    doc.setFontSize(9);
+    doc.setFontSize(index === 2 ? 10 : 8);
+    doc.text(row.value, pageWidth - margins.right - 4, summaryY + 4, { align: 'right' });
     
-    summaryY += 10;
+    summaryY += 7;
   });
 
-  yPos += 50;
+  yPos += 38;
 
-  // ===== PAID STAMP - Matching email style =====
+  // ===== PAID STAMP - Positioned inline =====
   if (isPaidInFull) {
-    const stampX = pageWidth - margins.right - 30;
-    const stampY = yPos;
-    
     doc.setDrawColor(...greenColor);
-    doc.setLineWidth(1.5);
-    doc.roundedRect(stampX - 22, stampY - 8, 44, 20, 3, 3, 'S');
+    doc.setLineWidth(1.2);
+    doc.roundedRect(pageWidth - margins.right - 40, yPos - 6, 36, 14, 2, 2, 'S');
     
     doc.setTextColor(...greenColor);
-    doc.setFontSize(20);
+    doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text('PAID', stampX, stampY + 4, { align: 'center' });
+    doc.text('PAID', pageWidth - margins.right - 22, yPos + 3, { align: 'center' });
     
-    doc.setFontSize(5);
-    doc.text('MICROSOFT TRAINING INSTITUTE', stampX, stampY + 10, { align: 'center' });
+    doc.setFontSize(4);
+    doc.text('MICROSOFT TRAINING INSTITUTE', pageWidth - margins.right - 22, yPos + 7, { align: 'center' });
   }
 
-  yPos += 20;
+  yPos += 12;
 
-  // ===== PAYMENT HISTORY Section =====
-  if (paymentHistory.length > 0 && yPos < pageHeight - 80) {
+  // ===== PAYMENT HISTORY =====
+  if (paymentHistory.length > 0) {
     doc.setTextColor(...primaryBlue);
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
     doc.text('PAYMENT HISTORY', margins.left, yPos);
 
-    yPos += 8;
+    yPos += 5;
     
-    // Table header
     doc.setFillColor(...primaryBlue);
-    doc.rect(margins.left, yPos, contentWidth, 8, 'F');
+    doc.rect(margins.left, yPos, contentWidth, 6, 'F');
     
-    doc.setFontSize(7);
+    doc.setFontSize(6);
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
-    doc.text('DATE', margins.left + 5, yPos + 5);
-    doc.text('RECEIPT NO.', margins.left + 45, yPos + 5);
-    doc.text('METHOD', margins.left + 95, yPos + 5);
-    doc.text('AMOUNT', pageWidth - margins.right - 5, yPos + 5, { align: 'right' });
+    doc.text('DATE', margins.left + 4, yPos + 4);
+    doc.text('RECEIPT NO.', margins.left + 40, yPos + 4);
+    doc.text('METHOD', margins.left + 85, yPos + 4);
+    doc.text('AMOUNT', pageWidth - margins.right - 4, yPos + 4, { align: 'right' });
 
-    yPos += 10;
+    yPos += 7;
 
-    paymentHistory.slice(0, 5).forEach((item, index) => {
+    const maxHistory = Math.min(paymentHistory.length, 4);
+    paymentHistory.slice(0, maxHistory).forEach((item, index) => {
       if (index % 2 === 0) {
         doc.setFillColor(...lightGray);
-        doc.rect(margins.left, yPos - 3, contentWidth, 7, 'F');
+        doc.rect(margins.left, yPos - 2, contentWidth, 5, 'F');
       }
       
       doc.setTextColor(...grayText);
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7);
-      doc.text(formatDate(item.payment_date).substring(0, 15), margins.left + 5, yPos + 1);
-      doc.text(item.receipt_number || 'N/A', margins.left + 45, yPos + 1);
-      doc.text((item.payment_method || 'N/A').toUpperCase(), margins.left + 95, yPos + 1);
+      doc.setFontSize(6);
+      doc.text(formatDate(item.payment_date), margins.left + 4, yPos + 1);
+      doc.text(item.receipt_number || 'N/A', margins.left + 40, yPos + 1);
+      doc.text((item.payment_method || 'N/A').toUpperCase(), margins.left + 85, yPos + 1);
       
       doc.setTextColor(...greenColor);
       doc.setFont('helvetica', 'bold');
-      doc.text(formatCurrency(item.amount), pageWidth - margins.right - 5, yPos + 1, { align: 'right' });
+      doc.text(formatCurrency(item.amount), pageWidth - margins.right - 4, yPos + 1, { align: 'right' });
       
-      yPos += 7;
+      yPos += 5;
     });
   }
 
   // ===== OFFICIAL NOTICE =====
-  const noticeY = pageHeight - 50;
-  doc.setFontSize(8);
+  const noticeY = pageHeight - 38;
+  doc.setFontSize(7);
   doc.setTextColor(...grayText);
   doc.setFont('helvetica', 'normal');
-  doc.text('This is an official receipt from Microsoft Training Institute.', pageWidth / 2, noticeY, { align: 'center' });
-  doc.text('Please keep this for your records.', pageWidth / 2, noticeY + 5, { align: 'center' });
+  doc.text('This is an official receipt from Microsoft Training Institute. Please keep this for your records.', pageWidth / 2, noticeY, { align: 'center' });
 
-  // ===== FOOTER - Matching email style =====
-  const footerY = pageHeight - 30;
+  // ===== FOOTER =====
+  const footerY = pageHeight - 26;
   
   doc.setFillColor(...primaryBlue);
-  doc.rect(0, footerY, pageWidth, 30, 'F');
+  doc.rect(0, footerY, pageWidth, 26, 'F');
   
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
-  doc.text('Microsoft Training Institute', pageWidth / 2, footerY + 8, { align: 'center' });
-  
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Nairobi, Kenya', pageWidth / 2, footerY + 14, { align: 'center' });
+  doc.text('Microsoft Training Institute', pageWidth / 2, footerY + 6, { align: 'center' });
   
   doc.setFontSize(8);
-  doc.text('finance@microsoftinstitute.africa  |  +254 723 821 798', pageWidth / 2, footerY + 20, { align: 'center' });
+  doc.setFont('helvetica', 'normal');
+  doc.text('Nairobi, Kenya', pageWidth / 2, footerY + 12, { align: 'center' });
   
   doc.setFontSize(7);
+  doc.text('finance@microsoftinstitute.africa  |  +254 723 821 798', pageWidth / 2, footerY + 17, { align: 'center' });
+  
+  doc.setFontSize(6);
   doc.setTextColor(200, 200, 200);
-  doc.text(`© ${new Date().getFullYear()} Microsoft Training Institute. All rights reserved.`, pageWidth / 2, footerY + 26, { align: 'center' });
+  doc.text(`© ${new Date().getFullYear()} Microsoft Training Institute. All rights reserved.`, pageWidth / 2, footerY + 22, { align: 'center' });
 
-  // Save
   doc.save(`Receipt-${payment.receipt_number || payment.id}.pdf`);
 };
 
 export const downloadReceiptForPayment = async (paymentId: string) => {
   try {
-    // Fetch payment
     const { data: payment, error: paymentError } = await supabase
       .from('fee_payments')
       .select('*')
@@ -366,7 +321,6 @@ export const downloadReceiptForPayment = async (paymentId: string) => {
 
     if (paymentError || !payment) throw new Error('Payment not found');
 
-    // Fetch student fee
     const { data: studentFee, error: feeError } = await supabase
       .from('student_fees')
       .select('*, fee_structures(name, currency), courses(title)')
@@ -375,14 +329,12 @@ export const downloadReceiptForPayment = async (paymentId: string) => {
 
     if (feeError || !studentFee) throw new Error('Fee record not found');
 
-    // Fetch student profile
     const { data: profile } = await supabase
       .from('profiles')
       .select('full_name, email')
       .eq('id', payment.user_id)
       .single();
 
-    // Fetch payment history
     const { data: history } = await supabase
       .from('fee_payments')
       .select('receipt_number, amount, payment_date, payment_method')
