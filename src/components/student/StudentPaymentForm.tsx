@@ -102,7 +102,7 @@ const StudentPaymentForm = ({ fee, onPaymentSuccess }: StudentPaymentFormProps) 
 
       if (paymentError) throw paymentError;
 
-      // Update student fee balance
+      // Update student fee - balance is auto-calculated as a generated column
       const newAmountPaid = fee.amount_paid + amount;
       const newBalance = fee.amount_due - newAmountPaid;
       const newStatus = newBalance <= 0 ? 'paid' : newBalance < fee.amount_due ? 'partial' : 'pending';
@@ -111,7 +111,6 @@ const StudentPaymentForm = ({ fee, onPaymentSuccess }: StudentPaymentFormProps) 
         .from('student_fees')
         .update({
           amount_paid: newAmountPaid,
-          balance: newBalance,
           status: newStatus,
         })
         .eq('id', fee.id);

@@ -230,7 +230,7 @@ Deno.serve(async (req) => {
       throw paymentError;
     }
 
-    // Update student fee balance
+    // Update student fee - balance is auto-calculated as a generated column
     const newAmountPaid = studentFee.amount_paid + amount;
     const newStatus = newAmountPaid >= studentFee.amount_due ? 'paid' : 'partial';
 

@@ -306,9 +306,10 @@ const Accounting = () => {
     const newBalance = selectedStudentFee.amount_due - newAmountPaid;
     const newStatus = newBalance <= 0 ? 'paid' : 'partial';
 
+    // Balance is a generated column - only update amount_paid and status
     await supabase
       .from('student_fees')
-      .update({ amount_paid: newAmountPaid, balance: newBalance, status: newStatus })
+      .update({ amount_paid: newAmountPaid, status: newStatus })
       .eq('id', selectedStudentFee.id);
 
     // Send payment receipt email
@@ -388,7 +389,7 @@ const Accounting = () => {
       const { error } = await supabase.from('fee_payments').delete().eq('id', paymentToDelete.id);
       if (error) throw error;
 
-      // Update student fee balance
+      // Update student fee - balance is a generated column, auto-calculated
       if (studentFee) {
         const newAmountPaid = studentFee.amount_paid - paymentToDelete.amount;
         const newBalance = studentFee.amount_due - newAmountPaid;
@@ -396,7 +397,7 @@ const Accounting = () => {
 
         await supabase
           .from('student_fees')
-          .update({ amount_paid: newAmountPaid, balance: newBalance, status: newStatus })
+          .update({ amount_paid: newAmountPaid, status: newStatus })
           .eq('id', studentFee.id);
       }
 
