@@ -120,10 +120,18 @@ const StudentPaymentForm = ({ fee, onPaymentSuccess }: StudentPaymentFormProps) 
 
       // Send payment receipt email
       try {
+        // Get student profile for email
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', fee.user_id)
+          .single();
+
         await supabase.functions.invoke('send-payment-receipt', {
           body: {
             paymentId: fee.id,
             email: user.email,
+            studentName: profile?.full_name,
             receiptNumber,
             amount,
             currency,
@@ -132,6 +140,9 @@ const StudentPaymentForm = ({ fee, onPaymentSuccess }: StudentPaymentFormProps) 
             paymentMethod: paymentForm.payment_method,
             paymentDate: new Date().toISOString(),
             transactionRef: paymentForm.transaction_reference,
+            totalFees: fee.amount_due,
+            totalPaid: newAmountPaid,
+            balance: newBalance,
           },
         });
       } catch (emailError) {

@@ -14,16 +14,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { 
   Plus, DollarSign, Users, TrendingUp, Receipt, Download, Search, CreditCard, Bell, 
   Loader2, Sparkles, FileText, PieChart, BarChart3, AlertTriangle, CheckCircle2,
-  Calendar, ArrowUpRight, ArrowDownRight
+  Calendar, ArrowUpRight, ArrowDownRight, Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, subDays, startOfMonth, endOfMonth } from 'date-fns';
 import PaymentDetailsCard from '@/components/admin/PaymentDetailsCard';
 import FeeStructurePDF from '@/components/admin/FeeStructurePDF';
 import ExpensesSection from '@/components/admin/ExpensesSection';
+import { downloadReceiptForPayment } from '@/components/admin/ReceiptPDF';
 
 interface StudentFee {
   id: string;
@@ -120,6 +122,10 @@ const Accounting = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sendingReminders, setSendingReminders] = useState(false);
   const [generatingFees, setGeneratingFees] = useState(false);
+  const [feeToDelete, setFeeToDelete] = useState<StudentFee | null>(null);
+  const [paymentToDelete, setPaymentToDelete] = useState<FeePayment | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [downloadingReceipt, setDownloadingReceipt] = useState<string | null>(null);
 
   const [assignForm, setAssignForm] = useState({
     user_id: '',
@@ -276,7 +282,7 @@ const Accounting = () => {
     const amount = parseFloat(paymentForm.amount);
     const receiptNumber = paymentForm.receipt_number || await generateReceiptNumber();
 
-    const { error: paymentError } = await supabase
+    const { data: paymentData, error: paymentError } = await supabase
       .from('fee_payments')
       .insert({
         student_fee_id: selectedStudentFee.id,
@@ -287,7 +293,9 @@ const Accounting = () => {
         receipt_number: receiptNumber,
         notes: paymentForm.notes || null,
         recorded_by: user?.id,
-      });
+      })
+      .select()
+      .single();
 
     if (paymentError) {
       toast.error('Failed to record payment');
@@ -303,12 +311,116 @@ const Accounting = () => {
       .update({ amount_paid: newAmountPaid, balance: newBalance, status: newStatus })
       .eq('id', selectedStudentFee.id);
 
+    // Send payment receipt email
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, email')
+        .eq('id', selectedStudentFee.user_id)
+        .single();
+
+      if (profile?.email) {
+        await supabase.functions.invoke('send-payment-receipt', {
+          body: {
+            paymentId: paymentData.id,
+            email: profile.email,
+            studentName: profile.full_name,
+            receiptNumber,
+            amount,
+            currency: selectedStudentFee.fee_structures?.currency || 'KES',
+            courseName: selectedStudentFee.courses?.title || 'General Fee',
+            feeName: selectedStudentFee.fee_structures?.name || 'Fee Payment',
+            paymentMethod: paymentForm.payment_method,
+            paymentDate: new Date().toISOString(),
+            transactionRef: paymentForm.transaction_reference,
+            totalFees: selectedStudentFee.amount_due,
+            totalPaid: newAmountPaid,
+            balance: newBalance,
+          },
+        });
+      }
+    } catch (emailError) {
+      console.error('Failed to send receipt email:', emailError);
+    }
+
     toast.success(`Payment recorded. Receipt: ${receiptNumber}`);
     fetchStudentFees();
     fetchPayments();
     setPaymentDialogOpen(false);
     setPaymentForm({ amount: '', payment_method: 'mpesa', transaction_reference: '', receipt_number: '', notes: '' });
     setSelectedStudentFee(null);
+  };
+
+  const handleDeleteFee = async () => {
+    if (!feeToDelete) return;
+    setIsDeleting(true);
+    try {
+      // Delete related payments first
+      await supabase.from('fee_payments').delete().eq('student_fee_id', feeToDelete.id);
+      
+      // Delete the fee
+      const { error } = await supabase.from('student_fees').delete().eq('id', feeToDelete.id);
+      if (error) throw error;
+      
+      toast.success('Fee record deleted');
+      fetchStudentFees();
+      fetchPayments();
+    } catch (error: any) {
+      toast.error('Failed to delete fee: ' + error.message);
+    } finally {
+      setIsDeleting(false);
+      setFeeToDelete(null);
+    }
+  };
+
+  const handleDeletePayment = async () => {
+    if (!paymentToDelete) return;
+    setIsDeleting(true);
+    try {
+      // Get the student fee to update balance
+      const { data: studentFee } = await supabase
+        .from('student_fees')
+        .select('*')
+        .eq('id', paymentToDelete.student_fee_id)
+        .single();
+
+      // Delete the payment
+      const { error } = await supabase.from('fee_payments').delete().eq('id', paymentToDelete.id);
+      if (error) throw error;
+
+      // Update student fee balance
+      if (studentFee) {
+        const newAmountPaid = studentFee.amount_paid - paymentToDelete.amount;
+        const newBalance = studentFee.amount_due - newAmountPaid;
+        const newStatus = newBalance <= 0 ? 'paid' : newAmountPaid > 0 ? 'partial' : 'pending';
+
+        await supabase
+          .from('student_fees')
+          .update({ amount_paid: newAmountPaid, balance: newBalance, status: newStatus })
+          .eq('id', studentFee.id);
+      }
+
+      toast.success('Payment deleted');
+      fetchStudentFees();
+      fetchPayments();
+    } catch (error: any) {
+      toast.error('Failed to delete payment: ' + error.message);
+    } finally {
+      setIsDeleting(false);
+      setPaymentToDelete(null);
+    }
+  };
+
+  const handleDownloadReceipt = async (paymentId: string) => {
+    setDownloadingReceipt(paymentId);
+    try {
+      await downloadReceiptForPayment(paymentId);
+      toast.success('Receipt downloaded');
+    } catch (error: any) {
+      toast.error('Failed to download receipt: ' + error.message);
+    } finally {
+      setDownloadingReceipt(null);
+    }
   };
 
   const openPaymentDialog = (fee: StudentFee) => {
@@ -827,14 +939,23 @@ const Accounting = () => {
                               <TableCell className="text-right font-semibold text-orange-600 text-sm whitespace-nowrap">
                                 {formatCurrency(fee.balance, fee.fee_structures?.currency)}
                               </TableCell>
-                              <TableCell>{getStatusBadge(fee.status)}</TableCell>
                               <TableCell>
-                                {fee.balance > 0 && (
-                                  <Button size="sm" onClick={() => openPaymentDialog(fee)}>
-                                    <CreditCard className="h-4 w-4 sm:mr-1" />
-                                    <span className="hidden sm:inline">Receive</span>
+                                <div className="flex items-center gap-1">
+                                  {fee.balance > 0 && (
+                                    <Button size="sm" onClick={() => openPaymentDialog(fee)}>
+                                      <CreditCard className="h-4 w-4 sm:mr-1" />
+                                      <span className="hidden sm:inline">Receive</span>
+                                    </Button>
+                                  )}
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    onClick={() => setFeeToDelete(fee)}
+                                    className="text-destructive hover:text-destructive"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
                                   </Button>
-                                )}
+                                </div>
                               </TableCell>
                             </TableRow>
                           ))}
@@ -870,6 +991,7 @@ const Accounting = () => {
                             <TableHead>Method</TableHead>
                             <TableHead>Reference</TableHead>
                             <TableHead>Receipt</TableHead>
+                            <TableHead>Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -893,8 +1015,30 @@ const Accounting = () => {
                               <TableCell className="text-xs font-mono truncate max-w-[100px]">
                                 {payment.transaction_reference || '-'}
                               </TableCell>
-                              <TableCell className="text-xs font-mono">
-                                {payment.receipt_number || '-'}
+                              <TableCell>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleDownloadReceipt(payment.id)}
+                                  disabled={downloadingReceipt === payment.id}
+                                  title="Download Receipt"
+                                >
+                                  {downloadingReceipt === payment.id ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Download className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </TableCell>
+                              <TableCell>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  onClick={() => setPaymentToDelete(payment)}
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
                               </TableCell>
                             </TableRow>
                           ))}
@@ -979,6 +1123,56 @@ const Accounting = () => {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Delete Fee Confirmation */}
+        <AlertDialog open={!!feeToDelete} onOpenChange={() => setFeeToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Fee Record</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this fee record for{' '}
+                <strong>{feeToDelete?.profiles?.full_name}</strong>?
+                This will also delete all associated payments.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteFee}
+                disabled={isDeleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Delete Payment Confirmation */}
+        <AlertDialog open={!!paymentToDelete} onOpenChange={() => setPaymentToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Payment</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this payment of{' '}
+                <strong>{formatCurrency(paymentToDelete?.amount || 0)}</strong>?
+                The student's balance will be updated accordingly.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeletePayment}
+                disabled={isDeleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </LMSLayout>
   );

@@ -167,8 +167,8 @@ const handler = async (req: Request): Promise<Response> => {
                     <div style="background: #f0fdf4; border-radius: 8px; padding: 20px; margin: 20px 0; border: 1px solid #bbf7d0;">
                       <h4 style="color: #166534; margin: 0 0 10px;">💳 Payment Methods:</h4>
                       <ul style="color: #374151; margin: 0; padding-left: 20px;">
-                        <li>M-Pesa Paybill: <strong>123456</strong>, Account: Your Student ID</li>
-                        <li>Bank Transfer: Microsoft Institute, ACC: 1234567890</li>
+                        <li>M-Pesa Paybill: <strong>889100</strong>, Account: 9067620016</li>
+                        <li>Bank Transfer: NCBA BANK, ACC: 9067620016</li>
                         <li>Visit our finance office during working hours</li>
                       </ul>
                     </div>
@@ -187,7 +187,7 @@ const handler = async (req: Request): Promise<Response> => {
                   <!-- Footer -->
                   <div style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
                     <p style="color: #64748b; font-size: 12px; margin: 0;">
-                      Contact: finance@microsoftinstitute.ac.ke | +254 723 821 798
+                      Contact: finance@microsoftinstitute.africa | +254 723 821 798
                     </p>
                   </div>
                 </div>

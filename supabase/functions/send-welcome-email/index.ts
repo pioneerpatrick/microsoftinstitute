@@ -76,7 +76,7 @@ const handler = async (req: Request): Promise<Response> => {
               
               <p><strong>Need Help?</strong></p>
               <ul>
-                <li>Email: <a href="mailto:admissions@microsoftinstitute.africa">admissions@microsoftinstitute.africa</a></li>
+                <li>Email: <a href="mailto:support@microsoftinstitute.africa">support@microsoftinstitute.africa</a></li>
                 <li>Phone: +254 723 821 798</li>
                 <li>WhatsApp: <a href="https://wa.me/254723821798">+254 723 821 798</a></li>
               </ul>

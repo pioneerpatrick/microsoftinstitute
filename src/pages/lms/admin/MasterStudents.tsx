@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   Search, Users, Download, Eye, GraduationCap, AlertTriangle, 
-  CheckCircle, XCircle, Clock, Filter, Trash2, Loader2
+  CheckCircle, XCircle, Clock, Filter, Trash2, Loader2, Mail, RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -47,6 +47,7 @@ const MasterStudents = () => {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -290,6 +291,41 @@ const MasterStudents = () => {
     }
   };
 
+  const handleResendEnrollmentEmail = async (student: Student) => {
+    setSendingEmail(student.id);
+    try {
+      // Get the first enrollment with course details
+      const enrollment = student.enrollments[0];
+      if (!enrollment) {
+        toast.error('Student has no course enrollments');
+        return;
+      }
+
+      // Generate a temporary password hint (they should reset their password)
+      const response = await supabase.functions.invoke('send-enrollment-email', {
+        body: {
+          studentEmail: student.email,
+          studentName: student.full_name,
+          courseTitle: enrollment.courses?.title || 'Course',
+          courseSchedule: 'Monday to Friday, 8:00 AM - 5:00 PM EAT',
+          enrollmentDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+          credentials: {
+            email: student.email,
+            password: '(Use password reset if forgotten)',
+          },
+        },
+      });
+
+      if (response.error) throw response.error;
+      toast.success(`Enrollment email sent to ${student.email}`);
+    } catch (error: any) {
+      console.error('Error sending email:', error);
+      toast.error('Failed to send email: ' + error.message);
+    } finally {
+      setSendingEmail(null);
+    }
+  };
+
   // Stats
   const activeCount = students.filter(s => (s.student_status || 'active') === 'active').length;
   const suspendedCount = students.filter(s => s.student_status === 'suspended').length;
@@ -474,14 +510,29 @@ const MasterStudents = () => {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => setSelectedStudent(student)}
+                                title="View Details"
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"
+                                onClick={() => handleResendEnrollmentEmail(student)}
+                                disabled={sendingEmail === student.id || student.enrollments.length === 0}
+                                title="Resend Enrollment Email"
+                              >
+                                {sendingEmail === student.id ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Mail className="h-4 w-4" />
+                                )}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => setStudentToDelete(student)}
                                 className="text-destructive hover:text-destructive"
+                                title="Delete Student"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
