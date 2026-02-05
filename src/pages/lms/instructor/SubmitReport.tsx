@@ -201,14 +201,14 @@ const SubmitReport = () => {
                   <div className="space-y-2">
                     <Label>Course (Optional)</Label>
                     <Select
-                      value={form.course_id}
-                      onValueChange={(v) => setForm({ ...form, course_id: v })}
+                      value={form.course_id || "all"}
+                      onValueChange={(v) => setForm({ ...form, course_id: v === "all" ? "" : v })}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="All Courses" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Courses</SelectItem>
+                        <SelectItem value="all">All Courses</SelectItem>
                         {courses.map((c) => (
                           <SelectItem key={c.id} value={c.id}>
                             {c.title}
