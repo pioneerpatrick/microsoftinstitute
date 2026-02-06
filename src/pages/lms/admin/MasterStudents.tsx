@@ -14,8 +14,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Search, Users, Download, Eye, GraduationCap, AlertTriangle, 
-  CheckCircle, XCircle, Clock, Filter, Trash2, Loader2, Mail, RefreshCw, UserPlus, Copy
+  CheckCircle, XCircle, Clock, Filter, Trash2, Loader2, Mail, RefreshCw, UserPlus, Copy, Pencil
 } from 'lucide-react';
+import EditStudentDialog from '@/components/admin/EditStudentDialog';
 import { toast } from 'sonner';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
@@ -72,6 +73,7 @@ const MasterStudents = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [studentToEdit, setStudentToEdit] = useState<Student | null>(null);
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
@@ -1015,6 +1017,14 @@ const MasterStudents = () => {
                               <Button
                                 variant="ghost"
                                 size="sm"
+                                onClick={() => setStudentToEdit(student)}
+                                title="Edit Student"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => handleResendEnrollmentEmail(student)}
                                 disabled={sendingEmail === student.id || student.enrollments.length === 0}
                                 title="Resend Enrollment Email"
@@ -1179,6 +1189,19 @@ const MasterStudents = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Edit Student Dialog */}
+        <EditStudentDialog
+          student={studentToEdit}
+          open={!!studentToEdit}
+          onOpenChange={(open) => !open && setStudentToEdit(null)}
+          courses={courses}
+          feeStructures={feeStructures}
+          onStudentUpdated={() => {
+            fetchStudents();
+            fetchExistingProfiles();
+          }}
+        />
       </div>
     </LMSLayout>
   );
