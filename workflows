@@ -1,6 +1,6 @@
-name: Deploy Microsoft Institute Website to DirectAdmin
+name: Deploy Lovable.dev Site to DirectAdmin
 
-# Trigger deployment on every push to main branch
+# Trigger every push to main branch
 on:
   push:
     branches:
@@ -9,20 +9,18 @@ on:
 jobs:
   ftp-deploy:
     runs-on: ubuntu-latest
-
     steps:
       # Step 1: Checkout the repository
-      - name: Checkout Repository
+      - name: Checkout Repo
         uses: actions/checkout@v3
 
-      # Step 2: Deploy files via FTP
-      - name: FTP Deploy to DirectAdmin
+      # Step 2: FTP Deploy only the website folder
+      - name: Deploy to DirectAdmin via FTP
         uses: SamKirkland/FTP-Deploy-Action@4.3.0
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./           # Root folder of your repo
-          server-dir: /public_html # Folder where website lives
-          git-ftp-args: --insecure # optional, if your server has SSL issues
-
+          local-dir: ./   # Change this if your Lovable export is in /dist
+          server-dir: /public_html
+          git-ftp-args: --insecure
