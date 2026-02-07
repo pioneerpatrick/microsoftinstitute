@@ -8,6 +8,7 @@ on:
 jobs:
   ftp-deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -18,6 +19,6 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist
-          server-dir: /public_html
+          local-dir: ./dist         # Change to ./ if your files are in root
+          server-dir: /domains/microsoftinstitute.africa/public_html
           git-ftp-args: --insecure
