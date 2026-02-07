@@ -3,7 +3,7 @@ name: Deploy Microsoft Institute Website to DirectAdmin
 on:
   push:
     branches:
-      - main
+      - main  # triggers on every push to main
 
 jobs:
   ftp-deploy:
@@ -13,12 +13,23 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: FTP Deploy
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@4.3.0
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/        # ✅ Must end with /
-          server-dir: /domains/microsoftinstitute.africa/public_html/  # ✅ Must end with /
+          local-dir: ./dist/       # dist folder
+          server-dir: /domains/microsoftinstitute.africa/public_html/
           log-level: standard
