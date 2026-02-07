@@ -1,31 +1,24 @@
 name: Deploy Lovable.dev Site to DirectAdmin
 
-# Trigger on every push to main branch
 on:
   push:
     branches:
-      - main  # Change if your branch is different
+      - main   # Change if your branch is different
 
 jobs:
-  deploy:
+  ftp-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the repository
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # Step 2: Debug - show files to confirm build folder
-      - name: Show repository files
-        run: ls -R
-
-      # Step 3: Deploy Lovable.dev exported build folder via FTP
-      - name: FTP Deploy to DirectAdmin
+      - name: Deploy via FTP
         uses: SamKirkland/FTP-Deploy-Action@4.3.0
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist        # <-- Change this if your Lovable export folder is named differently
-          server-dir: /public_html # <-- The live site folder
+          local-dir: ./dist        # <-- Your Lovable.dev build folder
+          server-dir: /public_html # <-- Live site folder
           git-ftp-args: --insecure
