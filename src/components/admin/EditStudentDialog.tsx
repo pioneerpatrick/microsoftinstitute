@@ -140,49 +140,64 @@ const EditStudentDialog = ({
 
     setAddingEnrollment(true);
     try {
-      const selectedFeeStructure = feeStructures.find(f => f.id === newEnrollment.fee_structure_id);
-      const course = selectedFeeStructure?.course_id 
-        ? courses.find(c => c.id === selectedFeeStructure.course_id)
-        : null;
+      const selectedFeeStructure = feeStructures.find(
+        (f) => f.id === newEnrollment.fee_structure_id,
+      );
+
+      if (!selectedFeeStructure) {
+        toast.error('Selected program not found. Please refresh and try again.');
+        return;
+      }
+
+      // Fee structures without a linked course cannot create an LMS enrollment record.
+      if (!selectedFeeStructure.course_id) {
+        toast.error(
+          'This program is not linked to a course, so an enrollment record cannot be created. Please link it to a course first.',
+        );
+        return;
+      }
+
+      const course = courses.find((c) => c.id === selectedFeeStructure.course_id) ?? null;
 
       // Check if already enrolled in this course
-      if (selectedFeeStructure?.course_id) {
-        const { data: existingEnroll } = await supabase
-          .from('enrollments')
-          .select('id')
-          .eq('user_id', student.id)
-          .eq('course_id', selectedFeeStructure.course_id)
-          .maybeSingle();
+      const { data: existingEnroll, error: existingEnrollError } = await supabase
+        .from('enrollments')
+        .select('id')
+        .eq('user_id', student.id)
+        .eq('course_id', selectedFeeStructure.course_id)
+        .maybeSingle();
 
-        if (existingEnroll) {
-          toast.error('Student is already enrolled in this course');
-          setAddingEnrollment(false);
-          return;
-        }
+      if (existingEnrollError) throw existingEnrollError;
 
-        // Create enrollment
-        await supabase.from('enrollments').insert({
-          user_id: student.id,
-          course_id: selectedFeeStructure.course_id,
-          status: 'active',
-          progress_percentage: 0,
-        });
+      if (existingEnroll) {
+        toast.error('Student is already enrolled in this course');
+        return;
       }
+
+      // Create enrollment
+      const { error: enrollInsertError } = await supabase.from('enrollments').insert({
+        user_id: student.id,
+        course_id: selectedFeeStructure.course_id,
+        status: 'active',
+        progress_percentage: 0,
+      });
+
+      if (enrollInsertError) throw enrollInsertError;
 
       // Create student fee record
-      if (selectedFeeStructure) {
-        await supabase.from('student_fees').insert({
-          user_id: student.id,
-          fee_structure_id: selectedFeeStructure.id,
-          course_id: selectedFeeStructure.course_id,
-          amount_due: selectedFeeStructure.amount,
-          amount_paid: 0,
-          balance: selectedFeeStructure.amount,
-          status: 'pending',
-        });
-      }
+      const { error: feeInsertError } = await supabase.from('student_fees').insert({
+        user_id: student.id,
+        fee_structure_id: selectedFeeStructure.id,
+        course_id: selectedFeeStructure.course_id,
+        amount_due: selectedFeeStructure.amount,
+        amount_paid: 0,
+        balance: selectedFeeStructure.amount,
+        status: 'pending',
+      });
 
-      // Send enrollment email
+      if (feeInsertError) throw feeInsertError;
+
+      // Send enrollment email (only after records are created)
       try {
         await supabase.functions.invoke('send-enrollment-email', {
           body: {
@@ -193,11 +208,11 @@ const EditStudentDialog = ({
             courseDuration: course?.duration_hours,
             courseCategory: course?.category,
             courseSchedule: 'Classes held Monday to Friday, 8:00 AM - 5:00 PM EAT',
-            feeStructure: selectedFeeStructure ? {
+            feeStructure: {
               name: selectedFeeStructure.name,
               amount: selectedFeeStructure.amount,
               currency: selectedFeeStructure.currency,
-            } : undefined,
+            },
           },
         });
         toast.success('Student enrolled successfully! Confirmation email sent.');
@@ -268,10 +283,10 @@ const EditStudentDialog = ({
     }
   };
 
-  // Get courses the student is not enrolled in
-  const availableFeeStructures = feeStructures.filter(f => {
-    if (!f.course_id) return true; // Non-course fee structures always available
-    return !student?.enrollments.some(e => e.course_id === f.course_id);
+  // Get courses the student is not enrolled in (only fee structures linked to a course)
+  const availableFeeStructures = feeStructures.filter((f) => {
+    if (!f.course_id) return false;
+    return !student?.enrollments.some((e) => e.course_id === f.course_id);
   });
 
   if (!student) return null;
