@@ -19,6 +19,6 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist/         # ✅ Must end with a slash
-          server-dir: /domains/microsoftinstitute.africa/public_html  # ✅ Full DirectAdmin path
+          local-dir: ./dist/        # ✅ Must end with /
+          server-dir: /domains/microsoftinstitute.africa/public_html/  # ✅ Must end with /
           log-level: standard
