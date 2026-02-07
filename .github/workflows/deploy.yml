@@ -19,6 +19,6 @@ jobs:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./dist         # Change to ./ if your files are in root
-          server-dir: /domains/microsoftinstitute.africa/public_html
-          git-ftp-args: --insecure
+          local-dir: ./dist/         # ✅ Must end with a slash
+          server-dir: /domains/microsoftinstitute.africa/public_html  # ✅ Full DirectAdmin path
+          log-level: standard
