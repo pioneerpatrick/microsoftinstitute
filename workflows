@@ -1,22 +1,28 @@
-name: Deploy to DirectAdmin via FTP
+name: Deploy Microsoft Institute Website to DirectAdmin
 
+# Trigger deployment on every push to main branch
 on:
   push:
     branches:
-      - main  # Change if you use a different branch
+      - main
 
 jobs:
   ftp-deploy:
     runs-on: ubuntu-latest
+
     steps:
+      # Step 1: Checkout the repository
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+      # Step 2: Deploy files via FTP
       - name: FTP Deploy to DirectAdmin
         uses: SamKirkland/FTP-Deploy-Action@4.3.0
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          local-dir: ./           # Root of your repo
-          server-dir: /public_html # Folder on your server
+          local-dir: ./           # Root folder of your repo
+          server-dir: /public_html # Folder where website lives
+          git-ftp-args: --insecure # optional, if your server has SSL issues
+
