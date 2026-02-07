@@ -40,8 +40,8 @@ const Hero = () => {
           </div>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-bold mb-6 leading-tight">
-            Transform Your Future with{" "}
-            <span className="text-secondary">Digital Skills</span>
+            Transform your Future with{" "}
+            <span className="text-secondary">Microsoft Training Institute</span>
           </h1>
 
           <p className="text-lg md:text-xl text-primary-foreground/90 mb-8 max-w-2xl mx-auto leading-relaxed">

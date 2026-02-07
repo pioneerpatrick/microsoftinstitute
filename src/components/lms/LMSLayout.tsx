@@ -98,7 +98,10 @@ const LMSLayout = ({ children }: LMSLayoutProps) => {
       <div className="p-4 border-b">
         <Link to="/lms/dashboard" className="flex items-center gap-2">
           <img src={logo} alt="Logo" className="h-10 w-auto" />
-          <span className="font-semibold text-lg">LMS</span>
+          <div className="flex flex-col">
+            <span className="font-bold text-sm leading-tight text-primary">MICROSOFT TRAINING INSTITUTE</span>
+            <span className="text-xs text-muted-foreground">Learning Management System</span>
+          </div>
         </Link>
       </div>
 

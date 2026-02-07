@@ -220,21 +220,46 @@ const EditStudentDialog = ({
 
     setRemovingEnrollment(courseId);
     try {
-      // Remove enrollment
-      await supabase
+      // Remove enrollment first
+      const { error: enrollError } = await supabase
         .from('enrollments')
         .delete()
         .eq('user_id', student.id)
         .eq('course_id', courseId);
 
-      // Remove associated fee record
-      await supabase
+      if (enrollError) {
+        console.error('Enrollment delete error:', enrollError);
+        throw enrollError;
+      }
+
+      // Remove associated fee records
+      const { error: feeError } = await supabase
         .from('student_fees')
         .delete()
         .eq('user_id', student.id)
         .eq('course_id', courseId);
 
-      toast.success('Enrollment removed successfully');
+      if (feeError) {
+        console.error('Fee delete error:', feeError);
+        // Don't throw - enrollment was deleted successfully
+      }
+
+      // Also delete any fee payments associated with the student fees for this course
+      const { data: studentFees } = await supabase
+        .from('student_fees')
+        .select('id')
+        .eq('user_id', student.id)
+        .eq('course_id', courseId);
+
+      if (studentFees && studentFees.length > 0) {
+        const feeIds = studentFees.map(f => f.id);
+        await supabase
+          .from('fee_payments')
+          .delete()
+          .in('student_fee_id', feeIds);
+      }
+
+      toast.success('Enrollment removed successfully. You can now add a new enrollment.');
       onStudentUpdated();
     } catch (error: any) {
       toast.error('Failed to remove enrollment: ' + error.message);
