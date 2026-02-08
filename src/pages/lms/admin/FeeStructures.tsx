@@ -13,8 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Edit, Trash2, DollarSign, BookOpen } from 'lucide-react';
+import { Plus, Edit, Trash2, DollarSign, BookOpen, Link, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface FeeStructure {
   id: string;
@@ -179,6 +180,20 @@ const FeeStructures = () => {
     }
   };
 
+  const handleQuickLinkCourse = async (feeId: string, courseId: string) => {
+    const { error } = await supabase
+      .from('fee_structures')
+      .update({ course_id: courseId })
+      .eq('id', feeId);
+
+    if (error) {
+      toast.error('Failed to link course');
+    } else {
+      toast.success('Fee structure linked to course! Students can now be enrolled.');
+      fetchFees();
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       name: '',
@@ -330,7 +345,7 @@ const FeeStructures = () => {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">Total Fee Types</CardTitle>
@@ -344,18 +359,40 @@ const FeeStructures = () => {
               <CardTitle className="text-sm font-medium text-muted-foreground">Active Fees</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{fees.filter(f => f.is_active).length}</div>
+              <div className="text-2xl font-bold text-primary">{fees.filter(f => f.is_active).length}</div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Course-Specific Fees</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Linked to Course</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{fees.filter(f => f.course_id).length}</div>
+              <div className="text-2xl font-bold text-primary">{fees.filter(f => f.course_id).length}</div>
+            </CardContent>
+          </Card>
+          <Card className={fees.filter(f => !f.course_id).length > 0 ? "border-destructive" : ""}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Not Linked (Action Needed)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${fees.filter(f => !f.course_id).length > 0 ? 'text-destructive' : ''}`}>
+                {fees.filter(f => !f.course_id).length}
+              </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Warning for unlinked fee structures */}
+        {fees.filter(f => !f.course_id).length > 0 && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Action Required: {fees.filter(f => !f.course_id).length} Unlinked Fee Structures</AlertTitle>
+            <AlertDescription>
+              These fee structures are not linked to a course and cannot be used for student enrollment. 
+              Use the "Quick link..." dropdown in the table below to link each one to a course.
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Fee Structures Table */}
         <Card>
@@ -397,11 +434,23 @@ const FeeStructures = () => {
                       <TableCell>
                         {fee.courses ? (
                           <div className="flex items-center gap-1">
-                            <BookOpen className="h-4 w-4 text-muted-foreground" />
+                            <BookOpen className="h-4 w-4 text-primary" />
                             <span className="text-sm">{fee.courses.title}</span>
                           </div>
                         ) : (
-                          <Badge variant="destructive" className="text-xs">⚠️ No Course Linked</Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="destructive" className="text-xs">⚠️ Not Linked</Badge>
+                            <Select onValueChange={(courseId) => handleQuickLinkCourse(fee.id, courseId)}>
+                              <SelectTrigger className="w-[160px] h-8 text-xs">
+                                <SelectValue placeholder="Quick link..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {courses.map((course) => (
+                                  <SelectItem key={course.id} value={course.id}>{course.title}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
                         )}
                       </TableCell>
                       <TableCell className="font-semibold">
