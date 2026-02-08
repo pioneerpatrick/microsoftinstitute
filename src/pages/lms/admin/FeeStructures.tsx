@@ -94,9 +94,14 @@ const FeeStructures = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!formData.course_id) {
+      toast.error('Please select a course. Course link is required for student enrollment.');
+      return;
+    }
+    
     const payload = {
       name: formData.name,
-      course_id: formData.course_id || null,
+      course_id: formData.course_id,
       amount: parseFloat(formData.amount),
       currency: formData.currency,
       description: formData.description || null,
@@ -243,18 +248,24 @@ const FeeStructures = () => {
                   />
                 </div>
                 <div>
-                  <Label>Course (Optional)</Label>
-                  <Select value={formData.course_id || "general"} onValueChange={(v) => setFormData({ ...formData, course_id: v === "general" ? "" : v })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select course (or leave for general fee)" />
+                  <Label>Course *</Label>
+                  <Select value={formData.course_id} onValueChange={(v) => setFormData({ ...formData, course_id: v })} required>
+                    <SelectTrigger className={!formData.course_id ? "border-destructive" : ""}>
+                      <SelectValue placeholder="Select a course (required for enrollment)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="general">General Fee (All Courses)</SelectItem>
-                      {courses.map((course) => (
-                        <SelectItem key={course.id} value={course.id}>{course.title}</SelectItem>
-                      ))}
+                      {courses.length === 0 ? (
+                        <SelectItem value="" disabled>No courses available - create one first</SelectItem>
+                      ) : (
+                        courses.map((course) => (
+                          <SelectItem key={course.id} value={course.id}>{course.title}</SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    A course must be linked for student enrollment to work properly
+                  </p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -390,7 +401,7 @@ const FeeStructures = () => {
                             <span className="text-sm">{fee.courses.title}</span>
                           </div>
                         ) : (
-                          <Badge variant="outline">All Courses</Badge>
+                          <Badge variant="destructive" className="text-xs">⚠️ No Course Linked</Badge>
                         )}
                       </TableCell>
                       <TableCell className="font-semibold">
