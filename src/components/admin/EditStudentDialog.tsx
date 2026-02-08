@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Save, Plus, Trash2, BookOpen, User, GraduationCap } from 'lucide-react';
+import { Loader2, Save, Plus, Trash2, BookOpen, User, GraduationCap, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Student {
@@ -66,6 +66,7 @@ const EditStudentDialog = ({
   const [saving, setSaving] = useState(false);
   const [addingEnrollment, setAddingEnrollment] = useState(false);
   const [removingEnrollment, setRemovingEnrollment] = useState<string | null>(null);
+  const [changingEnrollment, setChangingEnrollment] = useState<string | null>(null);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -78,6 +79,9 @@ const EditStudentDialog = ({
   const [newEnrollment, setNewEnrollment] = useState({
     fee_structure_id: '',
   });
+  
+  // Track which enrollment is being changed and to what
+  const [enrollmentChanges, setEnrollmentChanges] = useState<Record<string, string>>({});
 
   // Load student data when dialog opens
   useEffect(() => {
@@ -88,6 +92,7 @@ const EditStudentDialog = ({
         student_status: student.student_status || 'active',
       });
       setNewEnrollment({ fee_structure_id: '' });
+      setEnrollmentChanges({});
     }
   }, [student, open]);
 
@@ -283,6 +288,75 @@ const EditStudentDialog = ({
     }
   };
 
+  const handleChangeEnrollment = async (oldCourseId: string, newFeeStructureId: string) => {
+    if (!student) return;
+
+    const newFeeStructure = feeStructures.find(f => f.id === newFeeStructureId);
+    if (!newFeeStructure || !newFeeStructure.course_id) {
+      toast.error('Invalid program selected');
+      return;
+    }
+
+    // Check if already enrolled in the new course
+    if (student.enrollments.some(e => e.course_id === newFeeStructure.course_id)) {
+      toast.error('Student is already enrolled in this course');
+      return;
+    }
+
+    setChangingEnrollment(oldCourseId);
+    try {
+      // Update enrollment to new course
+      const { error: enrollError } = await supabase
+        .from('enrollments')
+        .update({ course_id: newFeeStructure.course_id })
+        .eq('user_id', student.id)
+        .eq('course_id', oldCourseId);
+
+      if (enrollError) throw enrollError;
+
+      // Update student_fees to new course and fee structure
+      const { error: feeError } = await supabase
+        .from('student_fees')
+        .update({ 
+          course_id: newFeeStructure.course_id,
+          fee_structure_id: newFeeStructure.id,
+          amount_due: newFeeStructure.amount,
+        })
+        .eq('user_id', student.id)
+        .eq('course_id', oldCourseId);
+
+      if (feeError) {
+        console.error('Fee update error:', feeError);
+        // Try to create a new fee record if update failed
+        await supabase.from('student_fees').insert({
+          user_id: student.id,
+          fee_structure_id: newFeeStructure.id,
+          course_id: newFeeStructure.course_id,
+          amount_due: newFeeStructure.amount,
+          amount_paid: 0,
+          status: 'pending',
+        });
+      }
+
+      toast.success('Enrollment changed successfully!');
+      setEnrollmentChanges({});
+      onStudentUpdated();
+    } catch (error: any) {
+      toast.error('Failed to change enrollment: ' + error.message);
+    } finally {
+      setChangingEnrollment(null);
+    }
+  };
+
+  // Get fee structures for changing enrollment (exclude current enrollments except the one being changed)
+  const getAvailableFeeStructuresForChange = (currentCourseId: string) => {
+    return feeStructures.filter((f) => {
+      if (!f.course_id) return false;
+      // Allow the current course and any course the student is not enrolled in
+      return f.course_id === currentCourseId || !student?.enrollments.some((e) => e.course_id === f.course_id);
+    });
+  };
+
   // Get courses the student is not enrolled in (only fee structures linked to a course)
   const availableFeeStructures = feeStructures.filter((f) => {
     if (!f.course_id) return false;
@@ -388,34 +462,77 @@ const EditStudentDialog = ({
                 {student.enrollments.length === 0 ? (
                   <p className="text-muted-foreground text-sm">No current enrollments</p>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {student.enrollments.map((enrollment, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                        className="p-3 bg-muted/50 rounded-lg space-y-3"
                       >
-                        <div className="flex items-center gap-3">
-                          <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                          <div>
-                            <p className="font-medium">{enrollment.courses?.title}</p>
-                            <Badge variant="outline" className="mt-1">
-                              {enrollment.status}
-                            </Badge>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                            <div>
+                              <p className="font-medium">{enrollment.courses?.title}</p>
+                              <Badge variant="outline" className="mt-1">
+                                {enrollment.status}
+                              </Badge>
+                            </div>
                           </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveEnrollment(enrollment.course_id)}
+                            disabled={removingEnrollment === enrollment.course_id || changingEnrollment === enrollment.course_id}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            {removingEnrollment === enrollment.course_id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </Button>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveEnrollment(enrollment.course_id)}
-                          disabled={removingEnrollment === enrollment.course_id}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          {removingEnrollment === enrollment.course_id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
+                        
+                        {/* Change Program Section */}
+                        <div className="flex items-center gap-2 pt-2 border-t border-border/50">
+                          <RefreshCw className="h-3 w-3 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">Change to:</span>
+                          <Select
+                            value={enrollmentChanges[enrollment.course_id] || ''}
+                            onValueChange={(value) => setEnrollmentChanges({
+                              ...enrollmentChanges,
+                              [enrollment.course_id]: value
+                            })}
+                          >
+                            <SelectTrigger className="flex-1 h-8 text-xs">
+                              <SelectValue placeholder="Select different program..." />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-[200px]">
+                              {getAvailableFeeStructuresForChange(enrollment.course_id)
+                                .filter(f => f.course_id !== enrollment.course_id)
+                                .map((fee) => (
+                                  <SelectItem key={fee.id} value={fee.id} className="text-xs">
+                                    {fee.name} - {fee.currency} {fee.amount.toLocaleString()}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                          {enrollmentChanges[enrollment.course_id] && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 text-xs"
+                              onClick={() => handleChangeEnrollment(enrollment.course_id, enrollmentChanges[enrollment.course_id])}
+                              disabled={changingEnrollment === enrollment.course_id}
+                            >
+                              {changingEnrollment === enrollment.course_id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                'Apply'
+                              )}
+                            </Button>
                           )}
-                        </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
