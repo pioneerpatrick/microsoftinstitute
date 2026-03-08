@@ -584,9 +584,13 @@ const LiveSessionRoom = () => {
     setRightPanel('notes');
   };
 
-  // Handle PDF pages extracted
+  // Handle PDF pages extracted - show in main area, not fullscreen
   const handlePDFPagesExtracted = (pages: string[]) => {
-    setPresentationSlides(pages);
+    setPresentationSlides(prev => {
+      // If we already have slides, this is a background update
+      if (prev.length > 0) return pages;
+      return pages;
+    });
     setCurrentSlideIndex(0);
     setLoadingPDF(null);
     setIsPresentationMode(true);
