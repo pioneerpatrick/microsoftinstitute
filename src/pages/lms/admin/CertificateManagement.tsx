@@ -85,11 +85,29 @@ const CertificateManagement = () => {
   };
 
   const fetchCertificates = async () => {
-    const { data } = await supabase
+    const { data: certsData } = await supabase
       .from('certificates')
-      .select('id, certificate_number, issued_at, user_id, course_id, courses(title, category, duration_hours), profiles:user_id(full_name, email)')
+      .select('id, certificate_number, issued_at, user_id, course_id, courses(title, category, duration_hours)')
       .order('issued_at', { ascending: false });
-    if (data) setCertificates(data as unknown as CertificateRecord[]);
+    
+    if (certsData && certsData.length > 0) {
+      // Fetch profiles for all user_ids in certificates
+      const userIds = [...new Set(certsData.map(c => c.user_id))];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', userIds);
+      
+      const profileMap = new Map((profilesData || []).map(p => [p.id, p]));
+      
+      const enriched = certsData.map(c => ({
+        ...c,
+        profiles: profileMap.get(c.user_id) || null,
+      }));
+      setCertificates(enriched as unknown as CertificateRecord[]);
+    } else {
+      setCertificates([]);
+    }
   };
 
   const fetchStudents = async () => {
