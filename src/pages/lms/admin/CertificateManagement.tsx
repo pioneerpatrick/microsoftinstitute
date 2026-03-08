@@ -195,7 +195,6 @@ const CertificateManagement = () => {
     setSelectedCert(cert);
     const year = new Date(cert.issued_at).getFullYear();
     const courseAbbr = (cert.courses?.title || 'CP').split(' ').map(w => w[0]).join('').toUpperCase();
-    const idx = String(certificates.indexOf(cert) + 1).padStart(2, '0');
     setOverrides({
       studentName: cert.profiles?.full_name || '',
       courseTitle: cert.courses?.title || '',
@@ -203,8 +202,8 @@ const CertificateManagement = () => {
       issuedAt: new Date(cert.issued_at).toISOString().split('T')[0],
       institutionTitle: 'MICROSOFT TRAINING INSTITUTE',
       motto: '"Quest for Excellence"',
-      admissionNumber: cert.profiles?.admission_number || `MTI/${String(Math.floor(Math.random() * 999) + 1).padStart(3, '0')}/${year}`,
-      serialNumber: `MTI/${courseAbbr}/${idx}/${year}`,
+      admissionNumber: cert.profiles?.admission_number || '',
+      serialNumber: `MTI/${courseAbbr}/${String(certificates.filter(c => c.course_id === cert.course_id).indexOf(cert) + 1).padStart(2, '0')}/${year}`,
       aggregate: 'DISTINCTION',
       congregationText: '',
       directorName: 'Director',
@@ -286,14 +285,14 @@ const CertificateManagement = () => {
     }
     setOpacity(1);
 
-    // ── Diagonal watermark text "MICROSOFT TRAINING INSTITUTE" ──
+    // ── Diagonal watermark text "Microsoft Training Institute" ──
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(28);
+    doc.setFontSize(24);
     doc.setTextColor(BLUE.r, BLUE.g, BLUE.b);
-    setOpacity(0.035);
-    const wmText = 'MICROSOFT TRAINING INSTITUTE';
-    for (let wy = -40; wy < H + 80; wy += 50) {
-      for (let wx = -100; wx < W + 100; wx += 160) {
+    setOpacity(0.045);
+    const wmText = 'Microsoft Training Institute';
+    for (let wy = -40; wy < H + 80; wy += 45) {
+      for (let wx = -100; wx < W + 100; wx += 150) {
         doc.text(wmText, wx, wy, { angle: 35 });
       }
     }
@@ -332,11 +331,12 @@ const CertificateManagement = () => {
     drawMedallion(13, 13); drawMedallion(W - 13, 13);
     drawMedallion(13, H - 13); drawMedallion(W - 13, H - 13);
 
-    // ── Logo centered at top (no background, expanded) ──
-    const logoSize = 28;
+    // ── Logo centered at top (no background, expanded, proper aspect ratio) ──
+    const logoW = 32;
+    const logoH = 30;
     if (logoBase64) {
       try {
-        doc.addImage(logoBase64, 'PNG', W / 2 - logoSize / 2, 14, logoSize, logoSize);
+        doc.addImage(logoBase64, 'PNG', W / 2 - logoW / 2, 12, logoW, logoH);
       } catch { /* fallback below */ }
     }
 
@@ -432,7 +432,7 @@ const CertificateManagement = () => {
     const congText = o.congregationText ||
       `With all rights and privileges thereunto admitted to the award at a congregation held at this College on the ${dayStr} day of ${monthStr} in the year ${getYearWord(year)} and in the testimony whereof we have affixed our signatures and seal of the college`;
 
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('helvetica', 'bolditalic');
     doc.setFontSize(7);
     doc.setTextColor(60, 60, 60);
     const congLines = doc.splitTextToSize(congText, W - 80);
