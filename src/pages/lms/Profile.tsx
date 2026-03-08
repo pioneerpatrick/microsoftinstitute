@@ -184,6 +184,13 @@ const ProfilePage = () => {
                   </div>
                 </div>
 
+                {profile?.admission_number && (
+                  <div className="p-4 bg-muted/50 rounded-lg border">
+                    <Label className="text-xs text-muted-foreground">Admission Number</Label>
+                    <p className="font-mono font-bold text-primary text-xl mt-1">{profile.admission_number}</p>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Full Name</Label>
