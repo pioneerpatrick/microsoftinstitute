@@ -19,10 +19,21 @@ interface VerificationResult {
 }
 
 const Verify = () => {
+  const [searchParams] = useSearchParams();
   const [certNumber, setCertNumber] = useState('');
   const [result, setResult] = useState<VerificationResult | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Auto-verify if cert param is in URL (from QR code)
+  useEffect(() => {
+    const certParam = searchParams.get('cert');
+    if (certParam) {
+      setCertNumber(certParam);
+      // Trigger verification
+      verifyCertificate(certParam);
+    }
+  }, [searchParams]);
 
   const handleVerify = async () => {
     const trimmed = certNumber.trim();
