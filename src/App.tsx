@@ -117,6 +117,7 @@ const App = () => (
             <Route path="/lms/admin/master-students" element={<MasterStudents />} />
             <Route path="/lms/admin/all-staff" element={<MasterStaff />} />
             <Route path="/lms/admin/reports" element={<AdminReports />} />
+            <Route path="/lms/admin/certificates" element={<CertificateManagement />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

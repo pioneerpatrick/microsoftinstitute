@@ -91,6 +91,7 @@ const LMSLayout = ({ children }: LMSLayoutProps) => {
     { icon: Users, label: 'Staff Contracts', href: '/lms/admin/staff' },
     { icon: DollarSign, label: 'Fee Structures', href: '/lms/admin/fees' },
     { icon: Calculator, label: 'Accounting', href: '/lms/admin/accounting' },
+    { icon: Award, label: 'Certificates', href: '/lms/admin/certificates' },
     { icon: Settings, label: 'Settings', href: '/lms/admin/settings' },
   ];
 
