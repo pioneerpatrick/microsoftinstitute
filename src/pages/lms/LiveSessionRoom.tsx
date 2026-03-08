@@ -681,10 +681,12 @@ const LiveSessionRoom = () => {
         message_type: 'system'
       });
       if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-        setLoadingPDF(urlData.publicUrl);
+        startPDFPresentation(urlData.publicUrl);
       } else if (file.type.startsWith('image/')) {
-        setPresentationSlides([urlData.publicUrl]);
+        setActiveImageUrl(urlData.publicUrl);
+        setActivePdfUrl(null);
         setCurrentSlideIndex(0);
+        setTotalSlides(1);
         setBoardMode('presentation');
       }
     } catch (err) {
