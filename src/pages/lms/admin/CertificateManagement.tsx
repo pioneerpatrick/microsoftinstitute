@@ -286,14 +286,14 @@ const CertificateManagement = () => {
     }
     setOpacity(1);
 
-    // ── Diagonal watermark text "MICROSOFT TRAINING INSTITUTE" ──
+    // ── Diagonal watermark text "Microsoft Training Institute" ──
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(28);
+    doc.setFontSize(24);
     doc.setTextColor(BLUE.r, BLUE.g, BLUE.b);
-    setOpacity(0.035);
-    const wmText = 'MICROSOFT TRAINING INSTITUTE';
-    for (let wy = -40; wy < H + 80; wy += 50) {
-      for (let wx = -100; wx < W + 100; wx += 160) {
+    setOpacity(0.045);
+    const wmText = 'Microsoft Training Institute';
+    for (let wy = -40; wy < H + 80; wy += 45) {
+      for (let wx = -100; wx < W + 100; wx += 150) {
         doc.text(wmText, wx, wy, { angle: 35 });
       }
     }
