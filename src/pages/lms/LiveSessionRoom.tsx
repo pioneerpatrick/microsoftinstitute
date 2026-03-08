@@ -48,6 +48,9 @@ import {
   VideoOff,
   Presentation,
   PenTool,
+  Maximize2,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
