@@ -278,6 +278,9 @@ const CertificateManagement = () => {
     const certNumber = o.certNumber || cert.certificate_number;
     const issuedAt = o.issuedAt || cert.issued_at;
     const year = new Date(issuedAt).getFullYear();
+    // Always ensure admission & serial numbers are present
+    const admissionNumber = o.admissionNumber || cert.profiles?.admission_number || '';
+    const serialNumber = o.serialNumber || generateSerialNumber(admissionNumber, courseTitle);
 
     // Brand colors from logo
     const BLUE = { r: 20, g: 67, b: 140 };    // #14438C
