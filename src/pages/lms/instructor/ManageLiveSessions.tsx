@@ -476,18 +476,6 @@ const ManageLiveSessions = () => {
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Google Meet Link *</Label>
-                  <Input
-                    type="url"
-                    value={newSession.meeting_url}
-                    onChange={(e) => setNewSession({ ...newSession, meeting_url: e.target.value })}
-                    placeholder="https://meet.google.com/abc-defg-hij"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Create a meeting in Google Calendar or Google Meet, then paste the link here
-                  </p>
-                </div>
                 <div className="flex items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
                     <Label className="text-base">Waiting Room</Label>
