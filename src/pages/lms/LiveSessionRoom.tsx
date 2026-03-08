@@ -1120,6 +1120,17 @@ const LiveSessionRoom = () => {
           </Tabs>
         </div>
       </div>
+
+      {/* Presentation Mode Overlay */}
+      {isPresentationMode && (
+        <PresentationMode
+          slides={presentationSlides}
+          isInstructor={isInstructor}
+          onClose={() => setIsPresentationMode(false)}
+          onSlideChange={setCurrentSlideIndex}
+          currentSlideIndex={currentSlideIndex}
+        />
+      )}
     </div>
   );
 };
