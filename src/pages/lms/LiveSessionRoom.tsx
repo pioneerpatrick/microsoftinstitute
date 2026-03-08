@@ -108,7 +108,7 @@ const LiveSessionRoom = () => {
   const [accessStatus, setAccessStatus] = useState<'checking' | 'approved' | 'pending' | 'denied' | 'open'>('checking');
   const [isLoading, setIsLoading] = useState(true);
   const [elapsed, setElapsed] = useState(0);
-  const [rightPanel, setRightPanel] = useState<'chat' | 'participants' | 'notes' | 'files'>('chat');
+  const [rightPanel, setRightPanel] = useState<'chat' | 'participants' | 'notes' | 'files' | 'polls'>('chat');
   const [handRaised, setHandRaised] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [sessionFiles, setSessionFiles] = useState<SessionFile[]>([]);
