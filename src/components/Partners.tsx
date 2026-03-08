@@ -18,12 +18,12 @@ const Partners = () => {
   ];
 
   const industryPartners = [
-    { name: "Safaricom", description: "Kenya's leading telecom", type: "Kenyan" },
-    { name: "KCB Bank", description: "East Africa's largest bank", type: "Kenyan" },
-    { name: "Equity Bank", description: "Financial services leader", type: "Kenyan" },
-    { name: "Andela", description: "African tech talent network", type: "African" },
-    { name: "iHub", description: "Innovation hub for startups", type: "Kenyan" },
-    { name: "Konza Technopolis", description: "Kenya's Silicon Savannah", type: "Kenyan" },
+    { name: "Safaricom", logo: "/images/partners/safaricom.png", description: "Kenya's leading telecom", type: "Kenyan" },
+    { name: "KCB Bank", logo: "/images/partners/kcb.png", description: "East Africa's largest bank", type: "Kenyan" },
+    { name: "Equity Bank", logo: "/images/partners/equity.png", description: "Financial services leader", type: "Kenyan" },
+    { name: "Andela", logo: "/images/partners/andela.png", description: "African tech talent network", type: "African" },
+    { name: "iHub", logo: "/images/partners/ihub.png", description: "Innovation hub for startups", type: "Kenyan" },
+    { name: "Konza Technopolis", logo: "/images/partners/konza.png", description: "Kenya's Silicon Savannah", type: "Kenyan" },
   ];
 
   return (
