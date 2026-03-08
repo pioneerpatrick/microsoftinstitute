@@ -767,12 +767,36 @@ const CertificateManagement = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  {formAdmission && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label>Admission Number</Label>
+                        <Input value={formAdmission} readOnly className="bg-muted" />
+                      </div>
+                      <div>
+                        <Label>Serial Number</Label>
+                        <Input value={formStudentId && formCourseId ? generateSerialNumber(formAdmission, courses.find(c => c.id === formCourseId)?.title || '') : ''} readOnly className="bg-muted" />
+                      </div>
+                    </div>
+                  )}
                   <div>
                     <Label>Certificate Number</Label>
                     <Input value={formCertNumber} onChange={e => setFormCertNumber(e.target.value)} />
                   </div>
                   <div>
-                    <Label>Issue Date</Label>
+                    <Label>Aggregate / Grade</Label>
+                    <Select value={formAggregate} onValueChange={setFormAggregate}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="DISTINCTION">DISTINCTION</SelectItem>
+                        <SelectItem value="CREDIT">CREDIT</SelectItem>
+                        <SelectItem value="MERIT">MERIT</SelectItem>
+                        <SelectItem value="PASS">PASS</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Issue Date (backdate if needed)</Label>
                     <Input type="date" value={formIssuedAt} onChange={e => setFormIssuedAt(e.target.value)} />
                   </div>
                 </div>
