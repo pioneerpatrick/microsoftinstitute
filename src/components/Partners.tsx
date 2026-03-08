@@ -107,8 +107,13 @@ const Partners = () => {
                 key={index}
                 className="bg-card border border-border rounded-xl p-5 text-center hover:shadow-lg hover:border-secondary/30 transition-all duration-300 group"
               >
-                <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mx-auto mb-3 group-hover:bg-secondary/20 transition-colors">
-                  <span className="text-secondary font-bold text-sm">{partner.name.slice(0, 2).toUpperCase()}</span>
+                <div className="w-16 h-16 flex items-center justify-center mx-auto mb-3">
+                  <img
+                    src={partner.logo}
+                    alt={partner.name}
+                    className="max-h-14 w-auto object-contain"
+                    loading="lazy"
+                  />
                 </div>
                 <h4 className="font-semibold text-foreground text-sm mb-1">{partner.name}</h4>
                 <p className="text-xs text-muted-foreground">{partner.description}</p>
