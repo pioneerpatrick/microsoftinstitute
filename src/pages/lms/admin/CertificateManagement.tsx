@@ -137,7 +137,7 @@ const CertificateManagement = () => {
       .order('issued_at', { ascending: false });
     if (certsData && certsData.length > 0) {
       const userIds = [...new Set(certsData.map(c => c.user_id))];
-      const { data: profilesData } = await supabase.from('profiles').select('id, full_name, email').in('id', userIds);
+      const { data: profilesData } = await supabase.from('profiles').select('id, full_name, email, admission_number').in('id', userIds);
       const profileMap = new Map((profilesData || []).map(p => [p.id, p]));
       setCertificates(certsData.map(c => ({ ...c, profiles: profileMap.get(c.user_id) || null })) as unknown as CertificateRecord[]);
     } else {
