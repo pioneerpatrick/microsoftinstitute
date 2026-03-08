@@ -737,7 +737,10 @@ const CertificateManagement = () => {
                   </div>
                   <div>
                     <Label>Course</Label>
-                    <Select value={formCourseId} onValueChange={setFormCourseId}>
+                    <Select value={formCourseId} onValueChange={(val) => {
+                      setFormCourseId(val);
+                      handleStudentCourseChange(formStudentId, val);
+                    }}>
                       <SelectTrigger><SelectValue placeholder="Select course..." /></SelectTrigger>
                       <SelectContent>
                         {courses.map(c => (
