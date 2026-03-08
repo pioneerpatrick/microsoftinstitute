@@ -426,18 +426,13 @@ const CertificateManagement = () => {
     doc.setLineWidth(0.3);
     doc.circle(sealX, sealY, sealR - 5.5, 'S');
 
-    // Seal text
+    // Seal text (no MTI monogram)
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(5);
-    doc.text('MICROSOFT', sealX, sealY - 4.5, { align: 'center' });
-    doc.text('TRAINING', sealX, sealY - 1.5, { align: 'center' });
-    doc.setFontSize(9);
-    doc.setTextColor(ORANGE.r, ORANGE.g, ORANGE.b);
-    doc.text('MTI', sealX, sealY + 3, { align: 'center' });
-    doc.setFontSize(5);
-    doc.setTextColor(255, 255, 255);
-    doc.text('INSTITUTE', sealX, sealY + 6, { align: 'center' });
+    doc.text('MICROSOFT', sealX, sealY - 3, { align: 'center' });
+    doc.text('TRAINING', sealX, sealY + 0.5, { align: 'center' });
+    doc.text('INSTITUTE', sealX, sealY + 4, { align: 'center' });
 
     // Orange stars
     doc.setFillColor(ORANGE.r, ORANGE.g, ORANGE.b);
