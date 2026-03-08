@@ -26,7 +26,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send confirmation to the person who contacted
     const confirmationEmail = await resend.emails.send({
-      from: "Microsoft Institute Africa <admissions@microsoftinstitute.africa>",
+      from: "Microsoft Institute Africa <admissions@mail.microsoftinstitute.africa>",
       to: [email],
       subject: "We received your message - Microsoft Institute Africa",
       html: `
@@ -78,7 +78,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send notification to admin
     const adminEmail = await resend.emails.send({
-      from: "Microsoft Institute Africa <admissions@microsoftinstitute.africa>",
+      from: "Microsoft Institute Africa <admissions@mail.microsoftinstitute.africa>",
       to: ["admissions@microsoftinstitute.africa"],
       subject: `New Contact: ${subject || "Website Inquiry"} from ${name}`,
       html: `

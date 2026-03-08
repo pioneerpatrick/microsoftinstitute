@@ -126,7 +126,7 @@ const handler = async (req: Request): Promise<Response> => {
 
       try {
         await resend.emails.send({
-          from: "Microsoft Institute <admissions@microsoftinstitute.africa>",
+          from: "Microsoft Institute <admissions@mail.microsoftinstitute.africa>",
           to: [studentEmail],
           subject: `🔴 LIVE NOW: ${sessionTitle} - Join Class!`,
           html: `

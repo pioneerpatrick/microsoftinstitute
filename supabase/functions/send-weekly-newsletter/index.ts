@@ -141,7 +141,7 @@
      for (const subscriber of subscribers) {
        try {
          await resend.emails.send({
-           from: "Microsoft Institute Africa <admissions@microsoftinstitute.africa>",
+           from: "Microsoft Institute Africa <admissions@mail.microsoftinstitute.africa>",
            to: [subscriber.email],
            subject: newsletterContent.subject,
            html: `

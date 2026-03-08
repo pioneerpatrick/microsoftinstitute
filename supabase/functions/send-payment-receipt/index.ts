@@ -66,7 +66,7 @@ const handler = async (req: Request): Promise<Response> => {
     const isPaidInFull = balance <= 0;
 
     const emailResponse = await resend.emails.send({
-      from: "Microsoft Training Institute <admissions@microsoftinstitute.africa>",
+      from: "Microsoft Training Institute <admissions@mail.microsoftinstitute.africa>",
       to: [email],
       subject: `Payment Receipt - ${receiptNumber}`,
       html: `
