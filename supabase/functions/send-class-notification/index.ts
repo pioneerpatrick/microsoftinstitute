@@ -68,13 +68,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Get all enrolled students for this course
     const { data: enrollments, error: enrollError } = await adminSupabase
       .from('enrollments')
-      .select(`
-        user_id,
-        profiles:user_id (
-          full_name,
-          email
-        )
-      `)
+      .select('user_id')
       .eq('course_id', courseId)
       .eq('status', 'active');
 
@@ -85,6 +79,33 @@ const handler = async (req: Request): Promise<Response> => {
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
+
+    // Get profiles for enrolled students
+    const userIds = enrollments?.map(e => e.user_id) || [];
+    
+    if (userIds.length === 0) {
+      console.log("No enrolled students found");
+      return new Response(JSON.stringify({ 
+        success: true, 
+        emailsSent: 0, 
+        emailsFailed: 0,
+        totalStudents: 0
+      }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    const { data: profiles, error: profilesError } = await adminSupabase
+      .from('profiles')
+      .select('id, full_name, email')
+      .in('id', userIds);
+
+    if (profilesError) {
+      console.error("Error fetching profiles:", profilesError);
+    }
+
+    const profilesMap = new Map((profiles || []).map(p => [p.id, p]));
 
     console.log(`Found ${enrollments?.length || 0} enrolled students`);
 
