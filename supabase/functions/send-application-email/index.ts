@@ -35,7 +35,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Send confirmation to applicant
     try {
       const applicantEmail = await resend.emails.send({
-        from: "Microsoft Institute Africa <onboarding@resend.dev>",
+        from: "Microsoft Institute Africa <admissions@microsoftinstitute.africa>",
         to: [email],
         subject: "Application Received - Microsoft Institute Africa",
         html: `
