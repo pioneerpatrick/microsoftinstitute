@@ -39,10 +39,16 @@ import {
   FileSpreadsheet,
   Paperclip,
   BarChart3,
+  Video,
+  VideoOff,
+  Presentation,
+  PenTool,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import SessionPolls from '@/components/lms/SessionPolls';
+import VideoPanel from '@/components/lms/VideoPanel';
+import PresentationMode from '@/components/lms/PresentationMode';
 
 interface Session {
   id: string;
