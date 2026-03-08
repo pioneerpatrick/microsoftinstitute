@@ -2,30 +2,25 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { 
-  Plus, 
   Video, 
   Trash2, 
-  Calendar,
-  Clock,
   Users,
   Play,
-  ExternalLink,
-  Copy,
   Shield,
   Check,
   X,
-  UserCheck
+  UserCheck,
+  Loader2,
+  Radio,
+  Mail,
+  BookOpen
 } from 'lucide-react';
 import { toast } from 'sonner';
 import LMSLayout from '@/components/lms/LMSLayout';
@@ -72,18 +67,13 @@ const ManageLiveSessions = () => {
   const [sessions, setSessions] = useState<LiveSession[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [startClassDialogOpen, setStartClassDialogOpen] = useState(false);
   const [moderationDialogOpen, setModerationDialogOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState<LiveSession | null>(null);
   const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
-  const [newSession, setNewSession] = useState({
-    title: '',
-    description: '',
-    course_id: '',
-    scheduled_at: '',
-    duration_minutes: 60,
-    moderation_enabled: true,
-  });
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [isStartingClass, setIsStartingClass] = useState(false);
+  const [instructorProfile, setInstructorProfile] = useState<{ full_name: string | null }>({ full_name: null });
 
   useEffect(() => {
     if (!loading && !user) {
@@ -97,13 +87,26 @@ const ManageLiveSessions = () => {
     if (user && isStaff) {
       fetchSessions();
       fetchCourses();
+      fetchInstructorProfile();
     }
   }, [user, isStaff]);
+
+  const fetchInstructorProfile = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', user.id)
+      .single();
+    
+    if (data) setInstructorProfile(data);
+  };
 
   const fetchCourses = async () => {
     const { data } = await supabase
       .from('courses')
       .select('id, title')
+      .eq('is_published', true)
       .order('title');
     
     if (data) setCourses(data);
@@ -127,7 +130,8 @@ const ManageLiveSessions = () => {
           title
         )
       `)
-      .order('scheduled_at', { ascending: false });
+      .order('scheduled_at', { ascending: false })
+      .limit(20);
 
     if (!error && data) {
       // Get attendance counts and pending requests
@@ -158,46 +162,29 @@ const ManageLiveSessions = () => {
   };
 
   const fetchJoinRequests = async (sessionId: string) => {
-    console.log('Fetching join requests for session:', sessionId);
-    
-    // First get the requests
     const { data: requestsData, error: requestsError } = await supabase
       .from('live_session_requests')
       .select('*')
       .eq('session_id', sessionId)
       .order('requested_at', { ascending: true });
 
-    if (requestsError) {
-      console.error('Error fetching requests:', requestsError);
-      return;
-    }
-
-    console.log('Found requests:', requestsData);
-
-    if (!requestsData || requestsData.length === 0) {
+    if (requestsError || !requestsData || requestsData.length === 0) {
       setJoinRequests([]);
       return;
     }
 
-    // Get profiles for these users
     const userIds = requestsData.map(r => r.user_id);
-    const { data: profilesData, error: profilesError } = await supabase
+    const { data: profilesData } = await supabase
       .from('profiles')
       .select('id, full_name, email')
       .in('id', userIds);
 
-    if (profilesError) {
-      console.error('Error fetching profiles:', profilesError);
-    }
-
-    // Combine the data
     const profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
     const combinedData = requestsData.map(request => ({
       ...request,
       profiles: profilesMap.get(request.user_id) || { full_name: 'Unknown User', email: 'No email' }
     }));
 
-    console.log('Combined requests with profiles:', combinedData);
     setJoinRequests(combinedData as unknown as JoinRequest[]);
   };
 
@@ -206,7 +193,6 @@ const ManageLiveSessions = () => {
     fetchJoinRequests(session.id);
     setModerationDialogOpen(true);
 
-    // Subscribe to realtime updates for this session's requests
     const channel = supabase
       .channel(`session-requests-${session.id}`)
       .on(
@@ -230,7 +216,6 @@ const ManageLiveSessions = () => {
   };
 
   const handleJoinRequest = async (requestId: string, status: 'approved' | 'rejected') => {
-    // Find the request to get student info
     const request = joinRequests.find(r => r.id === requestId);
     
     const { error } = await supabase
@@ -247,29 +232,23 @@ const ManageLiveSessions = () => {
     } else {
       toast.success(`Student ${status === 'approved' ? 'approved' : 'rejected'}`);
       
-      // Send email notification if approved
       if (status === 'approved' && request && selectedSession) {
         const studentEmail = request.profiles?.email;
         const studentName = request.profiles?.full_name || 'Student';
         
         if (studentEmail) {
           try {
-            const { data: sessionData } = await supabase.auth.getSession();
-            
             await supabase.functions.invoke('send-session-approval', {
               body: {
                 studentEmail,
                 studentName,
                 sessionTitle: selectedSession.title,
                 sessionDate: format(new Date(selectedSession.scheduled_at), 'MMMM d, yyyy h:mm a'),
-                meetingUrl: selectedSession.meeting_url || ''
+                meetingUrl: `${window.location.origin}/lms/meet/${selectedSession.id}`
               }
             });
-            
-            console.log('Approval email sent to:', studentEmail);
           } catch (emailError) {
             console.error('Failed to send approval email:', emailError);
-            // Don't show error to user - approval was successful, email is secondary
           }
         }
       }
@@ -293,61 +272,69 @@ const ManageLiveSessions = () => {
     toast.success(`Approved ${pendingRequests.length} students`);
   };
 
-  const validateSession = (): boolean => {
-    if (!newSession.title || !newSession.course_id || !newSession.scheduled_at) {
-      toast.error('Please fill in required fields');
-      return false;
+  const startClass = async () => {
+    if (!selectedCourseId || !user) {
+      toast.error('Please select a course');
+      return;
     }
-    return true;
-  };
 
-  const createSession = async () => {
-    if (!validateSession()) return;
+    setIsStartingClass(true);
 
-    const { data, error } = await supabase
-      .from('live_sessions')
-      .insert({
-        title: newSession.title,
-        description: newSession.description || null,
-        course_id: newSession.course_id,
-        scheduled_at: new Date(newSession.scheduled_at).toISOString(),
-        duration_minutes: newSession.duration_minutes,
-        instructor_id: user?.id,
-        status: 'scheduled',
-        moderation_enabled: newSession.moderation_enabled
-      })
-      .select()
-      .single();
+    try {
+      // Get course title
+      const course = courses.find(c => c.id === selectedCourseId);
+      const sessionTitle = `${course?.title || 'Class'} - Live Session`;
 
-    if (error) {
-      toast.error('Failed to create session');
-    } else {
-      toast.success('Session scheduled!');
-      const internalLink = `${window.location.origin}/lms/meet/${data.id}`;
-      navigator.clipboard.writeText(internalLink);
-      toast.info('Session link copied to clipboard!');
-      setDialogOpen(false);
-      setNewSession({
-        title: '',
-        description: '',
-        course_id: '',
-        scheduled_at: '',
-        duration_minutes: 60,
-        moderation_enabled: true,
-      });
-      fetchSessions();
-    }
-  };
+      // Create the live session (scheduled for now)
+      const { data: session, error: sessionError } = await supabase
+        .from('live_sessions')
+        .insert({
+          title: sessionTitle,
+          course_id: selectedCourseId,
+          scheduled_at: new Date().toISOString(),
+          duration_minutes: 60,
+          instructor_id: user.id,
+          status: 'live',
+          moderation_enabled: true
+        })
+        .select()
+        .single();
 
-  const updateStatus = async (sessionId: string, status: string) => {
-    const { error } = await supabase
-      .from('live_sessions')
-      .update({ status })
-      .eq('id', sessionId);
+      if (sessionError) {
+        throw sessionError;
+      }
 
-    if (!error) {
-      toast.success(`Session ${status}`);
-      fetchSessions();
+      toast.success('Class started! Notifying students...');
+
+      // Send email notifications to enrolled students
+      try {
+        const { data: notifyResult } = await supabase.functions.invoke('send-class-notification', {
+          body: {
+            courseId: selectedCourseId,
+            sessionId: session.id,
+            sessionTitle,
+            instructorName: instructorProfile.full_name || 'Your Instructor'
+          }
+        });
+
+        if (notifyResult?.emailsSent > 0) {
+          toast.success(`${notifyResult.emailsSent} students notified via email!`);
+        }
+      } catch (notifyError) {
+        console.error('Notification error:', notifyError);
+        // Continue anyway - class is started
+      }
+
+      setStartClassDialogOpen(false);
+      setSelectedCourseId('');
+      
+      // Navigate to the live session room
+      navigate(`/lms/meet/${session.id}`);
+    } catch (error: any) {
+      console.error('Error starting class:', error);
+      toast.error('Failed to start class');
+    } finally {
+      setIsStartingClass(false);
     }
   };
 
@@ -367,21 +354,26 @@ const ManageLiveSessions = () => {
     }
   };
 
-  const startSession = (session: LiveSession) => {
-    updateStatus(session.id, 'live');
-    navigate(`/lms/meet/${session.id}`);
+  const endSession = async (sessionId: string) => {
+    const { error } = await supabase
+      .from('live_sessions')
+      .update({ status: 'completed' })
+      .eq('id', sessionId);
+
+    if (!error) {
+      toast.success('Session ended');
+      fetchSessions();
+    }
   };
 
-  const copyJoinLink = (sessionId: string) => {
-    const link = `${window.location.origin}/lms/meet/${sessionId}`;
-    navigator.clipboard.writeText(link);
-    toast.success('Join link copied!');
+  const resumeSession = (session: LiveSession) => {
+    navigate(`/lms/meet/${session.id}`);
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'live':
-        return <Badge className="bg-red-500 animate-pulse">Live</Badge>;
+        return <Badge className="bg-red-500 animate-pulse">🔴 Live</Badge>;
       case 'scheduled':
         return <Badge variant="secondary">Scheduled</Badge>;
       case 'completed':
@@ -392,6 +384,9 @@ const ManageLiveSessions = () => {
         return null;
     }
   };
+
+  const liveSessions = sessions.filter(s => s.status === 'live');
+  const pastSessions = sessions.filter(s => s.status !== 'live');
 
   if (loading || isLoading) {
     return (
@@ -406,334 +401,291 @@ const ManageLiveSessions = () => {
   return (
     <LMSLayout>
       <div className="space-y-6">
+        {/* Header with Start Class Button */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Live Sessions</h1>
-            <p className="text-muted-foreground">Schedule and manage interactive live classes</p>
+            <h1 className="text-2xl font-bold">Live Classes</h1>
+            <p className="text-muted-foreground">Start a class and instantly notify your students</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Schedule Session
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Schedule Live Session</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label>Course *</Label>
-                  <Select
-                    value={newSession.course_id}
-                    onValueChange={(v) => setNewSession({ ...newSession, course_id: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select course" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {courses.map((course) => (
-                        <SelectItem key={course.id} value={course.id}>
-                          {course.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Title *</Label>
-                  <Input
-                    value={newSession.title}
-                    onChange={(e) => setNewSession({ ...newSession, title: e.target.value })}
-                    placeholder="e.g., Week 1 - Introduction"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Textarea
-                    value={newSession.description}
-                    onChange={(e) => setNewSession({ ...newSession, description: e.target.value })}
-                    placeholder="What will be covered in this session..."
-                    rows={3}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Date & Time *</Label>
-                    <Input
-                      type="datetime-local"
-                      value={newSession.scheduled_at}
-                      onChange={(e) => setNewSession({ ...newSession, scheduled_at: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Duration (minutes)</Label>
-                    <Input
-                      type="number"
-                      value={newSession.duration_minutes}
-                      onChange={(e) => setNewSession({ ...newSession, duration_minutes: parseInt(e.target.value) })}
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <Label className="text-base">Waiting Room</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Require approval before students can join
-                    </p>
-                  </div>
-                  <Switch
-                    checked={newSession.moderation_enabled}
-                    onCheckedChange={(checked) => setNewSession({ ...newSession, moderation_enabled: checked })}
-                  />
-                </div>
-                <Button onClick={createSession} className="w-full">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Schedule Session
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button 
+            size="lg" 
+            className="bg-red-500 hover:bg-red-600 gap-2"
+            onClick={() => setStartClassDialogOpen(true)}
+          >
+            <Radio className="h-5 w-5" />
+            Start Class
+          </Button>
         </div>
 
-        {/* Moderation Dialog */}
-        <Dialog open={moderationDialogOpen} onOpenChange={setModerationDialogOpen}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        {/* Start Class Dialog */}
+        <Dialog open={startClassDialogOpen} onOpenChange={setStartClassDialogOpen}>
+          <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Session Moderation - {selectedSession?.title}
+                <Radio className="h-5 w-5 text-red-500" />
+                Start Live Class
               </DialogTitle>
+              <DialogDescription>
+                Select a course to start a live class. All enrolled students will be notified instantly via email.
+              </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 pt-4">
-              {/* Pending Requests */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold">Pending Requests</h3>
-                  {joinRequests.filter(r => r.status === 'pending').length > 0 && (
-                    <Button size="sm" onClick={approveAllPending}>
-                      <UserCheck className="h-4 w-4 mr-1" />
-                      Approve All
-                    </Button>
-                  )}
-                </div>
-                {joinRequests.filter(r => r.status === 'pending').length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No pending requests
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {joinRequests
-                      .filter(r => r.status === 'pending')
-                      .map((request) => (
-                        <div
-                          key={request.id}
-                          className="flex items-center justify-between p-3 border rounded-lg"
-                        >
-                          <div>
-                            <p className="font-medium">
-                              {request.profiles?.full_name || 'Unknown'}
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {request.profiles?.email}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              onClick={() => handleJoinRequest(request.id, 'approved')}
-                            >
-                              <Check className="h-4 w-4 mr-1" />
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleJoinRequest(request.id, 'rejected')}
-                            >
-                              <X className="h-4 w-4 mr-1" />
-                              Reject
-                            </Button>
-                          </div>
+            <div className="space-y-6 pt-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Select Course</label>
+                <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Choose a course..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {courses.map((course) => (
+                      <SelectItem key={course.id} value={course.id}>
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="h-4 w-4" />
+                          {course.title}
                         </div>
-                      ))}
-                  </div>
-                )}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
-              {/* Approved Students */}
-              <div>
-                <h3 className="font-semibold mb-3">Approved Students</h3>
-                {joinRequests.filter(r => r.status === 'approved').length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No approved students yet
-                  </p>
+              {selectedCourseId && (
+                <Card className="border-green-200 bg-green-50/50">
+                  <CardContent className="pt-4 pb-4">
+                    <div className="flex items-start gap-3">
+                      <Mail className="h-5 w-5 text-green-600 mt-0.5" />
+                      <div className="text-sm">
+                        <p className="font-medium text-green-800">Instant Notification</p>
+                        <p className="text-green-600">
+                          All enrolled students will receive an email to join your class immediately.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              <Button 
+                onClick={startClass} 
+                className="w-full bg-red-500 hover:bg-red-600 gap-2"
+                disabled={!selectedCourseId || isStartingClass}
+              >
+                {isStartingClass ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Starting Class...
+                  </>
                 ) : (
-                  <div className="space-y-2">
-                    {joinRequests
-                      .filter(r => r.status === 'approved')
-                      .map((request) => (
-                        <div
-                          key={request.id}
-                          className="flex items-center justify-between p-3 border rounded-lg bg-green-50"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Check className="h-4 w-4 text-green-600" />
-                            <div>
-                              <p className="font-medium">
-                                {request.profiles?.full_name || 'Unknown'}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                {request.profiles?.email}
-                              </p>
-                            </div>
-                          </div>
-                          <Badge variant="secondary">Approved</Badge>
-                        </div>
-                      ))}
-                  </div>
+                  <>
+                    <Video className="h-4 w-4" />
+                    Start Class Now
+                  </>
                 )}
-              </div>
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
 
-        {sessions.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <Video className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-semibold mb-2">No Sessions Scheduled</h3>
-              <p className="text-muted-foreground mb-4">
-                Schedule your first live session with Google Meet
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Session</TableHead>
-                  <TableHead>Course</TableHead>
-                  <TableHead>Date & Time</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Attendance</TableHead>
-                  <TableHead>Moderation</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sessions.map((session) => (
-                  <TableRow key={session.id}>
-                    <TableCell className="font-medium">{session.title}</TableCell>
-                    <TableCell>{session.courses?.title}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-sm">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        {format(new Date(session.scheduled_at), 'MMM d, yyyy h:mm a')}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-sm">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        {session.duration_minutes} min
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-sm">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        {session.attendance_count}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {session.moderation_enabled ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="relative"
-                          onClick={() => openModerationDialog(session)}
-                        >
-                          <Shield className="h-4 w-4 mr-1" />
-                          Moderate
-                          {session.pending_requests && session.pending_requests > 0 && (
-                            <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                              {session.pending_requests}
+        {/* Moderation Dialog */}
+        <Dialog open={moderationDialogOpen} onOpenChange={setModerationDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Student Requests - {selectedSession?.title}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {joinRequests.filter(r => r.status === 'pending').length > 0 && (
+                <div className="flex justify-end">
+                  <Button onClick={approveAllPending} size="sm" className="gap-2">
+                    <UserCheck className="h-4 w-4" />
+                    Approve All ({joinRequests.filter(r => r.status === 'pending').length})
+                  </Button>
+                </div>
+              )}
+              
+              {joinRequests.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No join requests yet</p>
+                  <p className="text-sm">Students will appear here when they request to join</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Student</TableHead>
+                      <TableHead>Requested</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {joinRequests.map((request) => (
+                      <TableRow key={request.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{request.profiles?.full_name || 'Unknown'}</p>
+                            <p className="text-xs text-muted-foreground">{request.profiles?.email}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {format(new Date(request.requested_at), 'h:mm a')}
+                        </TableCell>
+                        <TableCell>
+                          {request.status === 'pending' && <Badge variant="secondary">Pending</Badge>}
+                          {request.status === 'approved' && <Badge className="bg-green-500">Approved</Badge>}
+                          {request.status === 'rejected' && <Badge variant="destructive">Rejected</Badge>}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {request.status === 'pending' && (
+                            <div className="flex gap-2 justify-end">
+                              <Button
+                                size="sm"
+                                onClick={() => handleJoinRequest(request.id, 'approved')}
+                                className="bg-green-500 hover:bg-green-600"
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleJoinRequest(request.id, 'rejected')}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Live Now Section */}
+        {liveSessions.length > 0 && (
+          <Card className="border-red-200 bg-red-50/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-red-600">
+                <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                Live Now
+              </CardTitle>
+              <CardDescription>Your active sessions</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {liveSessions.map((session) => (
+                <Card key={session.id}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          {getStatusBadge(session.status)}
+                          <span className="text-sm text-muted-foreground">{session.courses?.title}</span>
+                        </div>
+                        <h3 className="font-semibold">{session.title}</h3>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                          <span className="flex items-center gap-1">
+                            <Users className="h-4 w-4" />
+                            {session.attendance_count} in session
+                          </span>
+                          {session.pending_requests! > 0 && (
+                            <span className="flex items-center gap-1 text-amber-600">
+                              <Shield className="h-4 w-4" />
+                              {session.pending_requests} waiting
                             </span>
                           )}
-                        </Button>
-                      ) : (
-                        <Badge variant="outline">Open Access</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>{getStatusBadge(session.status)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {session.status === 'scheduled' && (
-                          <>
-                            <Button
-                              size="sm"
-                              onClick={() => startSession(session)}
-                            >
-                              <Play className="h-4 w-4 mr-1" />
-                              Start
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => copyJoinLink(session.id)}
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
-                        {session.status === 'live' && (
-                          <>
-                            <Button
-                              size="sm"
-                              onClick={() => navigate(`/lms/meet/${session.id}`)}
-                            >
-                              <ExternalLink className="h-4 w-4 mr-1" />
-                              Join
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => updateStatus(session.id, 'completed')}
-                            >
-                              End
-                            </Button>
-                          </>
-                        )}
-                        {session.status === 'completed' && session.recording_url && (
-                          <Button
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        {session.pending_requests! > 0 && (
+                          <Button 
+                            variant="outline" 
                             size="sm"
-                            variant="outline"
-                            asChild
+                            onClick={() => openModerationDialog(session)}
+                            className="gap-1"
                           >
-                            <a href={session.recording_url} target="_blank">
-                              <Video className="h-4 w-4 mr-1" />
-                              Recording
-                            </a>
+                            <Shield className="h-4 w-4" />
+                            Manage ({session.pending_requests})
                           </Button>
                         )}
-                        <Button
+                        <Button 
                           size="sm"
+                          onClick={() => resumeSession(session)}
+                          className="gap-1"
+                        >
+                          <Play className="h-4 w-4" />
+                          Resume
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Past Sessions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Session History</CardTitle>
+            <CardDescription>Previous live sessions</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {pastSessions.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <Video className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No sessions yet</p>
+                <p className="text-sm">Start your first class above!</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Session</TableHead>
+                    <TableHead>Course</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Attendance</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pastSessions.map((session) => (
+                    <TableRow key={session.id}>
+                      <TableCell className="font-medium">{session.title}</TableCell>
+                      <TableCell className="text-muted-foreground">{session.courses?.title}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {format(new Date(session.scheduled_at), 'MMM d, yyyy h:mm a')}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Users className="h-4 w-4" />
+                          {session.attendance_count}
+                        </div>
+                      </TableCell>
+                      <TableCell>{getStatusBadge(session.status)}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
                           variant="ghost"
-                          className="text-destructive"
+                          size="icon"
                           onClick={() => deleteSession(session.id)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </Card>
-        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </LMSLayout>
   );

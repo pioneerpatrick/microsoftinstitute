@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.ai-code-runner]
 verify_jwt = false
+
+[functions.send-class-notification]
+verify_jwt = false
