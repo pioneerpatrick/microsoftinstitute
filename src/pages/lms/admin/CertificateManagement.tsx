@@ -396,11 +396,12 @@ const CertificateManagement = () => {
     doc.setTextColor(80, 80, 80);
     doc.text('This is to certify that', W / 2, 71, { align: 'center' });
 
-    // ── Student Name ──
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(24);
+    // ── Student Name (Calligraphy) ──
+    setCalligraphyFont(doc);
+    doc.setFontSize(28);
     doc.setTextColor(BLUE.r, BLUE.g, BLUE.b);
     doc.text(studentName, W / 2, 82, { align: 'center' });
+    doc.setFont('helvetica', 'normal'); // reset font
 
     // Orange + green underline
     const nameW = doc.getTextWidth(studentName);
