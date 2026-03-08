@@ -15,22 +15,38 @@ const PDFPresenter = ({ pdfUrl, onPagesExtracted, onError }: PDFPresenterProps) 
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const hasStarted = useRef(false);
+  const onPagesExtractedRef = useRef(onPagesExtracted);
+  const onErrorRef = useRef(onError);
+
+  // Keep refs up to date
+  onPagesExtractedRef.current = onPagesExtracted;
+  onErrorRef.current = onError;
 
   useEffect(() => {
+    if (!pdfUrl || hasStarted.current) return;
+    hasStarted.current = true;
+
     const loadPDF = async () => {
       try {
         setLoading(true);
         setError(null);
         setProgress(0);
 
-        const loadingTask = pdfjsLib.getDocument(pdfUrl);
+        console.log('Loading PDF from:', pdfUrl);
+        const loadingTask = pdfjsLib.getDocument({
+          url: pdfUrl,
+          cMapUrl: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/cmaps/`,
+          cMapPacked: true,
+        });
         const pdf = await loadingTask.promise;
         const numPages = pdf.numPages;
+        console.log(`PDF loaded: ${numPages} pages`);
         const pages: string[] = [];
 
         for (let i = 1; i <= numPages; i++) {
           const page = await pdf.getPage(i);
-          const scale = 2; // Higher scale for better quality
+          const scale = 2;
           const viewport = page.getViewport({ scale });
 
           const canvas = document.createElement('canvas');
@@ -50,20 +66,19 @@ const PDFPresenter = ({ pdfUrl, onPagesExtracted, onError }: PDFPresenterProps) 
           setProgress(Math.round((i / numPages) * 100));
         }
 
-        onPagesExtracted(pages);
+        onPagesExtractedRef.current(pages);
         setLoading(false);
       } catch (err) {
+        console.error('PDF load error:', err);
         const message = err instanceof Error ? err.message : 'Failed to load PDF';
         setError(message);
-        onError?.(message);
+        onErrorRef.current?.(message);
         setLoading(false);
       }
     };
 
-    if (pdfUrl) {
-      loadPDF();
-    }
-  }, [pdfUrl, onPagesExtracted, onError]);
+    loadPDF();
+  }, [pdfUrl]);
 
   if (error) {
     return (
