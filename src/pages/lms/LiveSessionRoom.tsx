@@ -925,75 +925,55 @@ const LiveSessionRoom = () => {
               </div>
             )}
 
-            {/* PDF Loading State */}
-            {loadingPDF && (
-              <div className="flex-1 flex items-center justify-center bg-muted/30 rounded-xl border">
-                <PDFPresenter
-                  pdfUrl={loadingPDF}
-                  onPagesExtracted={handlePDFPagesExtracted}
-                  onError={() => {
-                    setLoadingPDF(null);
-                    toast.error('Failed to load PDF for presentation');
-                  }}
-                />
-              </div>
-            )}
-
-            {/* Presentation Mode - PDF slides */}
-            {!loadingPDF && boardMode === 'presentation' && presentationSlides.length > 0 && (
+            {/* Presentation Mode - PDF or Image */}
+            {boardMode === 'presentation' && (
               <>
                 <div ref={slideContainerRef} className="flex-1 bg-black rounded-xl overflow-hidden relative flex items-center justify-center">
-                  <img
-                    src={presentationSlides[currentSlideIndex]}
-                    alt={`Slide ${currentSlideIndex + 1}`}
-                    className="max-w-full max-h-full object-contain"
-                  />
+                  {activePdfUrl && (
+                    <PDFPresenter
+                      pdfUrl={activePdfUrl}
+                      currentPage={currentSlideIndex}
+                      onTotalPages={(t) => setTotalSlides(t)}
+                      onError={() => {
+                        setActivePdfUrl(null);
+                        setBoardMode('whiteboard');
+                        toast.error('Failed to load PDF');
+                      }}
+                    />
+                  )}
+                  {activeImageUrl && (
+                    <img
+                      src={activeImageUrl}
+                      alt="Presented image"
+                      className="max-w-full max-h-full object-contain"
+                    />
+                  )}
                   <SlideAnnotationCanvas
                     slideIndex={currentSlideIndex}
                     isInstructor={isInstructor}
                     containerRef={slideContainerRef}
                   />
-                  {currentSlideIndex > 0 && (
+                  {activePdfUrl && currentSlideIndex > 1 && (
                     <Button
                       variant="ghost"
                       size="icon"
                       className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full h-10 w-10 z-20"
-                      onClick={() => setCurrentSlideIndex(i => Math.max(0, i - 1))}
+                      onClick={() => setCurrentSlideIndex(i => Math.max(1, i - 1))}
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </Button>
                   )}
-                  {currentSlideIndex < presentationSlides.length - 1 && (
+                  {activePdfUrl && currentSlideIndex < totalSlides && (
                     <Button
                       variant="ghost"
                       size="icon"
                       className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full h-10 w-10 z-20"
-                      onClick={() => setCurrentSlideIndex(i => Math.min(presentationSlides.length - 1, i + 1))}
+                      onClick={() => setCurrentSlideIndex(i => Math.min(totalSlides, i + 1))}
                     >
                       <ChevronRight className="h-5 w-5" />
                     </Button>
                   )}
                 </div>
-                {/* Slide thumbnails strip */}
-                {isInstructor && presentationSlides.length > 1 && (
-                  <div className="mt-2 flex-shrink-0">
-                    <ScrollArea className="w-full">
-                      <div className="flex gap-1.5 pb-1">
-                        {presentationSlides.map((slide, i) => (
-                          <div
-                            key={i}
-                            className={`flex-shrink-0 w-16 h-12 rounded border overflow-hidden cursor-pointer transition-all ${
-                              i === currentSlideIndex ? 'ring-2 ring-primary border-primary' : 'opacity-60 hover:opacity-100'
-                            }`}
-                            onClick={() => setCurrentSlideIndex(i)}
-                          >
-                            <img src={slide} alt={`Slide ${i + 1}`} className="w-full h-full object-cover" />
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                )}
               </>
             )}
 
