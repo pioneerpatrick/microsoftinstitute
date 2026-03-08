@@ -114,11 +114,15 @@ const LiveSessionRoom = () => {
   const [accessStatus, setAccessStatus] = useState<'checking' | 'approved' | 'pending' | 'denied' | 'open'>('checking');
   const [isLoading, setIsLoading] = useState(true);
   const [elapsed, setElapsed] = useState(0);
-  const [rightPanel, setRightPanel] = useState<'chat' | 'participants' | 'notes' | 'files' | 'polls'>('chat');
+  const [rightPanel, setRightPanel] = useState<'chat' | 'participants' | 'notes' | 'files' | 'polls' | 'video'>('chat');
   const [handRaised, setHandRaised] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [sessionFiles, setSessionFiles] = useState<SessionFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isVideoOn, setIsVideoOn] = useState(false);
+  const [isPresentationMode, setIsPresentationMode] = useState(false);
+  const [presentationSlides, setPresentationSlides] = useState<string[]>([]);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
   const isInstructor = session?.instructor_id === user?.id || isStaff;
 
