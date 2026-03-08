@@ -456,7 +456,7 @@ const MasterStudents = () => {
 
   const exportToCSV = () => {
     const csv = [
-      'Name,Email,Status,Courses,Total Due,Total Paid,Balance,Created',
+      'Admission No,Name,Email,Status,Courses,Total Due,Total Paid,Balance,Created',
       ...filteredStudents.map(s => {
         const totalDue = s.fees.reduce((sum, f) => sum + f.amount_due, 0);
         const totalPaid = s.fees.reduce((sum, f) => sum + f.amount_paid, 0);
