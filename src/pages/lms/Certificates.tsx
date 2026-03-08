@@ -96,6 +96,31 @@ const Certificates = () => {
     doc.setFillColor(255, 251, 240);
     doc.rect(0, 0, width, height, 'F');
 
+    // ── Repeating college name pattern background (multi-color) ──
+    const BLUE_C = { r: 20, g: 67, b: 140 };
+    const GREEN_C = { r: 76, g: 140, b: 43 };
+    const ORANGE_C = { r: 243, g: 149, b: 25 };
+    const GOLD_C = { r: 212, g: 160, b: 23 };
+    const wmColors = [BLUE_C, GREEN_C, ORANGE_C, { r: 160, g: 160, b: 160 }, GOLD_C];
+    const wmText = 'Microsoft Training Institute';
+    const setOpacity = (o: number) => {
+      // @ts-ignore
+      doc.setGState(new doc.GState({ opacity: o }));
+    };
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    setOpacity(0.09);
+    let wmIdx = 0;
+    for (let wy = 4; wy < height; wy += 8) {
+      for (let wx = -20; wx < width + 20; wx += 82) {
+        const c = wmColors[wmIdx % wmColors.length];
+        doc.setTextColor(c.r, c.g, c.b);
+        doc.text(wmText, wx, wy);
+        wmIdx++;
+      }
+    }
+    setOpacity(1);
+
     // Decorative border
     doc.setDrawColor(212, 175, 55);
     doc.setLineWidth(3);

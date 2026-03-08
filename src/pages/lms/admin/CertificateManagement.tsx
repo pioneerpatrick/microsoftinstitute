@@ -314,15 +314,25 @@ const CertificateManagement = () => {
       doc.setGState(new doc.GState({ opacity: o }));
     };
 
-    // ── Diagonal watermark text "Microsoft Training Institute" ──
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(24);
-    doc.setTextColor(BLUE.r, BLUE.g, BLUE.b);
-    setOpacity(0.045);
+    // ── Repeating college name pattern background (multi-color) ──
     const wmText = 'Microsoft Training Institute';
-    for (let wy = -40; wy < H + 80; wy += 45) {
-      for (let wx = -100; wx < W + 100; wx += 150) {
-        doc.text(wmText, wx, wy, { angle: 35 });
+    const wmColors = [
+      { r: BLUE.r, g: BLUE.g, b: BLUE.b },
+      { r: GREEN.r, g: GREEN.g, b: GREEN.b },
+      { r: ORANGE.r, g: ORANGE.g, b: ORANGE.b },
+      { r: 160, g: 160, b: 160 },
+      { r: GOLD.r, g: GOLD.g, b: GOLD.b },
+    ];
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    setOpacity(0.09);
+    let wmColorIdx = 0;
+    for (let wy = 4; wy < H; wy += 8) {
+      for (let wx = -20; wx < W + 20; wx += 82) {
+        const c = wmColors[wmColorIdx % wmColors.length];
+        doc.setTextColor(c.r, c.g, c.b);
+        doc.text(wmText, wx, wy);
+        wmColorIdx++;
       }
     }
     setOpacity(1);
