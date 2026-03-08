@@ -713,15 +713,33 @@ const LiveSessionRoom = () => {
           </div>
 
           {/* Bottom Controls */}
-          <div className="h-14 border-t bg-card flex items-center justify-center gap-3 px-4 flex-shrink-0">
+          <div className="h-14 border-t bg-card flex items-center justify-center gap-2 px-4 flex-shrink-0">
+            {/* Video Toggle */}
+            <Button
+              variant={isVideoOn ? 'default' : 'secondary'}
+              size="icon"
+              className="rounded-full h-10 w-10"
+              onClick={() => {
+                setIsVideoOn(!isVideoOn);
+                setRightPanel('video');
+              }}
+              title={isVideoOn ? 'Turn off camera' : 'Turn on camera'}
+            >
+              {isVideoOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+            </Button>
+            
+            {/* Mic Toggle */}
             <Button
               variant={isMuted ? 'destructive' : 'secondary'}
               size="icon"
               className="rounded-full h-10 w-10"
               onClick={() => setIsMuted(!isMuted)}
+              title={isMuted ? 'Unmute' : 'Mute'}
             >
               {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
             </Button>
+            
+            {/* Raise Hand */}
             <Button
               variant={handRaised ? 'default' : 'secondary'}
               size="icon"
@@ -729,7 +747,6 @@ const LiveSessionRoom = () => {
               onClick={() => {
                 setHandRaised(!handRaised);
                 if (!handRaised) {
-                  // Send hand raise message
                   supabase.from('session_messages').insert({
                     session_id: sessionId,
                     user_id: user!.id,
@@ -738,15 +755,20 @@ const LiveSessionRoom = () => {
                   });
                 }
               }}
+              title={handRaised ? 'Lower hand' : 'Raise hand'}
             >
               <Hand className="h-4 w-4" />
             </Button>
+            
+            {/* Instructor-only controls */}
             {isInstructor && (
               <>
+                {/* File Upload */}
                 <input
                   ref={fileInputRef}
                   type="file"
                   className="hidden"
+                  accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
@@ -765,17 +787,38 @@ const LiveSessionRoom = () => {
                   className="rounded-full h-10 w-10"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploading}
+                  title="Share file"
                 >
                   {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
                 </Button>
+                
+                {/* Present Button */}
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="rounded-full h-10 w-10"
+                  onClick={startPresentation}
+                  title="Start presentation"
+                >
+                  <Presentation className="h-4 w-4" />
+                </Button>
               </>
             )}
+            
             {/* Mobile panel toggles */}
-            <div className="flex lg:hidden gap-1 ml-4">
+            <div className="flex lg:hidden gap-1 ml-2">
+              <Button
+                variant={rightPanel === 'video' ? 'default' : 'ghost'}
+                size="icon"
+                className="rounded-full h-9 w-9"
+                onClick={() => setRightPanel('video')}
+              >
+                <Video className="h-4 w-4" />
+              </Button>
               <Button
                 variant={rightPanel === 'chat' ? 'default' : 'ghost'}
                 size="icon"
-                className="rounded-full h-10 w-10"
+                className="rounded-full h-9 w-9"
                 onClick={() => setRightPanel('chat')}
               >
                 <MessageSquare className="h-4 w-4" />
@@ -783,7 +826,7 @@ const LiveSessionRoom = () => {
               <Button
                 variant={rightPanel === 'polls' ? 'default' : 'ghost'}
                 size="icon"
-                className="rounded-full h-10 w-10"
+                className="rounded-full h-9 w-9"
                 onClick={() => setRightPanel('polls')}
               >
                 <BarChart3 className="h-4 w-4" />
@@ -791,7 +834,7 @@ const LiveSessionRoom = () => {
               <Button
                 variant={rightPanel === 'participants' ? 'default' : 'ghost'}
                 size="icon"
-                className="rounded-full h-10 w-10"
+                className="rounded-full h-9 w-9"
                 onClick={() => setRightPanel('participants')}
               >
                 <Users className="h-4 w-4" />
@@ -799,7 +842,7 @@ const LiveSessionRoom = () => {
               <Button
                 variant={rightPanel === 'files' ? 'default' : 'ghost'}
                 size="icon"
-                className="rounded-full h-10 w-10"
+                className="rounded-full h-9 w-9"
                 onClick={() => setRightPanel('files')}
               >
                 <Paperclip className="h-4 w-4" />
