@@ -190,7 +190,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <p style="color: white; font-size: 14px; font-weight: bold; margin: 0;">Microsoft Training Institute</p>
                 <p style="color: rgba(255,255,255,0.8); font-size: 12px; margin: 8px 0 0;">Nairobi, Kenya</p>
                 <p style="color: rgba(255,255,255,0.8); font-size: 12px; margin: 8px 0 0;">
-                  📧 finance@microsoftinstitute.africa | 📱 +254 723 821 798
+                  📧 finance@microsoftinstitute.africa | 📱 +254 711 577 338
                 </p>
                 <p style="color: rgba(255,255,255,0.6); font-size: 11px; margin: 15px 0 0;">
                   © ${new Date().getFullYear()} Microsoft Training Institute. All rights reserved.

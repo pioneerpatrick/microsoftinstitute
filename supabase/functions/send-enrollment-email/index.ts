@@ -53,7 +53,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Sending enrollment email to ${studentEmail} for course: ${courseTitle}`);
 
     const institutionName = "Microsoft Training Institute";
-    const institutionPhone = "+254 723 821 798";
+    const institutionPhone = "+254 711 577 338";
     const lmsUrl = "https://microsoftinstitute.lovable.app/lms/login";
 
     const formatCurrency = (amount: number, currency: string) => {
