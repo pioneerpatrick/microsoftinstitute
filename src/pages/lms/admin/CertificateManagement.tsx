@@ -73,8 +73,6 @@ const PARTNER_LOGOS = [
   { name: 'CompTIA', path: '/images/partners/comptia.png' },
   { name: 'AWS', path: '/images/partners/aws.png' },
   { name: 'Oracle', path: '/images/partners/oracle.png' },
-  { name: 'Safaricom', path: '/images/partners/safaricom.png' },
-  { name: 'Andela', path: '/images/partners/andela.png' },
 ];
 
 const CertificateManagement = () => {
