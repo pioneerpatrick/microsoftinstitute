@@ -339,6 +339,143 @@ const PresentationMode = ({
     setDrawings([]);
   };
 
+  // Save annotated slide as image
+  const saveAnnotatedSlide = async (slideIndex: number): Promise<string | null> => {
+    const slideDrawings = drawings.filter(d => d.slideIndex === slideIndex);
+    const slideUrl = slides[slideIndex];
+    
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(null);
+          return;
+        }
+
+        // Draw the original image
+        ctx.drawImage(img, 0, 0);
+
+        // Calculate scale factor between display canvas and actual image
+        const displayCanvas = canvasRef.current;
+        if (!displayCanvas) {
+          resolve(canvas.toDataURL('image/png'));
+          return;
+        }
+        
+        const scaleX = img.naturalWidth / displayCanvas.width;
+        const scaleY = img.naturalHeight / displayCanvas.height;
+
+        // Draw annotations scaled to image size
+        slideDrawings.forEach(path => {
+          if (path.points.length < 2) return;
+          
+          ctx.beginPath();
+          ctx.strokeStyle = path.tool === 'highlighter' 
+            ? `${path.color}66` 
+            : path.color;
+          ctx.lineWidth = (path.tool === 'highlighter' 
+            ? path.strokeWidth * 4 
+            : path.strokeWidth) * Math.max(scaleX, scaleY);
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+
+          if (path.tool === 'pen' || path.tool === 'highlighter') {
+            ctx.moveTo(path.points[0].x * scaleX, path.points[0].y * scaleY);
+            path.points.slice(1).forEach(point => {
+              ctx.lineTo(point.x * scaleX, point.y * scaleY);
+            });
+            ctx.stroke();
+          } else if (path.tool === 'arrow') {
+            const start = path.points[0];
+            const end = path.points[path.points.length - 1];
+            
+            ctx.moveTo(start.x * scaleX, start.y * scaleY);
+            ctx.lineTo(end.x * scaleX, end.y * scaleY);
+            ctx.stroke();
+            
+            const angle = Math.atan2((end.y - start.y) * scaleY, (end.x - start.x) * scaleX);
+            const headLen = 15 * Math.max(scaleX, scaleY);
+            ctx.beginPath();
+            ctx.moveTo(end.x * scaleX, end.y * scaleY);
+            ctx.lineTo(end.x * scaleX - headLen * Math.cos(angle - Math.PI / 6), end.y * scaleY - headLen * Math.sin(angle - Math.PI / 6));
+            ctx.moveTo(end.x * scaleX, end.y * scaleY);
+            ctx.lineTo(end.x * scaleX - headLen * Math.cos(angle + Math.PI / 6), end.y * scaleY - headLen * Math.sin(angle + Math.PI / 6));
+            ctx.stroke();
+          } else if (path.tool === 'circle') {
+            const start = path.points[0];
+            const end = path.points[path.points.length - 1];
+            const rx = Math.abs((end.x - start.x) * scaleX) / 2;
+            const ry = Math.abs((end.y - start.y) * scaleY) / 2;
+            const cx = ((start.x + end.x) / 2) * scaleX;
+            const cy = ((start.y + end.y) / 2) * scaleY;
+            ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+            ctx.stroke();
+          } else if (path.tool === 'rectangle') {
+            const start = path.points[0];
+            const end = path.points[path.points.length - 1];
+            ctx.strokeRect(
+              start.x * scaleX, 
+              start.y * scaleY, 
+              (end.x - start.x) * scaleX, 
+              (end.y - start.y) * scaleY
+            );
+          }
+        });
+
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = () => resolve(null);
+      img.src = slideUrl;
+    });
+  };
+
+  // Download current annotated slide
+  const downloadCurrentSlide = async () => {
+    setIsSaving(true);
+    try {
+      const dataUrl = await saveAnnotatedSlide(currentSlide);
+      if (dataUrl) {
+        const link = document.createElement('a');
+        link.download = `slide-${currentSlide + 1}-annotated.png`;
+        link.href = dataUrl;
+        link.click();
+        toast.success('Slide saved!');
+      } else {
+        toast.error('Failed to save slide');
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Download all annotated slides
+  const downloadAllSlides = async () => {
+    setIsSaving(true);
+    try {
+      for (let i = 0; i < slides.length; i++) {
+        const dataUrl = await saveAnnotatedSlide(i);
+        if (dataUrl) {
+          const link = document.createElement('a');
+          link.download = `slide-${i + 1}-annotated.png`;
+          link.href = dataUrl;
+          link.click();
+          // Small delay between downloads
+          await new Promise(resolve => setTimeout(resolve, 300));
+        }
+      }
+      toast.success(`${slides.length} slides saved!`);
+    } catch (err) {
+      toast.error('Failed to save some slides');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
