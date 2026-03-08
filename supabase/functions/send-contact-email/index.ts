@@ -61,8 +61,8 @@ const handler = async (req: Request): Promise<Response> => {
               
               <p>For urgent inquiries, you can also reach us at:</p>
               <ul>
-                <li>Phone: <strong>+254 723 821 798</strong></li>
-                <li>WhatsApp: <a href="https://wa.me/254723821798">+254 723 821 798</a></li>
+                <li>Phone: <strong>+254 711 577 338</strong></li>
+                <li>WhatsApp: <a href="https://wa.me/254711577338">+254 711 577 338</a></li>
               </ul>
               
               <p>Best regards,<br><strong>Microsoft Institute Africa Team</strong></p>

@@ -16,7 +16,7 @@ const PaymentDetailsCard = () => {
       icon: Smartphone,
       color: 'bg-green-500',
       details: [
-        { label: 'Phone Number', value: '+254723821798' },
+        { label: 'Phone Number', value: '+254711577338' },
         { label: 'Name', value: 'PATRICK KIMANTHI' },
       ],
     },

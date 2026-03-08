@@ -22,7 +22,7 @@ const PaymentInstructionsCard = ({ studentName, studentEmail, balance }: Payment
 
   const paybillNumber = '889100';
   const accountNumber = '9067620016';
-  const phoneNumber = '+254723821798';
+  const phoneNumber = '+254711577338';
 
   // Generate QR code data for M-Pesa (using a simple QR API)
   const mpesaPaybillQR = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`Paybill: ${paybillNumber}\nAccount: ${accountNumber}\nName: PATRICK KIMANTHI`)}`;
@@ -138,7 +138,7 @@ const PaymentInstructionsCard = ({ studentName, studentEmail, balance }: Payment
                 <Button 
                   variant={copiedItem === 'Phone' ? 'default' : 'outline'} 
                   size="sm" 
-                  onClick={() => copyToClipboard('0723821798', 'Phone')}
+                  onClick={() => copyToClipboard('0711577338', 'Phone')}
                 >
                   {copiedItem === 'Phone' ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 </Button>

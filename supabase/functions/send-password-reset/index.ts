@@ -73,7 +73,7 @@ const handler = async (req: Request): Promise<Response> => {
                 ${resetUrl}
               </p>
               
-              <p>Need help? Contact us at <strong>admissions@microsoftinstitute.africa</strong> or call <strong>+254 723 821 798</strong></p>
+              <p>Need help? Contact us at <strong>admissions@microsoftinstitute.africa</strong> or call <strong>+254 711 577 338</strong></p>
               
               <p>Best regards,<br><strong>Microsoft Institute Africa Team</strong></p>
             </div>

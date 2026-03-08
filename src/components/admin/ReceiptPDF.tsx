@@ -308,7 +308,7 @@ export const generateReceiptPDF = async (
   doc.text('Nairobi, Kenya', pageWidth / 2, footerY + 12, { align: 'center' });
   
   doc.setFontSize(7);
-  doc.text('finance@microsoftinstitute.africa  |  +254 723 821 798', pageWidth / 2, footerY + 17, { align: 'center' });
+  doc.text('finance@microsoftinstitute.africa  |  +254 711 577 338', pageWidth / 2, footerY + 17, { align: 'center' });
   
   doc.setFontSize(6);
   doc.setTextColor(200, 200, 200);

@@ -77,7 +77,7 @@ const handler = async (req: Request): Promise<Response> => {
                   <li>We'll guide you through the enrollment process</li>
                 </ul>
                 
-                <p>Have questions? Reply to this email or call us at <strong>+254 723 821 798</strong></p>
+                <p>Have questions? Reply to this email or call us at <strong>+254 711 577 338</strong></p>
                 
                 <p>Best regards,<br><strong>Microsoft Institute Africa Admissions Team</strong></p>
               </div>

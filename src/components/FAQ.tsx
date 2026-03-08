@@ -17,7 +17,7 @@ const FAQ = () => {
         },
         {
           question: "How do I apply for a course?",
-          answer: "Applying is simple! Fill out our online application form on this website, and our admissions team will contact you within 24-48 hours to guide you through the enrollment process. You can also reach us directly via WhatsApp at +254 723 821 798.",
+          answer: "Applying is simple! Fill out our online application form on this website, and our admissions team will contact you within 24-48 hours to guide you through the enrollment process. You can also reach us directly via WhatsApp at +254 711 577 338.",
         },
         {
           question: "When can I start my studies?",
@@ -143,7 +143,7 @@ const FAQ = () => {
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <a
-                href="https://wa.me/254723821798"
+                href="https://wa.me/254711577338"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 bg-accent text-accent-foreground px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity"

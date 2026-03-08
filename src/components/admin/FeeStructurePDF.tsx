@@ -153,7 +153,7 @@ const FeeStructurePDF = () => {
     doc.text('M-Pesa Send Money', margin, yPos);
     yPos += 6;
     doc.setFont('helvetica', 'normal');
-    doc.text('Phone: +254723821798', margin + 5, yPos);
+    doc.text('Phone: +254711577338', margin + 5, yPos);
     yPos += 5;
     doc.text('Name: PATRICK KIMANTHI', margin + 5, yPos);
     yPos += 10;
