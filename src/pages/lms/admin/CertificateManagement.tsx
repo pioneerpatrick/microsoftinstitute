@@ -195,7 +195,6 @@ const CertificateManagement = () => {
     setSelectedCert(cert);
     const year = new Date(cert.issued_at).getFullYear();
     const courseAbbr = (cert.courses?.title || 'CP').split(' ').map(w => w[0]).join('').toUpperCase();
-    const idx = String(certificates.indexOf(cert) + 1).padStart(2, '0');
     setOverrides({
       studentName: cert.profiles?.full_name || '',
       courseTitle: cert.courses?.title || '',
