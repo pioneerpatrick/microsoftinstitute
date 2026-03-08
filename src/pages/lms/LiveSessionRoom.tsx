@@ -543,12 +543,25 @@ const LiveSessionRoom = () => {
     );
     
     if (imageFiles.length === 0) {
-      toast.error('No images to present. Please upload image files first.');
+      toast.error('No images to present. Please upload image files first, or use "Present PDF" for PDF files.');
       return;
     }
     
     setPresentationSlides(imageFiles.map(f => f.file_url));
     setCurrentSlideIndex(0);
+    setIsPresentationMode(true);
+  };
+
+  // Start presentation with a PDF file
+  const startPDFPresentation = (pdfUrl: string) => {
+    setLoadingPDF(pdfUrl);
+  };
+
+  // Handle PDF pages extracted
+  const handlePDFPagesExtracted = (pages: string[]) => {
+    setPresentationSlides(pages);
+    setCurrentSlideIndex(0);
+    setLoadingPDF(null);
     setIsPresentationMode(true);
   };
 
