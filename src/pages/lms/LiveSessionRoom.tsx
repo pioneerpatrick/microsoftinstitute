@@ -39,10 +39,16 @@ import {
   FileSpreadsheet,
   Paperclip,
   BarChart3,
+  Video,
+  VideoOff,
+  Presentation,
+  PenTool,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import SessionPolls from '@/components/lms/SessionPolls';
+import VideoPanel from '@/components/lms/VideoPanel';
+import PresentationMode from '@/components/lms/PresentationMode';
 
 interface Session {
   id: string;
@@ -108,11 +114,15 @@ const LiveSessionRoom = () => {
   const [accessStatus, setAccessStatus] = useState<'checking' | 'approved' | 'pending' | 'denied' | 'open'>('checking');
   const [isLoading, setIsLoading] = useState(true);
   const [elapsed, setElapsed] = useState(0);
-  const [rightPanel, setRightPanel] = useState<'chat' | 'participants' | 'notes' | 'files' | 'polls'>('chat');
+  const [rightPanel, setRightPanel] = useState<'chat' | 'participants' | 'notes' | 'files' | 'polls' | 'video'>('chat');
   const [handRaised, setHandRaised] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [sessionFiles, setSessionFiles] = useState<SessionFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isVideoOn, setIsVideoOn] = useState(false);
+  const [isPresentationMode, setIsPresentationMode] = useState(false);
+  const [presentationSlides, setPresentationSlides] = useState<string[]>([]);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
   const isInstructor = session?.instructor_id === user?.id || isStaff;
 
@@ -503,6 +513,23 @@ const LiveSessionRoom = () => {
     navigate('/lms/instructor/live-sessions');
   };
 
+  // Start presentation mode with images from session files
+  const startPresentation = () => {
+    const imageFiles = sessionFiles.filter(f => 
+      f.file_type?.startsWith('image/') || 
+      f.file_name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)
+    );
+    
+    if (imageFiles.length === 0) {
+      toast.error('No images to present. Please upload image files first.');
+      return;
+    }
+    
+    setPresentationSlides(imageFiles.map(f => f.file_url));
+    setCurrentSlideIndex(0);
+    setIsPresentationMode(true);
+  };
+
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
@@ -686,15 +713,33 @@ const LiveSessionRoom = () => {
           </div>
 
           {/* Bottom Controls */}
-          <div className="h-14 border-t bg-card flex items-center justify-center gap-3 px-4 flex-shrink-0">
+          <div className="h-14 border-t bg-card flex items-center justify-center gap-2 px-4 flex-shrink-0">
+            {/* Video Toggle */}
+            <Button
+              variant={isVideoOn ? 'default' : 'secondary'}
+              size="icon"
+              className="rounded-full h-10 w-10"
+              onClick={() => {
+                setIsVideoOn(!isVideoOn);
+                setRightPanel('video');
+              }}
+              title={isVideoOn ? 'Turn off camera' : 'Turn on camera'}
+            >
+              {isVideoOn ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+            </Button>
+            
+            {/* Mic Toggle */}
             <Button
               variant={isMuted ? 'destructive' : 'secondary'}
               size="icon"
               className="rounded-full h-10 w-10"
               onClick={() => setIsMuted(!isMuted)}
+              title={isMuted ? 'Unmute' : 'Mute'}
             >
               {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
             </Button>
+            
+            {/* Raise Hand */}
             <Button
               variant={handRaised ? 'default' : 'secondary'}
               size="icon"
@@ -702,7 +747,6 @@ const LiveSessionRoom = () => {
               onClick={() => {
                 setHandRaised(!handRaised);
                 if (!handRaised) {
-                  // Send hand raise message
                   supabase.from('session_messages').insert({
                     session_id: sessionId,
                     user_id: user!.id,
@@ -711,15 +755,20 @@ const LiveSessionRoom = () => {
                   });
                 }
               }}
+              title={handRaised ? 'Lower hand' : 'Raise hand'}
             >
               <Hand className="h-4 w-4" />
             </Button>
+            
+            {/* Instructor-only controls */}
             {isInstructor && (
               <>
+                {/* File Upload */}
                 <input
                   ref={fileInputRef}
                   type="file"
                   className="hidden"
+                  accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
@@ -738,17 +787,38 @@ const LiveSessionRoom = () => {
                   className="rounded-full h-10 w-10"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploading}
+                  title="Share file"
                 >
                   {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
                 </Button>
+                
+                {/* Present Button */}
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="rounded-full h-10 w-10"
+                  onClick={startPresentation}
+                  title="Start presentation"
+                >
+                  <Presentation className="h-4 w-4" />
+                </Button>
               </>
             )}
+            
             {/* Mobile panel toggles */}
-            <div className="flex lg:hidden gap-1 ml-4">
+            <div className="flex lg:hidden gap-1 ml-2">
+              <Button
+                variant={rightPanel === 'video' ? 'default' : 'ghost'}
+                size="icon"
+                className="rounded-full h-9 w-9"
+                onClick={() => setRightPanel('video')}
+              >
+                <Video className="h-4 w-4" />
+              </Button>
               <Button
                 variant={rightPanel === 'chat' ? 'default' : 'ghost'}
                 size="icon"
-                className="rounded-full h-10 w-10"
+                className="rounded-full h-9 w-9"
                 onClick={() => setRightPanel('chat')}
               >
                 <MessageSquare className="h-4 w-4" />
@@ -756,7 +826,7 @@ const LiveSessionRoom = () => {
               <Button
                 variant={rightPanel === 'polls' ? 'default' : 'ghost'}
                 size="icon"
-                className="rounded-full h-10 w-10"
+                className="rounded-full h-9 w-9"
                 onClick={() => setRightPanel('polls')}
               >
                 <BarChart3 className="h-4 w-4" />
@@ -764,7 +834,7 @@ const LiveSessionRoom = () => {
               <Button
                 variant={rightPanel === 'participants' ? 'default' : 'ghost'}
                 size="icon"
-                className="rounded-full h-10 w-10"
+                className="rounded-full h-9 w-9"
                 onClick={() => setRightPanel('participants')}
               >
                 <Users className="h-4 w-4" />
@@ -772,7 +842,7 @@ const LiveSessionRoom = () => {
               <Button
                 variant={rightPanel === 'files' ? 'default' : 'ghost'}
                 size="icon"
-                className="rounded-full h-10 w-10"
+                className="rounded-full h-9 w-9"
                 onClick={() => setRightPanel('files')}
               >
                 <Paperclip className="h-4 w-4" />
@@ -785,26 +855,65 @@ const LiveSessionRoom = () => {
         <div className="w-80 border-l bg-card flex flex-col flex-shrink-0 hidden lg:flex">
           <Tabs value={rightPanel} onValueChange={(v) => setRightPanel(v as any)} className="flex flex-col h-full">
             <TabsList className="w-full rounded-none border-b bg-transparent h-12 p-0">
+              <TabsTrigger value="video" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent h-full gap-1">
+                <Video className="h-4 w-4" />
+              </TabsTrigger>
               <TabsTrigger value="chat" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent h-full gap-1">
                 <MessageSquare className="h-4 w-4" />
-                Chat
               </TabsTrigger>
               <TabsTrigger value="polls" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent h-full gap-1">
                 <BarChart3 className="h-4 w-4" />
-                Polls
               </TabsTrigger>
               <TabsTrigger value="participants" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent h-full gap-1 relative">
                 <Users className="h-4 w-4" />
-                <span>{participants.length}</span>
+                <span className="text-xs">{participants.length}</span>
                 {pendingRequests.length > 0 && (
-                  <span className="absolute top-2 right-4 w-2 h-2 bg-destructive rounded-full" />
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full" />
                 )}
               </TabsTrigger>
               <TabsTrigger value="files" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent h-full gap-1">
                 <Paperclip className="h-4 w-4" />
-                <span>{sessionFiles.length}</span>
               </TabsTrigger>
             </TabsList>
+
+            {/* Video Tab */}
+            <TabsContent value="video" className="flex-1 m-0 overflow-hidden p-2">
+              <div className="h-full flex flex-col gap-2">
+                {/* Self Video */}
+                {user && (
+                  <VideoPanel
+                    userId={user.id}
+                    userName={user.email?.split('@')[0] || 'You'}
+                    isInstructor={isInstructor}
+                    isSelf={true}
+                  />
+                )}
+                
+                {/* Other Participants */}
+                <ScrollArea className="flex-1">
+                  <div className="space-y-2">
+                    {participants
+                      .filter(p => p.user_id !== user?.id)
+                      .slice(0, 4)
+                      .map(p => (
+                        <div key={p.id} className="aspect-video bg-muted rounded-lg flex items-center justify-center">
+                          <div className="text-center">
+                            <Avatar className={`h-10 w-10 mx-auto ${getColorFromName(p.profiles?.full_name || null)}`}>
+                              <AvatarFallback className="text-sm text-white bg-transparent">
+                                {getInitials(p.profiles?.full_name || null)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <p className="text-xs text-muted-foreground mt-1 truncate">
+                              {p.profiles?.full_name || p.profiles?.email || 'Participant'}
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                    }
+                  </div>
+                </ScrollArea>
+              </div>
+            </TabsContent>
 
             {/* Chat Tab */}
             <TabsContent value="chat" className="flex-1 flex flex-col m-0 overflow-hidden">
@@ -1011,6 +1120,17 @@ const LiveSessionRoom = () => {
           </Tabs>
         </div>
       </div>
+
+      {/* Presentation Mode Overlay */}
+      {isPresentationMode && (
+        <PresentationMode
+          slides={presentationSlides}
+          isInstructor={isInstructor}
+          onClose={() => setIsPresentationMode(false)}
+          onSlideChange={setCurrentSlideIndex}
+          currentSlideIndex={currentSlideIndex}
+        />
+      )}
     </div>
   );
 };
