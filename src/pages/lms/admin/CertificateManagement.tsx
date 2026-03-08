@@ -95,6 +95,7 @@ const CertificateManagement = () => {
   const [formCertNumber, setFormCertNumber] = useState('');
   const [formIssuedAt, setFormIssuedAt] = useState(new Date().toISOString().split('T')[0]);
   const [formAdmission, setFormAdmission] = useState('');
+  const [formAggregate, setFormAggregate] = useState('DISTINCTION');
 
   // Edit/Preview overrides
   const [overrides, setOverrides] = useState<CertOverrides>({
@@ -266,6 +267,7 @@ const CertificateManagement = () => {
   const resetForm = () => {
     setFormStudentId(''); setFormCourseId(''); setFormCertNumber('');
     setFormIssuedAt(new Date().toISOString().split('T')[0]); setFormAdmission('');
+    setFormAggregate('DISTINCTION');
   };
 
   const setOv = (key: keyof CertOverrides, val: string) => setOverrides(p => ({ ...p, [key]: val }));
@@ -278,6 +280,9 @@ const CertificateManagement = () => {
     const certNumber = o.certNumber || cert.certificate_number;
     const issuedAt = o.issuedAt || cert.issued_at;
     const year = new Date(issuedAt).getFullYear();
+    // Always ensure admission & serial numbers are present
+    const admissionNumber = o.admissionNumber || cert.profiles?.admission_number || '';
+    const serialNumber = o.serialNumber || generateSerialNumber(admissionNumber, courseTitle);
 
     // Brand colors from logo
     const BLUE = { r: 20, g: 67, b: 140 };    // #14438C
@@ -371,8 +376,8 @@ const CertificateManagement = () => {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(7.5);
     doc.setTextColor(BLUE.r, BLUE.g, BLUE.b);
-    doc.text(`ADMISSION: ${o.admissionNumber}`, 20, 55);
-    doc.text(`SERIAL NO: ${o.serialNumber}`, W - 20, 55, { align: 'right' });
+    doc.text(`ADMISSION: ${admissionNumber}`, 20, 55);
+    doc.text(`SERIAL NO: ${serialNumber}`, W - 20, 55, { align: 'right' });
 
     // ── Motto ──
     doc.setFont('helvetica', 'bolditalic');
@@ -762,12 +767,36 @@ const CertificateManagement = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  {formAdmission && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label>Admission Number</Label>
+                        <Input value={formAdmission} readOnly className="bg-muted" />
+                      </div>
+                      <div>
+                        <Label>Serial Number</Label>
+                        <Input value={formStudentId && formCourseId ? generateSerialNumber(formAdmission, courses.find(c => c.id === formCourseId)?.title || '') : ''} readOnly className="bg-muted" />
+                      </div>
+                    </div>
+                  )}
                   <div>
                     <Label>Certificate Number</Label>
                     <Input value={formCertNumber} onChange={e => setFormCertNumber(e.target.value)} />
                   </div>
                   <div>
-                    <Label>Issue Date</Label>
+                    <Label>Aggregate / Grade</Label>
+                    <Select value={formAggregate} onValueChange={setFormAggregate}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="DISTINCTION">DISTINCTION</SelectItem>
+                        <SelectItem value="CREDIT">CREDIT</SelectItem>
+                        <SelectItem value="MERIT">MERIT</SelectItem>
+                        <SelectItem value="PASS">PASS</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Issue Date (backdate if needed)</Label>
                     <Input type="date" value={formIssuedAt} onChange={e => setFormIssuedAt(e.target.value)} />
                   </div>
                 </div>
