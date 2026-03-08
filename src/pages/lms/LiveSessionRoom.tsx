@@ -566,6 +566,59 @@ const LiveSessionRoom = () => {
     setIsPresentationMode(true);
   };
 
+  // Quick upload and present file
+  const handleQuickPresent = async (file: globalThis.File) => {
+    if (!sessionId || !user) return;
+    setIsUploading(true);
+    try {
+      const filePath = `${sessionId}/${Date.now()}-${file.name}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('session-files')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        toast.error('Failed to upload file');
+        return;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('session-files')
+        .getPublicUrl(filePath);
+
+      // Save to session files
+      await supabase.from('session_files').insert({
+        session_id: sessionId,
+        uploaded_by: user.id,
+        file_name: file.name,
+        file_url: urlData.publicUrl,
+        file_size: file.size,
+        file_type: file.type || null,
+      });
+
+      // Send system message
+      await supabase.from('session_messages').insert({
+        session_id: sessionId,
+        user_id: user.id,
+        content: `📊 started presenting: ${file.name}`,
+        message_type: 'system'
+      });
+
+      // Start presentation based on file type
+      if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+        setLoadingPDF(urlData.publicUrl);
+      } else if (file.type.startsWith('image/')) {
+        setPresentationSlides([urlData.publicUrl]);
+        setCurrentSlideIndex(0);
+        setIsPresentationMode(true);
+      }
+    } catch (err) {
+      toast.error('Failed to start presentation');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
