@@ -14,7 +14,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Award, Download, Plus, Edit2, Trash2, Search, RefreshCw, Eye } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { toast } from 'sonner';
-import logoImg from '@/assets/logo.png';
+import logoImg from '@/assets/logo-transparent.png';
+import QRCode from 'qrcode';
 
 interface CertificateRecord {
   id: string;
@@ -234,7 +235,9 @@ const CertificateManagement = () => {
     const GREEN = { r: 76, g: 140, b: 43 };    // #4C8C2B
     const GOLD = { r: 212, g: 160, b: 23 };
 
-    // Preload images
+    // Preload images + QR code
+    const verifyUrl = `https://microsoftinstitute.lovable.app/lms/grades`;
+    const qrDataUrl = await QRCode.toDataURL(verifyUrl, { width: 200, margin: 1, color: { dark: '#14438C', light: '#FFFCF0' } });
     const [logoBase64, ...logoImages] = await Promise.all([
       loadImageAsBase64(logoImg),
       ...PARTNER_LOGOS.map(p => loadImageAsBase64(p.path)),
@@ -498,22 +501,75 @@ const CertificateManagement = () => {
     doc.setTextColor(100, 100, 100);
     doc.text('Department Head', W - 65, sigY + 9, { align: 'center' });
 
-    // ── CERTIFIED stamp (bottom-right) ──
-    const stX = W - 50;
-    const stY = 148;
-    doc.setDrawColor(180, 30, 30);
-    doc.setLineWidth(1.2);
-    doc.circle(stX, stY, 10, 'S');
-    doc.setLineWidth(0.4);
-    doc.circle(stX, stY, 8.5, 'S');
+    // ── KNEC-STYLE SECURITY SEAL (bottom-right) ──
+    const stX = W - 48;
+    const stY = 146;
+    const sealOuterR = 13;
+
+    // Gold foil outer ring
+    doc.setFillColor(GOLD.r, GOLD.g, GOLD.b);
+    setOpacity(0.25);
+    doc.circle(stX, stY, sealOuterR + 2, 'F');
+    setOpacity(1);
+
+    // Serrated edge (star points around the seal)
+    doc.setFillColor(GOLD.r, GOLD.g, GOLD.b);
+    for (let a = 0; a < 360; a += 10) {
+      const rad = (a * Math.PI) / 180;
+      const x1 = stX + Math.cos(rad) * (sealOuterR + 1);
+      const y1 = stY + Math.sin(rad) * (sealOuterR + 1);
+      doc.circle(x1, y1, 0.8, 'F');
+    }
+
+    // Outer dark blue ring
+    doc.setDrawColor(BLUE.r, BLUE.g, BLUE.b);
+    doc.setLineWidth(2);
+    doc.circle(stX, stY, sealOuterR, 'S');
+    // Gold inner ring
+    doc.setDrawColor(GOLD.r, GOLD.g, GOLD.b);
+    doc.setLineWidth(0.8);
+    doc.circle(stX, stY, sealOuterR - 2, 'S');
+    // Inner blue fill
+    doc.setFillColor(BLUE.r, BLUE.g, BLUE.b);
+    doc.circle(stX, stY, sealOuterR - 3, 'F');
+    // Gold accent ring
+    doc.setDrawColor(GOLD.r, GOLD.g, GOLD.b);
+    doc.setLineWidth(0.3);
+    doc.circle(stX, stY, sealOuterR - 4.5, 'S');
+
+    // Seal text
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(6.5);
-    doc.setTextColor(180, 30, 30);
-    doc.text('CERTIFIED', stX, stY - 1.5, { align: 'center' });
+    doc.setTextColor(255, 255, 255);
     doc.setFontSize(4.5);
-    doc.text('AUTHENTIC', stX, stY + 2, { align: 'center' });
+    doc.text('OFFICIAL', stX, stY - 4, { align: 'center' });
     doc.setFontSize(3.5);
-    doc.text(`${monthStr.toUpperCase()} ${year}`, stX, stY + 5, { align: 'center' });
+    doc.text('SECURITY', stX, stY - 1, { align: 'center' });
+    doc.setFontSize(3.5);
+    doc.text('SEAL', stX, stY + 2, { align: 'center' });
+    // Gold star in center
+    doc.setFillColor(GOLD.r, GOLD.g, GOLD.b);
+    const starCx = stX, starCy = stY + 5.5;
+    for (let i = 0; i < 5; i++) {
+      const angle = (i * 72 - 90) * Math.PI / 180;
+      doc.circle(starCx + Math.cos(angle) * 2, starCy + Math.sin(angle) * 2, 0.4, 'F');
+    }
+    doc.circle(starCx, starCy, 0.6, 'F');
+    // Year at bottom of seal
+    doc.setFontSize(3.2);
+    doc.setTextColor(GOLD.r, GOLD.g, GOLD.b);
+    doc.text(String(year), stX, stY + 9.5, { align: 'center' });
+
+    // ── QR Code (bottom-left) ──
+    const qrX = 22;
+    const qrY = 140;
+    const qrSize = 18;
+    try {
+      doc.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
+    } catch { /* QR failed */ }
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(3.5);
+    doc.setTextColor(BLUE.r, BLUE.g, BLUE.b);
+    doc.text('Scan to verify', qrX + qrSize / 2, qrY + qrSize + 2.5, { align: 'center' });
 
     // ── Partner logos bar (no background, just a subtle top line) ──
     const partnerBarY = H - 28;
@@ -557,17 +613,23 @@ const CertificateManagement = () => {
       doc.text(partner.name, px, logoRowY + logoMaxH + 2.5, { align: 'center' });
     });
 
-    // ── Disclaimer ──
-    doc.setFont('helvetica', 'italic');
-    doc.setFontSize(5);
-    doc.setTextColor(150, 150, 150);
-    doc.text('(This certificate is issued with no alteration whatsoever)', W / 2, H - 9, { align: 'center' });
+    // ── Footer bar with disclaimer and verification ──
+    doc.setFillColor(BLUE.r, BLUE.g, BLUE.b);
+    doc.rect(6, H - 14, W - 12, 8, 'F');
+    // Orange top accent on footer
+    doc.setDrawColor(ORANGE.r, ORANGE.g, ORANGE.b);
+    doc.setLineWidth(0.5);
+    doc.line(6, H - 14, W - 6, H - 14);
 
-    // ── Verification ──
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(5.5);
+    doc.setTextColor(255, 255, 255);
+    doc.text('This certificate is issued with no alteration whatsoever', W / 2, H - 10.5, { align: 'center' });
+
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(4.5);
-    doc.setTextColor(BLUE.r, BLUE.g, BLUE.b);
-    doc.text(`Verify: microsoftinstitute.africa/verify/${certNumber}`, W / 2, H - 6, { align: 'center' });
+    doc.setFontSize(4);
+    doc.setTextColor(GOLD.r, GOLD.g, GOLD.b);
+    doc.text(`Certificate No: ${certNumber}  |  Verify online or scan QR code`, W / 2, H - 7.5, { align: 'center' });
 
     doc.save(`Certificate-${certNumber}.pdf`);
     toast.success('Certificate PDF downloaded!');
