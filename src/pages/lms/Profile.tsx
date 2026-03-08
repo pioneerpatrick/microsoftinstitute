@@ -29,6 +29,7 @@ interface Profile {
   email: string | null;
   bio: string | null;
   avatar_url: string | null;
+  admission_number: string | null;
 }
 
 const ProfilePage = () => {
@@ -72,7 +73,8 @@ const ProfilePage = () => {
         full_name: user.user_metadata?.full_name || null,
         email: user.email || null,
         bio: null,
-        avatar_url: null
+        avatar_url: null,
+        admission_number: null,
       };
       await supabase.from('profiles').insert(newProfile);
       setProfile(newProfile);
@@ -181,6 +183,13 @@ const ProfilePage = () => {
                     />
                   </div>
                 </div>
+
+                {profile?.admission_number && (
+                  <div className="p-4 bg-muted/50 rounded-lg border">
+                    <Label className="text-xs text-muted-foreground">Admission Number</Label>
+                    <p className="font-mono font-bold text-primary text-xl mt-1">{profile.admission_number}</p>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">

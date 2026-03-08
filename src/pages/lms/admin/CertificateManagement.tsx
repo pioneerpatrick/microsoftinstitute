@@ -22,10 +22,10 @@ interface CertificateRecord {
   user_id: string;
   course_id: string;
   courses: { title: string; category: string | null; duration_hours: number | null } | null;
-  profiles: { full_name: string | null; email: string | null } | null;
+  profiles: { full_name: string | null; email: string | null; admission_number: string | null } | null;
 }
 
-interface StudentOption { id: string; full_name: string | null; email: string | null; }
+interface StudentOption { id: string; full_name: string | null; email: string | null; admission_number: string | null; }
 interface CourseOption { id: string; title: string; category: string | null; duration_hours: number | null; }
 
 interface CertOverrides {
@@ -137,7 +137,7 @@ const CertificateManagement = () => {
       .order('issued_at', { ascending: false });
     if (certsData && certsData.length > 0) {
       const userIds = [...new Set(certsData.map(c => c.user_id))];
-      const { data: profilesData } = await supabase.from('profiles').select('id, full_name, email').in('id', userIds);
+      const { data: profilesData } = await supabase.from('profiles').select('id, full_name, email, admission_number').in('id', userIds);
       const profileMap = new Map((profilesData || []).map(p => [p.id, p]));
       setCertificates(certsData.map(c => ({ ...c, profiles: profileMap.get(c.user_id) || null })) as unknown as CertificateRecord[]);
     } else {
@@ -146,7 +146,7 @@ const CertificateManagement = () => {
   };
 
   const fetchStudents = async () => {
-    const { data } = await supabase.from('profiles').select('id, full_name, email').order('full_name');
+    const { data } = await supabase.from('profiles').select('id, full_name, email, admission_number').order('full_name');
     if (data) setStudents(data);
   };
 
@@ -204,7 +204,7 @@ const CertificateManagement = () => {
       issuedAt: new Date(cert.issued_at).toISOString().split('T')[0],
       institutionTitle: 'MICROSOFT TRAINING INSTITUTE',
       motto: '"Quest for Excellence"',
-      admissionNumber: `MTI/${String(Math.floor(Math.random() * 999) + 1).padStart(3, '0')}/${year}`,
+      admissionNumber: cert.profiles?.admission_number || `MTI/${String(Math.floor(Math.random() * 999) + 1).padStart(3, '0')}/${year}`,
       serialNumber: `MTI/${courseAbbr}/${idx}/${year}`,
       aggregate: 'DISTINCTION',
       congregationText: '',
@@ -606,11 +606,17 @@ const CertificateManagement = () => {
                 <div className="space-y-4">
                   <div>
                     <Label>Student</Label>
-                    <Select value={formStudentId} onValueChange={setFormStudentId}>
+                    <Select value={formStudentId} onValueChange={(val) => {
+                      setFormStudentId(val);
+                      const s = students.find(st => st.id === val);
+                      if (s?.admission_number) setFormAdmission(s.admission_number);
+                    }}>
                       <SelectTrigger><SelectValue placeholder="Select student..." /></SelectTrigger>
                       <SelectContent>
                         {students.map(s => (
-                          <SelectItem key={s.id} value={s.id}>{s.full_name || s.email || s.id}</SelectItem>
+                          <SelectItem key={s.id} value={s.id}>
+                            {s.admission_number ? `[${s.admission_number}] ` : ''}{s.full_name || s.email || s.id}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

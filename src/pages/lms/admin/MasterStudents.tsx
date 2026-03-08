@@ -26,6 +26,7 @@ interface Student {
   full_name: string | null;
   email: string | null;
   student_status: string | null;
+  admission_number: string | null;
   created_at: string;
   enrollments: Array<{
     course_id: string;
@@ -151,6 +152,28 @@ const MasterStudents = () => {
     return password;
   };
 
+  const assignAdmissionNumber = async (userId: string) => {
+    // Check if already has admission number
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('admission_number')
+      .eq('id', userId)
+      .single();
+    
+    if (profile?.admission_number) return profile.admission_number;
+
+    // Generate via DB function
+    const { data: result } = await supabase.rpc('generate_admission_number');
+    if (result) {
+      await supabase
+        .from('profiles')
+        .update({ admission_number: result })
+        .eq('id', userId);
+      return result as string;
+    }
+    return null;
+  };
+
   const copyCredentials = () => {
     if (createdCredentials) {
       navigator.clipboard.writeText(
@@ -220,6 +243,9 @@ const MasterStudents = () => {
       }
 
       if (userId) {
+        // Auto-assign admission number
+        const admNo = await assignAdmissionNumber(userId);
+        
         const selectedFeeStructure = feeStructures.find(f => f.id === newStudent.fee_structure_id);
         const course = selectedFeeStructure?.course_id 
           ? courses.find(c => c.id === selectedFeeStructure.course_id)
@@ -308,6 +334,9 @@ const MasterStudents = () => {
     setEnrolling(true);
 
     try {
+      // Auto-assign admission number
+      await assignAdmissionNumber(existingEnrollment.student_id);
+      
       const selectedFeeStructure = feeStructures.find(f => f.id === existingEnrollment.fee_structure_id);
       const student = existingProfiles.find(s => s.id === existingEnrollment.student_id);
       const course = selectedFeeStructure?.course_id 
@@ -402,7 +431,7 @@ const MasterStudents = () => {
     // Get profiles for these students
     const { data: profilesData } = await supabase
       .from('profiles')
-      .select('id, full_name, email, student_status, created_at')
+      .select('id, full_name, email, student_status, admission_number, created_at')
       .in('id', allStudentIds);
 
     // Combine data
@@ -446,22 +475,24 @@ const MasterStudents = () => {
   };
 
   const filteredStudents = students.filter(s => {
+    const q = searchQuery.toLowerCase();
     const matchesSearch = 
-      s.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.email?.toLowerCase().includes(searchQuery.toLowerCase());
+      s.full_name?.toLowerCase().includes(q) ||
+      s.email?.toLowerCase().includes(q) ||
+      s.admission_number?.toLowerCase().includes(q);
     const matchesStatus = statusFilter === 'all' || (s.student_status || 'active') === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
   const exportToCSV = () => {
     const csv = [
-      'Name,Email,Status,Courses,Total Due,Total Paid,Balance,Created',
+      'Admission No,Name,Email,Status,Courses,Total Due,Total Paid,Balance,Created',
       ...filteredStudents.map(s => {
         const totalDue = s.fees.reduce((sum, f) => sum + f.amount_due, 0);
         const totalPaid = s.fees.reduce((sum, f) => sum + f.amount_paid, 0);
         const balance = s.fees.reduce((sum, f) => sum + f.balance, 0);
         const courses = s.enrollments.map(e => e.courses?.title).join('; ');
-        return `"${s.full_name || ''}","${s.email || ''}","${s.student_status || 'active'}","${courses}",${totalDue},${totalPaid},${balance},"${format(new Date(s.created_at), 'yyyy-MM-dd')}"`;
+        return `"${s.admission_number || ''}","${s.full_name || ''}","${s.email || ''}","${s.student_status || 'active'}","${courses}",${totalDue},${totalPaid},${balance},"${format(new Date(s.created_at), 'yyyy-MM-dd')}"`;
       })
     ].join('\n');
 
@@ -920,7 +951,7 @@ const MasterStudents = () => {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by name or email..."
+              placeholder="Search by name, email, or admission number..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -955,6 +986,7 @@ const MasterStudents = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Adm. No.</TableHead>
                       <TableHead>Student</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Courses</TableHead>
@@ -970,6 +1002,11 @@ const MasterStudents = () => {
                       const balance = student.fees.reduce((sum, f) => sum + f.balance, 0);
                       return (
                         <TableRow key={student.id}>
+                          <TableCell>
+                            <span className="font-mono text-xs font-medium text-primary">
+                              {student.admission_number || '—'}
+                            </span>
+                          </TableCell>
                           <TableCell>
                             <div>
                               <div className="font-medium">{student.full_name || 'Unnamed'}</div>
@@ -1064,7 +1101,11 @@ const MasterStudents = () => {
             </DialogHeader>
             {selectedStudent && (
               <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Admission Number</p>
+                    <p className="font-mono font-bold text-primary text-lg">{selectedStudent.admission_number || '—'}</p>
+                  </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Name</p>
                     <p className="font-medium">{selectedStudent.full_name || 'Unnamed'}</p>
