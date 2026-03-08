@@ -581,6 +581,7 @@ const LiveSessionRoom = () => {
   // Start presentation with a PDF file
   const startPDFPresentation = (pdfUrl: string) => {
     setLoadingPDF(pdfUrl);
+    setRightPanel('notes');
   };
 
   // Handle PDF pages extracted
