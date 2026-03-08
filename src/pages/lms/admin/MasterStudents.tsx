@@ -973,6 +973,11 @@ const MasterStudents = () => {
                       return (
                         <TableRow key={student.id}>
                           <TableCell>
+                            <span className="font-mono text-xs font-medium text-primary">
+                              {student.admission_number || '—'}
+                            </span>
+                          </TableCell>
+                          <TableCell>
                             <div>
                               <div className="font-medium">{student.full_name || 'Unnamed'}</div>
                               <div className="text-sm text-muted-foreground">{student.email}</div>
