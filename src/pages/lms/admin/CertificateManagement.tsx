@@ -324,11 +324,11 @@ const CertificateManagement = () => {
       { r: GOLD.r, g: GOLD.g, b: GOLD.b },
     ];
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     setOpacity(0.09);
     let wmColorIdx = 0;
-    for (let wy = 4; wy < H; wy += 8) {
-      for (let wx = -20; wx < W + 20; wx += 82) {
+    for (let wy = 4; wy < H; wy += 7) {
+      for (let wx = -10; wx < W + 10; wx += 58) {
         const c = wmColors[wmColorIdx % wmColors.length];
         doc.setTextColor(c.r, c.g, c.b);
         doc.text(wmText, wx, wy);
