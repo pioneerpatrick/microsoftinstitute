@@ -87,6 +87,7 @@ const App = () => (
             <Route path="/lms/messages" element={<Messages />} />
             <Route path="/lms/meet/:sessionId" element={<LiveSessionRoom />} />
             <Route path="/lms/profile" element={<ProfilePage />} />
+            <Route path="/lms/coding-lab" element={<CodingLab />} />
             
             {/* Student Grades & Fees */}
             <Route path="/lms/grades" element={<Grades />} />
