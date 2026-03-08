@@ -32,6 +32,12 @@ import {
   Smile,
   Pin,
   Trash2,
+  Upload,
+  Download,
+  File,
+  Image,
+  FileSpreadsheet,
+  Paperclip,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
