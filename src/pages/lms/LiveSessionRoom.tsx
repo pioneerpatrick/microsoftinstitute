@@ -133,7 +133,12 @@ const LiveSessionRoom = () => {
   const [screenShareStream, setScreenShareStream] = useState<MediaStream | null>(null);
   const [loadingPDF, setLoadingPDF] = useState<string | null>(null);
   const presentInputRef = useRef<HTMLInputElement>(null);
-
+  const [showSettings, setShowSettings] = useState(false);
+  const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);
+  const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedAudioDevice, setSelectedAudioDevice] = useState<string>('');
+  const [selectedVideoDevice, setSelectedVideoDevice] = useState<string>('');
+  const [noiseSuppression, setNoiseSuppression] = useState(true);
   const isInstructor = session?.instructor_id === user?.id || isStaff;
 
   // WebRTC for peer-to-peer video
