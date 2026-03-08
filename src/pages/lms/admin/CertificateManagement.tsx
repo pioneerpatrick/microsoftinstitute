@@ -300,6 +300,7 @@ const CertificateManagement = () => {
     ]);
 
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    await registerCalligraphyFont(doc);
     const W = doc.internal.pageSize.getWidth();
     const H = doc.internal.pageSize.getHeight();
 

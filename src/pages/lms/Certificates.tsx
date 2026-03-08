@@ -81,12 +81,13 @@ const Certificates = () => {
     setIsLoading(false);
   };
 
-  const generateCertificatePDF = (cert: Certificate) => {
+  const generateCertificatePDF = async (cert: Certificate) => {
     const doc = new jsPDF({
       orientation: 'landscape',
       unit: 'mm',
       format: 'a4',
     });
+    await registerCalligraphyFont(doc);
 
     const width = doc.internal.pageSize.getWidth();
     const height = doc.internal.pageSize.getHeight();
