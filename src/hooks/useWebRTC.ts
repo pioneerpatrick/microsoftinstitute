@@ -168,7 +168,7 @@ export function useWebRTC({ sessionId, userId, localStream }: UseWebRTCOptions) 
         receiver_id: peerId,
         signal_type: 'offer',
         signal_data: offer,
-      });
+      } as any);
     } catch (err) {
       console.error('Error creating offer:', err);
       makingOffer.current.delete(peerId);
