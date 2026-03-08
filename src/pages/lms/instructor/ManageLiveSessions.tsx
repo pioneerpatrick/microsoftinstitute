@@ -368,12 +368,8 @@ const ManageLiveSessions = () => {
   };
 
   const startSession = (session: LiveSession) => {
-    // Update status to live
     updateStatus(session.id, 'live');
-    // Open Google Meet in new tab
-    if (session.meeting_url) {
-      window.open(session.meeting_url, '_blank');
-    }
+    navigate(`/lms/meet/${session.id}`);
   };
 
   const copyJoinLink = (sessionId: string) => {
