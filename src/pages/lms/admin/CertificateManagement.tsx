@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Award, Download, Plus, Edit2, Trash2, Search, RefreshCw, Eye } from 'lucide-react';
 import { jsPDF } from 'jspdf';
-import { registerCalligraphyFont, setCalligraphyFont } from '@/lib/registerCalligraphyFont';
+import { registerCalligraphyFont, setCalligraphyFont, toSentenceCase } from '@/lib/registerCalligraphyFont';
 import { toast } from 'sonner';
 import logoImg from '@/assets/logo-transparent.png';
 import QRCode from 'qrcode';
@@ -402,11 +402,12 @@ const CertificateManagement = () => {
     setCalligraphyFont(doc);
     doc.setFontSize(28);
     doc.setTextColor(BLUE.r, BLUE.g, BLUE.b);
-    doc.text(studentName, W / 2, 82, { align: 'center' });
+    const displayName = toSentenceCase(studentName);
+    doc.text(displayName, W / 2, 82, { align: 'center' });
     doc.setFont('helvetica', 'normal'); // reset font
 
     // Orange + green underline
-    const nameW = doc.getTextWidth(studentName);
+    const nameW = doc.getTextWidth(displayName);
     doc.setDrawColor(ORANGE.r, ORANGE.g, ORANGE.b);
     doc.setLineWidth(0.8);
     doc.line(W / 2 - nameW / 2 - 8, 85, W / 2 + nameW / 2 + 8, 85);
