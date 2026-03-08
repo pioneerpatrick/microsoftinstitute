@@ -50,6 +50,7 @@ import { format } from 'date-fns';
 import SessionPolls from '@/components/lms/SessionPolls';
 import VideoPanel from '@/components/lms/VideoPanel';
 import PresentationMode from '@/components/lms/PresentationMode';
+import PDFPresenter from '@/components/lms/PDFPresenter';
 
 interface Session {
   id: string;
@@ -126,6 +127,7 @@ const LiveSessionRoom = () => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [screenShareStream, setScreenShareStream] = useState<MediaStream | null>(null);
+  const [loadingPDF, setLoadingPDF] = useState<string | null>(null);
 
   const isInstructor = session?.instructor_id === user?.id || isStaff;
 
@@ -541,12 +543,25 @@ const LiveSessionRoom = () => {
     );
     
     if (imageFiles.length === 0) {
-      toast.error('No images to present. Please upload image files first.');
+      toast.error('No images to present. Please upload image files first, or use "Present PDF" for PDF files.');
       return;
     }
     
     setPresentationSlides(imageFiles.map(f => f.file_url));
     setCurrentSlideIndex(0);
+    setIsPresentationMode(true);
+  };
+
+  // Start presentation with a PDF file
+  const startPDFPresentation = (pdfUrl: string) => {
+    setLoadingPDF(pdfUrl);
+  };
+
+  // Handle PDF pages extracted
+  const handlePDFPagesExtracted = (pages: string[]) => {
+    setPresentationSlides(pages);
+    setCurrentSlideIndex(0);
+    setLoadingPDF(null);
     setIsPresentationMode(true);
   };
 
@@ -1138,6 +1153,33 @@ const LiveSessionRoom = () => {
                           </p>
                         </div>
                         <div className="flex gap-1 flex-shrink-0">
+                          {/* Present button for PDFs and images */}
+                          {isInstructor && (file.file_type?.includes('pdf') || file.file_name.endsWith('.pdf')) && (
+                            <Button 
+                              size="icon" 
+                              variant="ghost" 
+                              className="h-7 w-7 text-primary hover:text-primary"
+                              onClick={() => startPDFPresentation(file.file_url)}
+                              title="Present PDF"
+                            >
+                              <Presentation className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                          {isInstructor && (file.file_type?.startsWith('image/') || file.file_name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) && (
+                            <Button 
+                              size="icon" 
+                              variant="ghost" 
+                              className="h-7 w-7 text-primary hover:text-primary"
+                              onClick={() => {
+                                setPresentationSlides([file.file_url]);
+                                setCurrentSlideIndex(0);
+                                setIsPresentationMode(true);
+                              }}
+                              title="Present Image"
+                            >
+                              <Presentation className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
                           <Button size="icon" variant="ghost" className="h-7 w-7" asChild>
                             <a href={file.file_url} target="_blank" rel="noopener noreferrer" download>
                               <Download className="h-3.5 w-3.5" />
@@ -1168,6 +1210,27 @@ const LiveSessionRoom = () => {
           </Tabs>
         </div>
       </div>
+
+      {/* PDF Loading Modal */}
+      {loadingPDF && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
+          <Card className="w-80">
+            <PDFPresenter
+              pdfUrl={loadingPDF}
+              onPagesExtracted={handlePDFPagesExtracted}
+              onError={() => {
+                setLoadingPDF(null);
+                toast.error('Failed to load PDF for presentation');
+              }}
+            />
+            <div className="p-3 border-t text-center">
+              <Button variant="ghost" size="sm" onClick={() => setLoadingPDF(null)}>
+                Cancel
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* Presentation Mode Overlay */}
       {isPresentationMode && (
