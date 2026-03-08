@@ -712,7 +712,35 @@ const LiveSessionRoom = () => {
             >
               <Hand className="h-4 w-4" />
             </Button>
-
+            {isInstructor && (
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      if (file.size > 20 * 1024 * 1024) {
+                        toast.error('File size must be under 20MB');
+                        return;
+                      }
+                      uploadFile(file);
+                    }
+                    e.target.value = '';
+                  }}
+                />
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="rounded-full h-10 w-10"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                >
+                  {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+                </Button>
+              </>
+            )}
             {/* Mobile panel toggles */}
             <div className="flex lg:hidden gap-1 ml-4">
               <Button
