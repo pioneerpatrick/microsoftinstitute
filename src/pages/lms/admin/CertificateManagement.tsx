@@ -235,7 +235,9 @@ const CertificateManagement = () => {
     const GREEN = { r: 76, g: 140, b: 43 };    // #4C8C2B
     const GOLD = { r: 212, g: 160, b: 23 };
 
-    // Preload images
+    // Preload images + QR code
+    const verifyUrl = `https://microsoftinstitute.lovable.app/lms/grades`;
+    const qrDataUrl = await QRCode.toDataURL(verifyUrl, { width: 200, margin: 1, color: { dark: '#14438C', light: '#FFFCF0' } });
     const [logoBase64, ...logoImages] = await Promise.all([
       loadImageAsBase64(logoImg),
       ...PARTNER_LOGOS.map(p => loadImageAsBase64(p.path)),
