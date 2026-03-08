@@ -732,6 +732,31 @@ const PresentationMode = ({
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
+
+            {/* Save Actions */}
+            <div className="flex items-center gap-1 ml-2 border-l border-white/20 pl-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-full text-white hover:bg-green-500/50"
+                onClick={downloadCurrentSlide}
+                disabled={isSaving}
+                title="Save current slide"
+              >
+                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 rounded-full text-white hover:bg-green-500/50 gap-1 px-3"
+                onClick={downloadAllSlides}
+                disabled={isSaving}
+                title="Save all slides"
+              >
+                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                <span className="text-xs">All</span>
+              </Button>
+            </div>
           </div>
 
           {/* Slide Thumbnails */}
