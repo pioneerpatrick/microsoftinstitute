@@ -1153,6 +1153,33 @@ const LiveSessionRoom = () => {
                           </p>
                         </div>
                         <div className="flex gap-1 flex-shrink-0">
+                          {/* Present button for PDFs and images */}
+                          {isInstructor && (file.file_type?.includes('pdf') || file.file_name.endsWith('.pdf')) && (
+                            <Button 
+                              size="icon" 
+                              variant="ghost" 
+                              className="h-7 w-7 text-primary hover:text-primary"
+                              onClick={() => startPDFPresentation(file.file_url)}
+                              title="Present PDF"
+                            >
+                              <Presentation className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                          {isInstructor && (file.file_type?.startsWith('image/') || file.file_name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) && (
+                            <Button 
+                              size="icon" 
+                              variant="ghost" 
+                              className="h-7 w-7 text-primary hover:text-primary"
+                              onClick={() => {
+                                setPresentationSlides([file.file_url]);
+                                setCurrentSlideIndex(0);
+                                setIsPresentationMode(true);
+                              }}
+                              title="Present Image"
+                            >
+                              <Presentation className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
                           <Button size="icon" variant="ghost" className="h-7 w-7" asChild>
                             <a href={file.file_url} target="_blank" rel="noopener noreferrer" download>
                               <Download className="h-3.5 w-3.5" />
