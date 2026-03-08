@@ -1446,26 +1446,7 @@ const LiveSessionRoom = () => {
         </div>
       </div>
 
-      {/* PDF Loading Modal */}
-      {loadingPDF && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
-          <Card className="w-80">
-            <PDFPresenter
-              pdfUrl={loadingPDF}
-              onPagesExtracted={handlePDFPagesExtracted}
-              onError={() => {
-                setLoadingPDF(null);
-                toast.error('Failed to load PDF for presentation');
-              }}
-            />
-            <div className="p-3 border-t text-center">
-              <Button variant="ghost" size="sm" onClick={() => setLoadingPDF(null)}>
-                Cancel
-              </Button>
-            </div>
-          </Card>
-        </div>
-      )}
+      {/* PDF loading now inline in Notes tab */}
 
       {/* Presentation Mode Overlay */}
       {isPresentationMode && (
