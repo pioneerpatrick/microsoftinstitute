@@ -108,11 +108,11 @@ const Certificates = () => {
       doc.setGState(new doc.GState({ opacity: o }));
     };
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     setOpacity(0.09);
     let wmIdx = 0;
-    for (let wy = 4; wy < height; wy += 8) {
-      for (let wx = -20; wx < width + 20; wx += 82) {
+    for (let wy = 4; wy < height; wy += 7) {
+      for (let wx = -10; wx < width + 10; wx += 58) {
         const c = wmColors[wmIdx % wmColors.length];
         doc.setTextColor(c.r, c.g, c.b);
         doc.text(wmText, wx, wy);
