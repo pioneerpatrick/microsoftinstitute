@@ -111,7 +111,7 @@ export function useWebRTC({ sessionId, userId, localStream }: UseWebRTCOptions) 
         receiver_id: peerId,
         signal_type: 'answer',
         signal_data: answer,
-      });
+      } as any);
     } catch (err) {
       console.error('Error handling offer:', err);
     }
