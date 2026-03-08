@@ -513,6 +513,23 @@ const LiveSessionRoom = () => {
     navigate('/lms/instructor/live-sessions');
   };
 
+  // Start presentation mode with images from session files
+  const startPresentation = () => {
+    const imageFiles = sessionFiles.filter(f => 
+      f.file_type?.startsWith('image/') || 
+      f.file_name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)
+    );
+    
+    if (imageFiles.length === 0) {
+      toast.error('No images to present. Please upload image files first.');
+      return;
+    }
+    
+    setPresentationSlides(imageFiles.map(f => f.file_url));
+    setCurrentSlideIndex(0);
+    setIsPresentationMode(true);
+  };
+
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
