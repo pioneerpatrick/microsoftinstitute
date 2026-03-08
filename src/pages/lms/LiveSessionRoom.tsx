@@ -650,13 +650,10 @@ const LiveSessionRoom = () => {
 
   // Start PDF presentation
   const startPDFPresentation = (pdfUrl: string) => {
-    setLoadingPDF(pdfUrl);
-  };
-
-  const handlePDFPagesExtracted = (pages: string[]) => {
-    setPresentationSlides(pages);
-    setCurrentSlideIndex(0);
-    setLoadingPDF(null);
+    setActivePdfUrl(pdfUrl);
+    setActiveImageUrl(null);
+    setCurrentSlideIndex(1);
+    setTotalSlides(0);
     setBoardMode('presentation');
   };
 
