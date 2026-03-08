@@ -115,7 +115,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send emails to all enrolled students
     for (const enrollment of enrollments || []) {
-      const profile = enrollment.profiles as any;
+      const profile = profilesMap.get(enrollment.user_id);
       const studentEmail = profile?.email;
       const studentName = profile?.full_name || 'Student';
 
