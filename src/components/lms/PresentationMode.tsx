@@ -23,12 +23,16 @@ import {
   MousePointer,
   Highlighter,
   Image,
+  Download,
+  Save,
+  Loader2,
 } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { toast } from 'sonner';
 
 interface PresentationModeProps {
   slides: string[];
