@@ -154,7 +154,7 @@ const Certificates = () => {
     // Underline for name
     doc.setDrawColor(212, 175, 55);
     doc.setLineWidth(0.3);
-    const nameWidth = doc.getTextWidth(studentName.toUpperCase());
+    const nameWidth = doc.getTextWidth(displayName);
     doc.line(width / 2 - nameWidth / 2 - 10, 108, width / 2 + nameWidth / 2 + 10, 108);
 
     // "has successfully completed"

@@ -407,7 +407,7 @@ const CertificateManagement = () => {
     doc.setFont('helvetica', 'normal'); // reset font
 
     // Orange + green underline
-    const nameW = doc.getTextWidth(studentName);
+    const nameW = doc.getTextWidth(displayName);
     doc.setDrawColor(ORANGE.r, ORANGE.g, ORANGE.b);
     doc.setLineWidth(0.8);
     doc.line(W / 2 - nameW / 2 - 8, 85, W / 2 + nameW / 2 + 8, 85);
