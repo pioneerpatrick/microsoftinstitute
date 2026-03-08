@@ -67,6 +67,7 @@ const LMSLayout = ({ children }: LMSLayoutProps) => {
     { icon: Award, label: 'Certificates', href: '/lms/certificates' },
     { icon: Calendar, label: 'Live Sessions', href: '/lms/live-sessions' },
     { icon: MessageSquare, label: 'Forums', href: '/lms/forums' },
+    { icon: Code2, label: 'Coding Lab', href: '/lms/coding-lab' },
   ];
 
   const staffNavItems = [
