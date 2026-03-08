@@ -781,20 +781,20 @@ const LiveSessionRoom = () => {
                 <MessageSquare className="h-4 w-4" />
                 Chat
               </TabsTrigger>
+              <TabsTrigger value="polls" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent h-full gap-1">
+                <BarChart3 className="h-4 w-4" />
+                Polls
+              </TabsTrigger>
               <TabsTrigger value="participants" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent h-full gap-1 relative">
                 <Users className="h-4 w-4" />
                 <span>{participants.length}</span>
                 {pendingRequests.length > 0 && (
-                  <span className="absolute top-2 right-4 w-2 h-2 bg-red-500 rounded-full" />
+                  <span className="absolute top-2 right-4 w-2 h-2 bg-destructive rounded-full" />
                 )}
               </TabsTrigger>
               <TabsTrigger value="files" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent h-full gap-1">
                 <Paperclip className="h-4 w-4" />
                 <span>{sessionFiles.length}</span>
-              </TabsTrigger>
-              <TabsTrigger value="notes" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent h-full gap-1 lg:hidden">
-                <FileText className="h-4 w-4" />
-                Notes
               </TabsTrigger>
             </TabsList>
 
