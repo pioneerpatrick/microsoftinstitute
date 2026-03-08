@@ -143,11 +143,12 @@ const LiveSessionRoom = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [isPresentationMode, setIsPresentationMode] = useState(false);
-  const [presentationSlides, setPresentationSlides] = useState<string[]>([]);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [totalSlides, setTotalSlides] = useState(0);
+  const [activePdfUrl, setActivePdfUrl] = useState<string | null>(null);
+  const [activeImageUrl, setActiveImageUrl] = useState<string | null>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [screenShareStream, setScreenShareStream] = useState<MediaStream | null>(null);
-  const [loadingPDF, setLoadingPDF] = useState<string | null>(null);
   const presentInputRef = useRef<HTMLInputElement>(null);
   const slideContainerRef = useRef<HTMLDivElement>(null);
   const [showSettings, setShowSettings] = useState(false);
