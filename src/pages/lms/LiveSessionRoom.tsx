@@ -12,6 +12,10 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
   ArrowLeft,
   Send,
@@ -129,7 +133,12 @@ const LiveSessionRoom = () => {
   const [screenShareStream, setScreenShareStream] = useState<MediaStream | null>(null);
   const [loadingPDF, setLoadingPDF] = useState<string | null>(null);
   const presentInputRef = useRef<HTMLInputElement>(null);
-
+  const [showSettings, setShowSettings] = useState(false);
+  const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);
+  const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedAudioDevice, setSelectedAudioDevice] = useState<string>('');
+  const [selectedVideoDevice, setSelectedVideoDevice] = useState<string>('');
+  const [noiseSuppression, setNoiseSuppression] = useState(true);
   const isInstructor = session?.instructor_id === user?.id || isStaff;
 
   // WebRTC for peer-to-peer video
@@ -138,6 +147,22 @@ const LiveSessionRoom = () => {
     userId: user?.id || '',
     localStream,
   });
+
+  // Enumerate media devices
+  useEffect(() => {
+    const enumerateDevices = async () => {
+      try {
+        // Request permission first to get labeled devices
+        await navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then(s => s.getTracks().forEach(t => t.stop())).catch(() => {});
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        setAudioDevices(devices.filter(d => d.kind === 'audioinput'));
+        setVideoDevices(devices.filter(d => d.kind === 'videoinput'));
+      } catch (err) {
+        console.error('Failed to enumerate devices:', err);
+      }
+    };
+    enumerateDevices();
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) navigate('/lms/login');
@@ -848,6 +873,86 @@ const LiveSessionRoom = () => {
             >
               <Hand className="h-4 w-4" />
             </Button>
+            
+            {/* Settings */}
+            <Popover open={showSettings} onOpenChange={setShowSettings}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="rounded-full h-10 w-10"
+                  title="Audio & Video Settings"
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80" side="top" align="center">
+                <div className="space-y-4">
+                  <h4 className="font-medium text-sm">Audio & Video Settings</h4>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-xs">Microphone</Label>
+                    <Select value={selectedAudioDevice} onValueChange={setSelectedAudioDevice}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Default microphone" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {audioDevices.map(device => (
+                          <SelectItem key={device.deviceId} value={device.deviceId}>
+                            {device.label || `Microphone ${device.deviceId.slice(0, 5)}`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs">Camera</Label>
+                    <Select value={selectedVideoDevice} onValueChange={setSelectedVideoDevice}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Default camera" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {videoDevices.map(device => (
+                          <SelectItem key={device.deviceId} value={device.deviceId}>
+                            {device.label || `Camera ${device.deviceId.slice(0, 5)}`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Noise Suppression</Label>
+                    <Switch
+                      checked={noiseSuppression}
+                      onCheckedChange={setNoiseSuppression}
+                    />
+                  </div>
+
+                  <Separator />
+                  
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Camera</Label>
+                    <Switch
+                      checked={isVideoOn}
+                      onCheckedChange={(v) => {
+                        setIsVideoOn(v);
+                        if (v) setRightPanel('video');
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Microphone</Label>
+                    <Switch
+                      checked={!isMuted}
+                      onCheckedChange={(v) => setIsMuted(!v)}
+                    />
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
             
             {/* Instructor-only controls */}
             {isInstructor && (
