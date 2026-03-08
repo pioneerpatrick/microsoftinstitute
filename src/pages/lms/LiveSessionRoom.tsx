@@ -974,6 +974,7 @@ const LiveSessionRoom = () => {
               </ScrollArea>
             </TabsContent>
 
+            <TabsContent value="notes" className="flex-1 m-0 overflow-hidden p-3">
               <div className="h-full bg-muted/30 rounded-lg border overflow-y-auto p-3">
                 {sharedNotes ? (
                   <div className="whitespace-pre-wrap text-sm">{sharedNotes}</div>
