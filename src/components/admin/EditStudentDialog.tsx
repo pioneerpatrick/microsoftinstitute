@@ -16,6 +16,7 @@ interface Student {
   full_name: string | null;
   email: string | null;
   student_status: string | null;
+  admission_number: string | null;
   created_at: string;
   enrollments: Array<{
     course_id: string;
