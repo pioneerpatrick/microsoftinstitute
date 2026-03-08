@@ -42,6 +42,12 @@ serve(async (req) => {
       }),
     });
 
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('AI gateway error:', response.status, errorText);
+      throw new Error(`AI service error: ${response.status}`);
+    }
+
     const data = await response.json();
     const output = data.choices?.[0]?.message?.content || 'No response generated.';
 
