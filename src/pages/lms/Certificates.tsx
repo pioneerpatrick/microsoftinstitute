@@ -226,7 +226,7 @@ const Certificates = () => {
   };
 
   const shareCertificate = (cert: Certificate) => {
-    const verifyUrl = `${window.location.origin}/verify/${cert.certificate_number}`;
+    const verifyUrl = `https://www.microsoftinstitute.africa/verify?cert=${encodeURIComponent(cert.certificate_number)}`;
     if (navigator.share) {
       navigator.share({
         title: `${studentName}'s Certificate - ${cert.courses?.title}`,
