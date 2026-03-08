@@ -9,6 +9,7 @@ import { Award, Download, Share2, ExternalLink, CheckCircle2 } from 'lucide-reac
 import LMSLayout from '@/components/lms/LMSLayout';
 import { jsPDF } from 'jspdf';
 import { toast } from 'sonner';
+import { registerCalligraphyFont, setCalligraphyFont } from '@/lib/registerCalligraphyFont';
 
 interface Certificate {
   id: string;
