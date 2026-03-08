@@ -759,6 +759,14 @@ const LiveSessionRoom = () => {
               >
                 <Users className="h-4 w-4" />
               </Button>
+              <Button
+                variant={rightPanel === 'files' ? 'default' : 'ghost'}
+                size="icon"
+                className="rounded-full h-10 w-10"
+                onClick={() => setRightPanel('files')}
+              >
+                <Paperclip className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>
