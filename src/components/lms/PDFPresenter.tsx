@@ -1,106 +1,116 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
 interface PDFPresenterProps {
   pdfUrl: string;
-  onPagesExtracted: (pages: string[]) => void;
+  currentPage: number;
+  onTotalPages: (total: number) => void;
   onError?: (error: string) => void;
+  containerRef?: React.RefObject<HTMLDivElement>;
 }
 
-const PDFPresenter = ({ pdfUrl, onPagesExtracted, onError }: PDFPresenterProps) => {
+const PDFPresenter = ({ pdfUrl, currentPage, onTotalPages, onError }: PDFPresenterProps) => {
   const [loading, setLoading] = useState(true);
-  const [progress, setProgress] = useState(0);
+  const [pageLoading, setPageLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const hasStarted = useRef(false);
-  const onPagesExtractedRef = useRef(onPagesExtracted);
-  const onErrorRef = useRef(onError);
-  const blobUrls = useRef<string[]>([]);
+  const [totalPages, setTotalPages] = useState(0);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const pdfRef = useRef<pdfjsLib.PDFDocumentProxy | null>(null);
+  const renderTaskRef = useRef<any>(null);
+  const containerDivRef = useRef<HTMLDivElement>(null);
 
-  onPagesExtractedRef.current = onPagesExtracted;
-  onErrorRef.current = onError;
-
+  // Load PDF document once
   useEffect(() => {
-    return () => {
-      blobUrls.current.forEach(url => URL.revokeObjectURL(url));
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!pdfUrl || hasStarted.current) return;
-    hasStarted.current = true;
-
-    const renderPage = async (
-      pdf: pdfjsLib.PDFDocumentProxy,
-      pageNum: number,
-      canvas: HTMLCanvasElement,
-      ctx: CanvasRenderingContext2D,
-      scale: number
-    ): Promise<string> => {
-      const page = await pdf.getPage(pageNum);
-      const vp = page.getViewport({ scale });
-      canvas.width = vp.width;
-      canvas.height = vp.height;
-      ctx.clearRect(0, 0, vp.width, vp.height);
-      await page.render({ canvasContext: ctx, viewport: vp }).promise;
-      const blob = await new Promise<Blob>((res, rej) =>
-        canvas.toBlob(b => (b ? res(b) : rej(new Error('toBlob failed'))), 'image/jpeg', 0.65)
-      );
-      const url = URL.createObjectURL(blob);
-      blobUrls.current.push(url);
-      page.cleanup();
-      return url;
-    };
+    if (!pdfUrl) return;
+    let cancelled = false;
 
     (async () => {
       try {
         setLoading(true);
         setError(null);
-        setProgress(0);
-
         const pdf = await pdfjsLib.getDocument({
           url: pdfUrl,
           cMapUrl: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/cmaps/`,
           cMapPacked: true,
           disableAutoFetch: true,
-          disableStream: false,
         }).promise;
 
-        const numPages = pdf.numPages;
-        // Aggressive low scale for speed — 0.6 for large decks, max 1.0
-        const scale = numPages > 20 ? 0.6 : numPages > 10 ? 0.75 : 1.0;
-
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d', { willReadFrequently: false });
-        if (!ctx) throw new Error('Canvas context failed');
-
-        const pages: string[] = [];
-
-        // Render page 1 immediately and show it
-        pages.push(await renderPage(pdf, 1, canvas, ctx, scale));
-        setProgress(Math.round((1 / numPages) * 100));
-        onPagesExtractedRef.current([...pages]);
+        if (cancelled) { pdf.destroy(); return; }
+        pdfRef.current = pdf;
+        setTotalPages(pdf.numPages);
+        onTotalPages(pdf.numPages);
         setLoading(false);
-
-        // Render rest in background, yielding every page
-        for (let i = 2; i <= numPages; i++) {
-          pages.push(await renderPage(pdf, i, canvas, ctx, scale));
-          setProgress(Math.round((i / numPages) * 100));
-          onPagesExtractedRef.current([...pages]);
-          // Yield to main thread every 2 pages
-          if (i % 2 === 0) await new Promise(r => setTimeout(r, 0));
-        }
       } catch (err) {
-        console.error('PDF load error:', err);
+        if (cancelled) return;
         const msg = err instanceof Error ? err.message : 'Failed to load PDF';
         setError(msg);
-        onErrorRef.current?.(msg);
+        onError?.(msg);
         setLoading(false);
       }
     })();
+
+    return () => {
+      cancelled = true;
+      pdfRef.current?.destroy();
+      pdfRef.current = null;
+    };
   }, [pdfUrl]);
+
+  // Render current page on-demand
+  useEffect(() => {
+    const pdf = pdfRef.current;
+    const canvas = canvasRef.current;
+    if (!pdf || !canvas || currentPage < 1 || currentPage > totalPages) return;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        // Cancel any in-progress render
+        if (renderTaskRef.current) {
+          renderTaskRef.current.cancel();
+          renderTaskRef.current = null;
+        }
+
+        setPageLoading(true);
+        const page = await pdf.getPage(currentPage);
+        if (cancelled) { page.cleanup(); return; }
+
+        // Fit to container
+        const container = containerDivRef.current;
+        const maxW = container ? container.clientWidth : 960;
+        const maxH = container ? container.clientHeight : 640;
+        const baseVp = page.getViewport({ scale: 1 });
+        const scale = Math.min(maxW / baseVp.width, maxH / baseVp.height, 2);
+        const viewport = page.getViewport({ scale });
+
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const task = page.render({ canvasContext: ctx, viewport });
+        renderTaskRef.current = task;
+        await task.promise;
+
+        if (!cancelled) {
+          setPageLoading(false);
+        }
+        page.cleanup();
+      } catch (err: any) {
+        if (err?.name === 'RenderingCancelledException' || cancelled) return;
+        console.error('Page render error:', err);
+        setPageLoading(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [currentPage, totalPages]);
 
   if (error) {
     return (
@@ -115,15 +125,25 @@ const PDFPresenter = ({ pdfUrl, onPagesExtracted, onError }: PDFPresenterProps) 
     return (
       <div className="flex flex-col items-center justify-center p-8 gap-3">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground">Loading first page…</p>
-        <div className="w-48 h-2 bg-muted rounded-full overflow-hidden">
-          <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
-        </div>
+        <p className="text-sm text-muted-foreground">Loading PDF…</p>
       </div>
     );
   }
 
-  return null;
+  return (
+    <div ref={containerDivRef} className="w-full h-full flex items-center justify-center relative">
+      <canvas
+        ref={canvasRef}
+        className="max-w-full max-h-full object-contain"
+        style={{ display: 'block' }}
+      />
+      {pageLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/30">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default PDFPresenter;

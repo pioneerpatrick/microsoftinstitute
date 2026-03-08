@@ -143,11 +143,12 @@ const LiveSessionRoom = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [isPresentationMode, setIsPresentationMode] = useState(false);
-  const [presentationSlides, setPresentationSlides] = useState<string[]>([]);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [totalSlides, setTotalSlides] = useState(0);
+  const [activePdfUrl, setActivePdfUrl] = useState<string | null>(null);
+  const [activeImageUrl, setActiveImageUrl] = useState<string | null>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [screenShareStream, setScreenShareStream] = useState<MediaStream | null>(null);
-  const [loadingPDF, setLoadingPDF] = useState<string | null>(null);
   const presentInputRef = useRef<HTMLInputElement>(null);
   const slideContainerRef = useRef<HTMLDivElement>(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -167,23 +168,25 @@ const LiveSessionRoom = () => {
 
   // Keyboard arrow navigation for presentation slides
   useEffect(() => {
-    if (boardMode !== 'presentation' || presentationSlides.length === 0) return;
+    if (boardMode !== 'presentation' || totalSlides === 0) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
         e.preventDefault();
-        setCurrentSlideIndex(i => Math.min(presentationSlides.length - 1, i + 1));
+        setCurrentSlideIndex(i => Math.min(totalSlides - 1, i + 1));
       } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
         e.preventDefault();
         setCurrentSlideIndex(i => Math.max(0, i - 1));
       } else if (e.key === 'Escape') {
         setBoardMode('whiteboard');
-        setPresentationSlides([]);
+        setActivePdfUrl(null);
+        setActiveImageUrl(null);
         setCurrentSlideIndex(0);
+        setTotalSlides(0);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [boardMode, presentationSlides.length]);
+  }, [boardMode, totalSlides]);
 
   // WebRTC for peer-to-peer video
   const { peerStreams, connectToPeer } = useWebRTC({
@@ -647,13 +650,10 @@ const LiveSessionRoom = () => {
 
   // Start PDF presentation
   const startPDFPresentation = (pdfUrl: string) => {
-    setLoadingPDF(pdfUrl);
-  };
-
-  const handlePDFPagesExtracted = (pages: string[]) => {
-    setPresentationSlides(pages);
-    setCurrentSlideIndex(0);
-    setLoadingPDF(null);
+    setActivePdfUrl(pdfUrl);
+    setActiveImageUrl(null);
+    setCurrentSlideIndex(1);
+    setTotalSlides(0);
     setBoardMode('presentation');
   };
 
@@ -681,10 +681,12 @@ const LiveSessionRoom = () => {
         message_type: 'system'
       });
       if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-        setLoadingPDF(urlData.publicUrl);
+        startPDFPresentation(urlData.publicUrl);
       } else if (file.type.startsWith('image/')) {
-        setPresentationSlides([urlData.publicUrl]);
+        setActiveImageUrl(urlData.publicUrl);
+        setActivePdfUrl(null);
         setCurrentSlideIndex(0);
+        setTotalSlides(1);
         setBoardMode('presentation');
       }
     } catch (err) {
@@ -853,7 +855,7 @@ const LiveSessionRoom = () => {
                         Presentation
                       </h3>
                       <Badge variant="secondary" className="text-xs">
-                        {currentSlideIndex + 1} / {presentationSlides.length}
+                        {activePdfUrl ? `${currentSlideIndex} / ${totalSlides}` : '1 / 1'}
                       </Badge>
                     </>
                   ) : (
@@ -874,8 +876,10 @@ const LiveSessionRoom = () => {
                       className="h-7 text-xs gap-1"
                       onClick={() => {
                         setBoardMode('whiteboard');
-                        setPresentationSlides([]);
+                        setActivePdfUrl(null);
+                        setActiveImageUrl(null);
                         setCurrentSlideIndex(0);
+                        setTotalSlides(0);
                       }}
                     >
                       <Type className="h-3 w-3" /> Whiteboard
@@ -904,9 +908,9 @@ const LiveSessionRoom = () => {
                     <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                       Presentation
                     </h3>
-                    {presentationSlides.length > 0 && (
+                    {totalSlides > 0 && (
                       <Badge variant="secondary" className="text-xs">
-                        {currentSlideIndex + 1} / {presentationSlides.length}
+                        {activePdfUrl ? `${currentSlideIndex} / ${totalSlides}` : '1 / 1'}
                       </Badge>
                     )}
                   </>
@@ -921,80 +925,60 @@ const LiveSessionRoom = () => {
               </div>
             )}
 
-            {/* PDF Loading State */}
-            {loadingPDF && (
-              <div className="flex-1 flex items-center justify-center bg-muted/30 rounded-xl border">
-                <PDFPresenter
-                  pdfUrl={loadingPDF}
-                  onPagesExtracted={handlePDFPagesExtracted}
-                  onError={() => {
-                    setLoadingPDF(null);
-                    toast.error('Failed to load PDF for presentation');
-                  }}
-                />
-              </div>
-            )}
-
-            {/* Presentation Mode - PDF slides */}
-            {!loadingPDF && boardMode === 'presentation' && presentationSlides.length > 0 && (
+            {/* Presentation Mode - PDF or Image */}
+            {boardMode === 'presentation' && (
               <>
                 <div ref={slideContainerRef} className="flex-1 bg-black rounded-xl overflow-hidden relative flex items-center justify-center">
-                  <img
-                    src={presentationSlides[currentSlideIndex]}
-                    alt={`Slide ${currentSlideIndex + 1}`}
-                    className="max-w-full max-h-full object-contain"
-                  />
+                  {activePdfUrl && (
+                    <PDFPresenter
+                      pdfUrl={activePdfUrl}
+                      currentPage={currentSlideIndex}
+                      onTotalPages={(t) => setTotalSlides(t)}
+                      onError={() => {
+                        setActivePdfUrl(null);
+                        setBoardMode('whiteboard');
+                        toast.error('Failed to load PDF');
+                      }}
+                    />
+                  )}
+                  {activeImageUrl && (
+                    <img
+                      src={activeImageUrl}
+                      alt="Presented image"
+                      className="max-w-full max-h-full object-contain"
+                    />
+                  )}
                   <SlideAnnotationCanvas
                     slideIndex={currentSlideIndex}
                     isInstructor={isInstructor}
                     containerRef={slideContainerRef}
                   />
-                  {currentSlideIndex > 0 && (
+                  {activePdfUrl && currentSlideIndex > 1 && (
                     <Button
                       variant="ghost"
                       size="icon"
                       className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full h-10 w-10 z-20"
-                      onClick={() => setCurrentSlideIndex(i => Math.max(0, i - 1))}
+                      onClick={() => setCurrentSlideIndex(i => Math.max(1, i - 1))}
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </Button>
                   )}
-                  {currentSlideIndex < presentationSlides.length - 1 && (
+                  {activePdfUrl && currentSlideIndex < totalSlides && (
                     <Button
                       variant="ghost"
                       size="icon"
                       className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full h-10 w-10 z-20"
-                      onClick={() => setCurrentSlideIndex(i => Math.min(presentationSlides.length - 1, i + 1))}
+                      onClick={() => setCurrentSlideIndex(i => Math.min(totalSlides, i + 1))}
                     >
                       <ChevronRight className="h-5 w-5" />
                     </Button>
                   )}
                 </div>
-                {/* Slide thumbnails strip */}
-                {isInstructor && presentationSlides.length > 1 && (
-                  <div className="mt-2 flex-shrink-0">
-                    <ScrollArea className="w-full">
-                      <div className="flex gap-1.5 pb-1">
-                        {presentationSlides.map((slide, i) => (
-                          <div
-                            key={i}
-                            className={`flex-shrink-0 w-16 h-12 rounded border overflow-hidden cursor-pointer transition-all ${
-                              i === currentSlideIndex ? 'ring-2 ring-primary border-primary' : 'opacity-60 hover:opacity-100'
-                            }`}
-                            onClick={() => setCurrentSlideIndex(i)}
-                          >
-                            <img src={slide} alt={`Slide ${i + 1}`} className="w-full h-full object-cover" />
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                )}
               </>
             )}
 
             {/* Whiteboard Mode - typing + annotation canvas */}
-            {!loadingPDF && boardMode === 'whiteboard' && (
+            {boardMode === 'whiteboard' && (
               <div ref={slideContainerRef} className="flex-1 bg-white dark:bg-slate-900 rounded-xl border overflow-hidden relative">
                 {isInstructor ? (
                   <Textarea
@@ -1518,8 +1502,10 @@ const LiveSessionRoom = () => {
                             <Button 
                               size="icon" variant="ghost" className="h-7 w-7 text-primary hover:text-primary"
                               onClick={() => {
-                                setPresentationSlides([file.file_url]);
+                                setActiveImageUrl(file.file_url);
+                                setActivePdfUrl(null);
                                 setCurrentSlideIndex(0);
+                                setTotalSlides(1);
                                 setBoardMode('presentation');
                               }}
                               title="Present Image"
