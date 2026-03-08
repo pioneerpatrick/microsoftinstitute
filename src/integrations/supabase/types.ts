@@ -1592,6 +1592,73 @@ export type Database = {
         }
         Relationships: []
       }
+      session_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          message_type: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          message_type?: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          message_type?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "live_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_notes: {
+        Row: {
+          content: string
+          id: string
+          session_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          content?: string
+          id?: string
+          session_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          content?: string
+          id?: string
+          session_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_notes_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "live_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff_contracts: {
         Row: {
           contract_type: string

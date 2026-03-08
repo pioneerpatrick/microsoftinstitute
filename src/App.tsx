@@ -22,7 +22,7 @@ import Forums from "./pages/lms/Forums";
 import ForumTopic from "./pages/lms/ForumTopic";
 import Assignments from "./pages/lms/Assignments";
 import Messages from "./pages/lms/Messages";
-import GoogleMeetRedirect from "./pages/lms/GoogleMeetRedirect";
+import LiveSessionRoom from "./pages/lms/LiveSessionRoom";
 import ProfilePage from "./pages/lms/Profile";
 
 // Instructor Pages
@@ -84,7 +84,7 @@ const App = () => (
             <Route path="/lms/forums/:topicId" element={<ForumTopic />} />
             <Route path="/lms/assignments" element={<Assignments />} />
             <Route path="/lms/messages" element={<Messages />} />
-            <Route path="/lms/meet/:sessionId" element={<GoogleMeetRedirect />} />
+            <Route path="/lms/meet/:sessionId" element={<LiveSessionRoom />} />
             <Route path="/lms/profile" element={<ProfilePage />} />
             
             {/* Student Grades & Fees */}
