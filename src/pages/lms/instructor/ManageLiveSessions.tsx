@@ -302,20 +302,7 @@ const ManageLiveSessions = () => {
   };
 
   const createSession = async () => {
-    if (!newSession.title || !newSession.course_id || !newSession.scheduled_at) {
-      toast.error('Please fill in required fields');
-      return;
-    }
-
-    if (!newSession.meeting_url) {
-      toast.error('Please enter your Google Meet link');
-      return;
-    }
-
-    if (!validateGoogleMeetUrl(newSession.meeting_url)) {
-      toast.error('Please enter a valid Google Meet URL (e.g., https://meet.google.com/abc-defg-hij)');
-      return;
-    }
+    if (!validateSession()) return;
 
     const { data, error } = await supabase
       .from('live_sessions')
@@ -326,7 +313,6 @@ const ManageLiveSessions = () => {
         scheduled_at: new Date(newSession.scheduled_at).toISOString(),
         duration_minutes: newSession.duration_minutes,
         instructor_id: user?.id,
-        meeting_url: newSession.meeting_url,
         status: 'scheduled',
         moderation_enabled: newSession.moderation_enabled
       })
@@ -336,11 +322,10 @@ const ManageLiveSessions = () => {
     if (error) {
       toast.error('Failed to create session');
     } else {
-      toast.success('Session scheduled with Google Meet!');
-      // Copy the join link to clipboard
+      toast.success('Session scheduled!');
       const internalLink = `${window.location.origin}/lms/meet/${data.id}`;
       navigator.clipboard.writeText(internalLink);
-      toast.info('Join link copied to clipboard!');
+      toast.info('Session link copied to clipboard!');
       setDialogOpen(false);
       setNewSession({
         title: '',
@@ -349,7 +334,6 @@ const ManageLiveSessions = () => {
         scheduled_at: '',
         duration_minutes: 60,
         moderation_enabled: true,
-        meeting_url: ''
       });
       fetchSessions();
     }
