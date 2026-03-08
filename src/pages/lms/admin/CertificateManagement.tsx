@@ -433,7 +433,7 @@ const CertificateManagement = () => {
     const congText = o.congregationText ||
       `With all rights and privileges thereunto admitted to the award at a congregation held at this College on the ${dayStr} day of ${monthStr} in the year ${getYearWord(year)} and in the testimony whereof we have affixed our signatures and seal of the college`;
 
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('helvetica', 'bolditalic');
     doc.setFontSize(7);
     doc.setTextColor(60, 60, 60);
     const congLines = doc.splitTextToSize(congText, W - 80);
