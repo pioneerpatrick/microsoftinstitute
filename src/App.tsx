@@ -24,6 +24,7 @@ import Assignments from "./pages/lms/Assignments";
 import Messages from "./pages/lms/Messages";
 import LiveSessionRoom from "./pages/lms/LiveSessionRoom";
 import ProfilePage from "./pages/lms/Profile";
+import CodingLab from "./pages/lms/CodingLab";
 
 // Instructor Pages
 import InstructorDashboard from "./pages/lms/instructor/InstructorDashboard";
@@ -86,6 +87,7 @@ const App = () => (
             <Route path="/lms/messages" element={<Messages />} />
             <Route path="/lms/meet/:sessionId" element={<LiveSessionRoom />} />
             <Route path="/lms/profile" element={<ProfilePage />} />
+            <Route path="/lms/coding-lab" element={<CodingLab />} />
             
             {/* Student Grades & Fees */}
             <Route path="/lms/grades" element={<Grades />} />

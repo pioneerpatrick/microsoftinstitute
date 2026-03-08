@@ -36,9 +36,11 @@ import {
   DollarSign,
   Calculator,
   Wallet,
+  Code2,
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import { cn } from '@/lib/utils';
+import NotificationBell from './NotificationBell';
 
 interface LMSLayoutProps {
   children: ReactNode;
@@ -65,6 +67,7 @@ const LMSLayout = ({ children }: LMSLayoutProps) => {
     { icon: Award, label: 'Certificates', href: '/lms/certificates' },
     { icon: Calendar, label: 'Live Sessions', href: '/lms/live-sessions' },
     { icon: MessageSquare, label: 'Forums', href: '/lms/forums' },
+    { icon: Code2, label: 'Coding Lab', href: '/lms/coding-lab' },
   ];
 
   const staffNavItems = [
@@ -206,6 +209,7 @@ const LMSLayout = ({ children }: LMSLayoutProps) => {
           <img src={logo} alt="Logo" className="h-10 w-auto" />
         </div>
 
+        <NotificationBell />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
@@ -256,6 +260,7 @@ const LMSLayout = ({ children }: LMSLayoutProps) => {
           </div>
 
           <div className="flex items-center gap-4">
+            <NotificationBell />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2">
