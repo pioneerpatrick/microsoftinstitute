@@ -527,9 +527,9 @@ const CertificateManagement = () => {
     doc.text(String(year), W / 2, sigY + 2, { align: 'center' });
 
     // ── "No alteration" disclaimer just below year badge ──
-    doc.setFont('helvetica', 'italic');
+    doc.setFont('helvetica', 'bolditalic');
     doc.setFontSize(5.5);
-    doc.setTextColor(100, 100, 100);
+    doc.setTextColor(200, 0, 0);
     doc.text('This certificate is issued with no alteration whatsoever', W / 2, sigY + 12, { align: 'center' });
 
     // Right: Department Head
