@@ -293,12 +293,12 @@ const ManageLiveSessions = () => {
     toast.success(`Approved ${pendingRequests.length} students`);
   };
 
-  const validateGoogleMeetUrl = (url: string): boolean => {
-    if (!url) return false;
-    // Accept Google Meet URLs
-    const meetPattern = /^https:\/\/meet\.google\.com\/[a-z]{3}-[a-z]{4}-[a-z]{3}$/i;
-    const altMeetPattern = /^https:\/\/meet\.google\.com\/.+/i;
-    return meetPattern.test(url) || altMeetPattern.test(url);
+  const validateSession = (): boolean => {
+    if (!newSession.title || !newSession.course_id || !newSession.scheduled_at) {
+      toast.error('Please fill in required fields');
+      return false;
+    }
+    return true;
   };
 
   const createSession = async () => {
