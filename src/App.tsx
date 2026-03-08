@@ -48,6 +48,7 @@ import AdminSettings from "./pages/lms/admin/Settings";
 import MasterStudents from "./pages/lms/admin/MasterStudents";
 import MasterStaff from "./pages/lms/admin/MasterStaff";
 import AdminReports from "./pages/lms/admin/AdminReports";
+import CertificateManagement from "./pages/lms/admin/CertificateManagement";
 
 // Instructor Pages (continued)
 import Attendance from "./pages/lms/instructor/Attendance";
