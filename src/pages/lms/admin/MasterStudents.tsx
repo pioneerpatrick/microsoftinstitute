@@ -462,7 +462,7 @@ const MasterStudents = () => {
         const totalPaid = s.fees.reduce((sum, f) => sum + f.amount_paid, 0);
         const balance = s.fees.reduce((sum, f) => sum + f.balance, 0);
         const courses = s.enrollments.map(e => e.courses?.title).join('; ');
-        return `"${s.full_name || ''}","${s.email || ''}","${s.student_status || 'active'}","${courses}",${totalDue},${totalPaid},${balance},"${format(new Date(s.created_at), 'yyyy-MM-dd')}"`;
+        return `"${s.admission_number || ''}","${s.full_name || ''}","${s.email || ''}","${s.student_status || 'active'}","${courses}",${totalDue},${totalPaid},${balance},"${format(new Date(s.created_at), 'yyyy-MM-dd')}"`;
       })
     ].join('\n');
 
