@@ -76,7 +76,7 @@ export function useWebRTC({ sessionId, userId, localStream }: UseWebRTCOptions) 
           receiver_id: peerId,
           signal_type: 'ice-candidate',
           signal_data: event.candidate.toJSON(),
-        });
+        } as any);
       }
     };
 
