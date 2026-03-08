@@ -754,6 +754,14 @@ const LiveSessionRoom = () => {
                 <MessageSquare className="h-4 w-4" />
               </Button>
               <Button
+                variant={rightPanel === 'polls' ? 'default' : 'ghost'}
+                size="icon"
+                className="rounded-full h-10 w-10"
+                onClick={() => setRightPanel('polls')}
+              >
+                <BarChart3 className="h-4 w-4" />
+              </Button>
+              <Button
                 variant={rightPanel === 'participants' ? 'default' : 'ghost'}
                 size="icon"
                 className="rounded-full h-10 w-10"
