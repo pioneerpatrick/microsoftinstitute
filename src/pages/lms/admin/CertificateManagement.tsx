@@ -171,12 +171,34 @@ const CertificateManagement = () => {
     if (data) setCourses(data);
   };
 
-  const generateCertNumber = () => `MTI-${new Date().getFullYear()}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-  const generateAdmissionNumber = () => `MTI/${String(Math.floor(Math.random() * 999) + 1).padStart(3, '0')}/${new Date().getFullYear()}`;
+  const generateCertNumber = (admissionNumber: string) => {
+    const year = new Date().getFullYear();
+    const admSuffix = admissionNumber ? admissionNumber.replace(/\//g, '') : Math.random().toString(36).substring(2, 8).toUpperCase();
+    return `MTI-${year}-${admSuffix}`;
+  };
+
+  const generateSerialNumber = (admissionNumber: string, courseTitle: string) => {
+    const year = new Date().getFullYear();
+    const courseAbbr = (courseTitle || 'CP').split(' ').map(w => w[0]).join('').toUpperCase();
+    const admSeq = admissionNumber ? admissionNumber.split('/').pop() || '0001' : '0001';
+    return `MTI/${courseAbbr}/${admSeq}/${year}`;
+  };
+
+  const handleStudentCourseChange = (studentId: string, courseId: string) => {
+    const student = students.find(s => s.id === studentId);
+    const course = courses.find(c => c.id === courseId);
+    const admNum = student?.admission_number || '';
+    if (admNum) setFormAdmission(admNum);
+    if (studentId && courseId && admNum) {
+      setFormCertNumber(generateCertNumber(admNum));
+    }
+  };
 
   const handleCreate = async () => {
     if (!formStudentId || !formCourseId) { toast.error('Please select a student and course'); return; }
-    const certNumber = formCertNumber || generateCertNumber();
+    const student = students.find(s => s.id === formStudentId);
+    if (!student?.admission_number) { toast.error('Selected student has no admission number'); return; }
+    const certNumber = formCertNumber || generateCertNumber(student.admission_number);
     const { error } = await supabase.from('certificates').insert({
       user_id: formStudentId, course_id: formCourseId,
       certificate_number: certNumber, issued_at: new Date(formIssuedAt).toISOString(),
