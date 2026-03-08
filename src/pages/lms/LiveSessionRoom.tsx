@@ -908,9 +908,9 @@ const LiveSessionRoom = () => {
                     <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                       Presentation
                     </h3>
-                    {presentationSlides.length > 0 && (
+                    {totalSlides > 0 && (
                       <Badge variant="secondary" className="text-xs">
-                        {currentSlideIndex + 1} / {presentationSlides.length}
+                        {activePdfUrl ? `${currentSlideIndex} / ${totalSlides}` : '1 / 1'}
                       </Badge>
                     )}
                   </>
