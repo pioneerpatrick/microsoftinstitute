@@ -403,7 +403,7 @@ const MasterStudents = () => {
     // Get profiles for these students
     const { data: profilesData } = await supabase
       .from('profiles')
-      .select('id, full_name, email, student_status, created_at')
+      .select('id, full_name, email, student_status, admission_number, created_at')
       .in('id', allStudentIds);
 
     // Combine data
