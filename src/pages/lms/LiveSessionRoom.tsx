@@ -978,7 +978,7 @@ const LiveSessionRoom = () => {
             )}
 
             {/* Whiteboard Mode - typing + annotation canvas */}
-            {!loadingPDF && boardMode === 'whiteboard' && (
+            {boardMode === 'whiteboard' && (
               <div ref={slideContainerRef} className="flex-1 bg-white dark:bg-slate-900 rounded-xl border overflow-hidden relative">
                 {isInstructor ? (
                   <Textarea
