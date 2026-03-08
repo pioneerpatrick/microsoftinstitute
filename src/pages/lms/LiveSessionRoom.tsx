@@ -144,6 +144,26 @@ const LiveSessionRoom = () => {
   const [noiseSuppression, setNoiseSuppression] = useState(true);
   const isInstructor = session?.instructor_id === user?.id || isStaff;
 
+  // Keyboard arrow navigation for presentation slides
+  useEffect(() => {
+    if (!isPresentationMode || presentationSlides.length === 0) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        setCurrentSlideIndex(i => Math.min(presentationSlides.length - 1, i + 1));
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        setCurrentSlideIndex(i => Math.max(0, i - 1));
+      } else if (e.key === 'Escape') {
+        setIsPresentationMode(false);
+        setPresentationSlides([]);
+        setCurrentSlideIndex(0);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isPresentationMode, presentationSlides.length]);
+
   // WebRTC for peer-to-peer video
   const { peerStreams, connectToPeer } = useWebRTC({
     sessionId: sessionId || '',
