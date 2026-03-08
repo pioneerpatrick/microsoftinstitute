@@ -374,8 +374,8 @@ const CertificateManagement = () => {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(7.5);
     doc.setTextColor(BLUE.r, BLUE.g, BLUE.b);
-    doc.text(`ADMISSION: ${o.admissionNumber}`, 20, 55);
-    doc.text(`SERIAL NO: ${o.serialNumber}`, W - 20, 55, { align: 'right' });
+    doc.text(`ADMISSION: ${admissionNumber}`, 20, 55);
+    doc.text(`SERIAL NO: ${serialNumber}`, W - 20, 55, { align: 'right' });
 
     // ── Motto ──
     doc.setFont('helvetica', 'bolditalic');
