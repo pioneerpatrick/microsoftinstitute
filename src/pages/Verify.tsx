@@ -35,8 +35,8 @@ const Verify = () => {
     }
   }, [searchParams]);
 
-  const verifycertificate = async (number: string) => {
-    const trimmed = number.trim();
+  const handleVerify = async (numberOverride?: string) => {
+    const trimmed = (numberOverride || certNumber).trim();
     if (!trimmed) return;
 
     setIsLoading(true);
