@@ -327,8 +327,8 @@ const CertificateManagement = () => {
     doc.setFontSize(9);
     setOpacity(0.09);
     let wmColorIdx = 0;
-    for (let wy = 4; wy < H; wy += 7) {
-      for (let wx = -10; wx < W + 10; wx += 58) {
+    for (let wy = 4; wy < H; wy += 6) {
+      for (let wx = -10; wx < W + 10; wx += 48) {
         const c = wmColors[wmColorIdx % wmColors.length];
         doc.setTextColor(c.r, c.g, c.b);
         doc.text(wmText, wx, wy);
