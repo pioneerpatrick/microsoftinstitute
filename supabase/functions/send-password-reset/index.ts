@@ -27,7 +27,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const emailResponse = await resend.emails.send({
-      from: "Microsoft Institute Africa <onboarding@resend.dev>",
+      from: "Microsoft Institute Africa <admissions@microsoftinstitute.africa>",
       to: [email],
       subject: "Password Reset Request - Microsoft Institute Africa",
       html: `

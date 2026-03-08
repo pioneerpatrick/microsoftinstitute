@@ -137,7 +137,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Also notify admissions team
     try {
       await resend.emails.send({
-        from: `${institutionName} <onboarding@resend.dev>`,
+        from: `${institutionName} <admissions@microsoftinstitute.africa>`,
         to: ["admissions@microsoftinstitute.africa"],
         subject: `📥 New Scholarship Application: ${fullName} - ${course}`,
         html: `

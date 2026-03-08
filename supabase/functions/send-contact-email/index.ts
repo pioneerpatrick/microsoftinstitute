@@ -78,8 +78,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send notification to admin
     const adminEmail = await resend.emails.send({
-      from: "Microsoft Institute Africa <onboarding@resend.dev>",
-      to: ["onboarding@resend.dev>"],
+      from: "Microsoft Institute Africa <admissions@microsoftinstitute.africa>",
+      to: ["admissions@microsoftinstitute.africa"],
       subject: `New Contact: ${subject || "Website Inquiry"} from ${name}`,
       html: `
         <!DOCTYPE html>

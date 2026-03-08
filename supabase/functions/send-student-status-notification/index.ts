@@ -60,7 +60,7 @@ const handler = async (req: Request): Promise<Response> => {
     const info = statusInfo[status];
 
     const emailResponse = await resend.emails.send({
-      from: "Microsoft Institute Africa <onboarding@resend.dev>",
+      from: "Microsoft Institute Africa <admissions@microsoftinstitute.africa>",
       to: [email],
       subject: `${info.icon} ${info.title} - Microsoft Institute Africa`,
       html: `
