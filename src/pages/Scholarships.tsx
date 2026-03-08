@@ -93,6 +93,22 @@ const Scholarships = () => {
       const { error } = await supabase.from("scholarship_applications").insert([formData]);
       if (error) throw error;
 
+      // Send confirmation email
+      try {
+        await supabase.functions.invoke('send-scholarship-email', {
+          body: {
+            fullName: formData.full_name,
+            email: formData.email,
+            phone: formData.phone,
+            course: formData.course,
+            educationLevel: formData.education_level,
+            statement: formData.statement,
+          },
+        });
+      } catch (emailErr) {
+        console.error("Email sending failed (non-blocking):", emailErr);
+      }
+
       setIsSubmitted(true);
       toast({ title: "Application Submitted!", description: "We will review your scholarship application and contact you soon." });
       setFormData({ full_name: "", phone: "", email: "", course: "", education_level: "", statement: "" });
