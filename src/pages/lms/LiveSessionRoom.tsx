@@ -38,9 +38,11 @@ import {
   Image,
   FileSpreadsheet,
   Paperclip,
+  BarChart3,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import SessionPolls from '@/components/lms/SessionPolls';
 
 interface Session {
   id: string;
@@ -106,7 +108,7 @@ const LiveSessionRoom = () => {
   const [accessStatus, setAccessStatus] = useState<'checking' | 'approved' | 'pending' | 'denied' | 'open'>('checking');
   const [isLoading, setIsLoading] = useState(true);
   const [elapsed, setElapsed] = useState(0);
-  const [rightPanel, setRightPanel] = useState<'chat' | 'participants' | 'notes' | 'files'>('chat');
+  const [rightPanel, setRightPanel] = useState<'chat' | 'participants' | 'notes' | 'files' | 'polls'>('chat');
   const [handRaised, setHandRaised] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [sessionFiles, setSessionFiles] = useState<SessionFile[]>([]);
@@ -752,6 +754,14 @@ const LiveSessionRoom = () => {
                 <MessageSquare className="h-4 w-4" />
               </Button>
               <Button
+                variant={rightPanel === 'polls' ? 'default' : 'ghost'}
+                size="icon"
+                className="rounded-full h-10 w-10"
+                onClick={() => setRightPanel('polls')}
+              >
+                <BarChart3 className="h-4 w-4" />
+              </Button>
+              <Button
                 variant={rightPanel === 'participants' ? 'default' : 'ghost'}
                 size="icon"
                 className="rounded-full h-10 w-10"
@@ -779,20 +789,20 @@ const LiveSessionRoom = () => {
                 <MessageSquare className="h-4 w-4" />
                 Chat
               </TabsTrigger>
+              <TabsTrigger value="polls" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent h-full gap-1">
+                <BarChart3 className="h-4 w-4" />
+                Polls
+              </TabsTrigger>
               <TabsTrigger value="participants" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent h-full gap-1 relative">
                 <Users className="h-4 w-4" />
                 <span>{participants.length}</span>
                 {pendingRequests.length > 0 && (
-                  <span className="absolute top-2 right-4 w-2 h-2 bg-red-500 rounded-full" />
+                  <span className="absolute top-2 right-4 w-2 h-2 bg-destructive rounded-full" />
                 )}
               </TabsTrigger>
               <TabsTrigger value="files" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent h-full gap-1">
                 <Paperclip className="h-4 w-4" />
                 <span>{sessionFiles.length}</span>
-              </TabsTrigger>
-              <TabsTrigger value="notes" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent h-full gap-1 lg:hidden">
-                <FileText className="h-4 w-4" />
-                Notes
               </TabsTrigger>
             </TabsList>
 
@@ -859,6 +869,13 @@ const LiveSessionRoom = () => {
                   </Button>
                 </form>
               </div>
+            </TabsContent>
+
+            {/* Polls Tab */}
+            <TabsContent value="polls" className="flex-1 m-0 overflow-hidden">
+              {session && user && (
+                <SessionPolls sessionId={session.id} userId={user.id} isInstructor={isInstructor} />
+              )}
             </TabsContent>
 
             {/* Participants Tab */}

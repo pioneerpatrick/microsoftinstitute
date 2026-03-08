@@ -1733,6 +1733,85 @@ export type Database = {
           },
         ]
       }
+      session_poll_responses: {
+        Row: {
+          answer: number
+          created_at: string
+          id: string
+          is_correct: boolean | null
+          poll_id: string
+          user_id: string
+        }
+        Insert: {
+          answer: number
+          created_at?: string
+          id?: string
+          is_correct?: boolean | null
+          poll_id: string
+          user_id: string
+        }
+        Update: {
+          answer?: number
+          created_at?: string
+          id?: string
+          is_correct?: boolean | null
+          poll_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_poll_responses_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "session_polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_polls: {
+        Row: {
+          correct_answer: number | null
+          created_at: string
+          created_by: string
+          id: string
+          is_active: boolean
+          options: Json
+          poll_type: string
+          question: string
+          session_id: string
+        }
+        Insert: {
+          correct_answer?: number | null
+          created_at?: string
+          created_by: string
+          id?: string
+          is_active?: boolean
+          options?: Json
+          poll_type?: string
+          question: string
+          session_id: string
+        }
+        Update: {
+          correct_answer?: number | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_active?: boolean
+          options?: Json
+          poll_type?: string
+          question?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_polls_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "live_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff_contracts: {
         Row: {
           contract_type: string
