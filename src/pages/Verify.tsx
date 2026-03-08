@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Award, Search, CheckCircle, XCircle, GraduationCap, BookOpen } from 'lucide-react';
-import { Helmet } from 'react-helmet-deprecated';
 import logoImg from '@/assets/logo-transparent.png';
 
 interface VerificationResult {
