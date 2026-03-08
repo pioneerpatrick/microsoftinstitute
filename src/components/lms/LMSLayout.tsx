@@ -209,6 +209,7 @@ const LMSLayout = ({ children }: LMSLayoutProps) => {
           <img src={logo} alt="Logo" className="h-10 w-auto" />
         </div>
 
+        <NotificationBell />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
