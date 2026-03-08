@@ -1515,18 +1515,7 @@ const LiveSessionRoom = () => {
         </div>
       </div>
 
-      {/* PDF loading now inline in Notes tab */}
-
-      {/* Presentation Mode Overlay */}
-      {isPresentationMode && (
-        <PresentationMode
-          slides={presentationSlides}
-          isInstructor={isInstructor}
-          onClose={() => setIsPresentationMode(false)}
-          onSlideChange={setCurrentSlideIndex}
-          currentSlideIndex={currentSlideIndex}
-        />
-      )}
+      {/* Presentation is now inline in main content area */}
     </div>
   );
 };
