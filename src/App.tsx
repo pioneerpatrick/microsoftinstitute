@@ -84,7 +84,7 @@ const App = () => (
             <Route path="/lms/forums/:topicId" element={<ForumTopic />} />
             <Route path="/lms/assignments" element={<Assignments />} />
             <Route path="/lms/messages" element={<Messages />} />
-            <Route path="/lms/meet/:sessionId" element={<GoogleMeetRedirect />} />
+            <Route path="/lms/meet/:sessionId" element={<LiveSessionRoom />} />
             <Route path="/lms/profile" element={<ProfilePage />} />
             
             {/* Student Grades & Fees */}
