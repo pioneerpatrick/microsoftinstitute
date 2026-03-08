@@ -334,6 +334,9 @@ const MasterStudents = () => {
     setEnrolling(true);
 
     try {
+      // Auto-assign admission number
+      await assignAdmissionNumber(existingEnrollment.student_id);
+      
       const selectedFeeStructure = feeStructures.find(f => f.id === existingEnrollment.fee_structure_id);
       const student = existingProfiles.find(s => s.id === existingEnrollment.student_id);
       const course = selectedFeeStructure?.course_id 
