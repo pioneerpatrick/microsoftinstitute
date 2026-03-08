@@ -613,17 +613,23 @@ const CertificateManagement = () => {
       doc.text(partner.name, px, logoRowY + logoMaxH + 2.5, { align: 'center' });
     });
 
-    // ── Disclaimer ──
-    doc.setFont('helvetica', 'italic');
-    doc.setFontSize(5);
-    doc.setTextColor(150, 150, 150);
-    doc.text('(This certificate is issued with no alteration whatsoever)', W / 2, H - 9, { align: 'center' });
+    // ── Footer bar with disclaimer and verification ──
+    doc.setFillColor(BLUE.r, BLUE.g, BLUE.b);
+    doc.rect(6, H - 14, W - 12, 8, 'F');
+    // Orange top accent on footer
+    doc.setDrawColor(ORANGE.r, ORANGE.g, ORANGE.b);
+    doc.setLineWidth(0.5);
+    doc.line(6, H - 14, W - 6, H - 14);
 
-    // ── Verification ──
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(5.5);
+    doc.setTextColor(255, 255, 255);
+    doc.text('This certificate is issued with no alteration whatsoever', W / 2, H - 10.5, { align: 'center' });
+
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(4.5);
-    doc.setTextColor(BLUE.r, BLUE.g, BLUE.b);
-    doc.text(`Verify: microsoftinstitute.africa/verify/${certNumber}`, W / 2, H - 6, { align: 'center' });
+    doc.setFontSize(4);
+    doc.setTextColor(GOLD.r, GOLD.g, GOLD.b);
+    doc.text(`Certificate No: ${certNumber}  |  Verify online or scan QR code`, W / 2, H - 7.5, { align: 'center' });
 
     doc.save(`Certificate-${certNumber}.pdf`);
     toast.success('Certificate PDF downloaded!');
