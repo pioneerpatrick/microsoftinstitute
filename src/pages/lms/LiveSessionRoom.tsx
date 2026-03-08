@@ -876,8 +876,10 @@ const LiveSessionRoom = () => {
                       className="h-7 text-xs gap-1"
                       onClick={() => {
                         setBoardMode('whiteboard');
-                        setPresentationSlides([]);
+                        setActivePdfUrl(null);
+                        setActiveImageUrl(null);
                         setCurrentSlideIndex(0);
+                        setTotalSlides(0);
                       }}
                     >
                       <Type className="h-3 w-3" /> Whiteboard
