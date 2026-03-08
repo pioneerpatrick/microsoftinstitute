@@ -402,7 +402,8 @@ const CertificateManagement = () => {
     setCalligraphyFont(doc);
     doc.setFontSize(28);
     doc.setTextColor(BLUE.r, BLUE.g, BLUE.b);
-    doc.text(studentName, W / 2, 82, { align: 'center' });
+    const displayName = toSentenceCase(studentName);
+    doc.text(displayName, W / 2, 82, { align: 'center' });
     doc.setFont('helvetica', 'normal'); // reset font
 
     // Orange + green underline
