@@ -127,6 +127,7 @@ const LiveSessionRoom = () => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [screenShareStream, setScreenShareStream] = useState<MediaStream | null>(null);
+  const [loadingPDF, setLoadingPDF] = useState<string | null>(null);
 
   const isInstructor = session?.instructor_id === user?.id || isStaff;
 
