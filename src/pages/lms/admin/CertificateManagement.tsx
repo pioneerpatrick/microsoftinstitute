@@ -606,11 +606,17 @@ const CertificateManagement = () => {
                 <div className="space-y-4">
                   <div>
                     <Label>Student</Label>
-                    <Select value={formStudentId} onValueChange={setFormStudentId}>
+                    <Select value={formStudentId} onValueChange={(val) => {
+                      setFormStudentId(val);
+                      const s = students.find(st => st.id === val);
+                      if (s?.admission_number) setFormAdmission(s.admission_number);
+                    }}>
                       <SelectTrigger><SelectValue placeholder="Select student..." /></SelectTrigger>
                       <SelectContent>
                         {students.map(s => (
-                          <SelectItem key={s.id} value={s.id}>{s.full_name || s.email || s.id}</SelectItem>
+                          <SelectItem key={s.id} value={s.id}>
+                            {s.admission_number ? `[${s.admission_number}] ` : ''}{s.full_name || s.email || s.id}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
