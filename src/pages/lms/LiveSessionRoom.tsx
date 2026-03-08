@@ -1502,8 +1502,11 @@ const LiveSessionRoom = () => {
                             <Button 
                               size="icon" variant="ghost" className="h-7 w-7 text-primary hover:text-primary"
                               onClick={() => {
-                                setPresentationSlides([file.file_url]);
+                                setPresentationSlides_legacy: undefined,
+                                setActiveImageUrl(file.file_url);
+                                setActivePdfUrl(null);
                                 setCurrentSlideIndex(0);
+                                setTotalSlides(1);
                                 setBoardMode('presentation');
                               }}
                               title="Present Image"
