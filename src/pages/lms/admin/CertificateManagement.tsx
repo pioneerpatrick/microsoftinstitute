@@ -723,8 +723,7 @@ const CertificateManagement = () => {
                     <Label>Student</Label>
                     <Select value={formStudentId} onValueChange={(val) => {
                       setFormStudentId(val);
-                      const s = students.find(st => st.id === val);
-                      if (s?.admission_number) setFormAdmission(s.admission_number);
+                      handleStudentCourseChange(val, formCourseId);
                     }}>
                       <SelectTrigger><SelectValue placeholder="Select student..." /></SelectTrigger>
                       <SelectContent>
