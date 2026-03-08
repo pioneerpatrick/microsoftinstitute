@@ -150,6 +150,7 @@ const LiveSessionRoom = () => {
       fetchMessages();
       fetchParticipants();
       fetchSharedNotes();
+      fetchSessionFiles();
     } else {
       checkAccess();
     }
