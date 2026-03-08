@@ -146,7 +146,7 @@ const CertificateManagement = () => {
   };
 
   const fetchStudents = async () => {
-    // Only fetch students who are enrolled and have admission numbers
+    // Fetch students who are enrolled
     const { data: enrollmentData } = await supabase
       .from('enrollments')
       .select('user_id')
@@ -159,7 +159,6 @@ const CertificateManagement = () => {
           .from('profiles')
           .select('id, full_name, email, admission_number')
           .in('id', enrolledUserIds)
-          .not('admission_number', 'is', null)
           .order('full_name');
         if (data) setStudents(data);
       }
@@ -184,9 +183,23 @@ const CertificateManagement = () => {
     return `MTI/${courseAbbr}/${admSeq}/${year}`;
   };
 
-  const handleStudentCourseChange = (studentId: string, courseId: string) => {
-    const student = students.find(s => s.id === studentId);
+  const handleStudentCourseChange = async (studentId: string, courseId: string) => {
+    if (!studentId) return;
+    let student = students.find(s => s.id === studentId);
     const course = courses.find(c => c.id === courseId);
+    
+    // Auto-assign admission number if missing
+    if (student && !student.admission_number) {
+      const { data: admData } = await supabase.rpc('generate_admission_number');
+      if (admData) {
+        await supabase.from('profiles').update({ admission_number: admData }).eq('id', studentId);
+        // Update local state
+        setStudents(prev => prev.map(s => s.id === studentId ? { ...s, admission_number: admData } : s));
+        student = { ...student, admission_number: admData };
+        toast.success(`Admission number ${admData} assigned to ${student.full_name || 'student'}`);
+      }
+    }
+    
     const admNum = student?.admission_number || '';
     if (admNum) setFormAdmission(admNum);
     if (studentId && courseId && admNum) {
