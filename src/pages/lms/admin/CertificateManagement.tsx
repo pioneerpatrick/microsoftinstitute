@@ -656,18 +656,19 @@ const CertificateManagement = () => {
       doc.text(partner.name, px, logoRowY + logoMaxH + 2.5, { align: 'center' });
     });
 
-    // ── Footer bar with verification info ──
+    // ── Slim footer bar with verification info ──
+    const footerH = 5;
     doc.setFillColor(BLUE.r, BLUE.g, BLUE.b);
-    doc.rect(6, H - 14, W - 12, 8, 'F');
+    doc.rect(6, H - 6 - footerH, W - 12, footerH, 'F');
     // Orange top accent on footer
     doc.setDrawColor(ORANGE.r, ORANGE.g, ORANGE.b);
-    doc.setLineWidth(0.5);
-    doc.line(6, H - 14, W - 6, H - 14);
+    doc.setLineWidth(0.4);
+    doc.line(6, H - 6 - footerH, W - 6, H - 6 - footerH);
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(5.5);
+    doc.setFontSize(4.5);
     doc.setTextColor(255, 255, 255);
-    doc.text(`Certificate No: ${certNumber}  |  Verify online or scan QR code`, W / 2, H - 9, { align: 'center' });
+    doc.text(`Certificate No: ${certNumber}  |  Verify online or scan QR code`, W / 2, H - 6 - footerH / 2 + 1.5, { align: 'center' });
 
     doc.save(`Certificate-${certNumber}.pdf`);
     toast.success('Certificate PDF downloaded!');
