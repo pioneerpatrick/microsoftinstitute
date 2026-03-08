@@ -147,7 +147,8 @@ const Certificates = () => {
     setCalligraphyFont(doc);
     doc.setFontSize(32);
     doc.setTextColor(45, 55, 72);
-    doc.text(studentName, width / 2, 105, { align: 'center' });
+    const displayName = toSentenceCase(studentName);
+    doc.text(displayName, width / 2, 105, { align: 'center' });
     doc.setFont('helvetica', 'normal'); // reset font
 
     // Underline for name
