@@ -51,6 +51,11 @@ import {
   Maximize2,
   ChevronLeft,
   ChevronRight,
+  VolumeX,
+  LogOut,
+  Type,
+  Eraser,
+  ListVideo,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -109,6 +114,13 @@ interface SessionFile {
   profiles?: { full_name: string | null };
 }
 
+interface OtherLiveSession {
+  id: string;
+  title: string;
+  status: string;
+  courses: { title: string };
+}
+
 const LiveSessionRoom = () => {
   const { sessionId } = useParams();
   const { user, loading, isStaff } = useAuth();
@@ -124,7 +136,7 @@ const LiveSessionRoom = () => {
   const [accessStatus, setAccessStatus] = useState<'checking' | 'approved' | 'pending' | 'denied' | 'open'>('checking');
   const [isLoading, setIsLoading] = useState(true);
   const [elapsed, setElapsed] = useState(0);
-  const [rightPanel, setRightPanel] = useState<'chat' | 'participants' | 'notes' | 'files' | 'polls' | 'video'>('chat');
+  const [rightPanel, setRightPanel] = useState<'chat' | 'participants' | 'files' | 'polls' | 'video' | 'sessions'>('chat');
   const [handRaised, setHandRaised] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [sessionFiles, setSessionFiles] = useState<SessionFile[]>([]);
@@ -144,11 +156,18 @@ const LiveSessionRoom = () => {
   const [selectedAudioDevice, setSelectedAudioDevice] = useState<string>('');
   const [selectedVideoDevice, setSelectedVideoDevice] = useState<string>('');
   const [noiseSuppression, setNoiseSuppression] = useState(true);
+  // Whiteboard mode: instructor can type manually without uploading PDF
+  const [boardMode, setBoardMode] = useState<'whiteboard' | 'presentation'>('whiteboard');
+  // Other live sessions
+  const [otherSessions, setOtherSessions] = useState<OtherLiveSession[]>([]);
+  // Muted students tracking (local instructor state)
+  const [mutedStudents, setMutedStudents] = useState<Set<string>>(new Set());
+
   const isInstructor = session?.instructor_id === user?.id || isStaff;
 
   // Keyboard arrow navigation for presentation slides
   useEffect(() => {
-    if (!isPresentationMode || presentationSlides.length === 0) return;
+    if (boardMode !== 'presentation' || presentationSlides.length === 0) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
         e.preventDefault();
@@ -157,14 +176,14 @@ const LiveSessionRoom = () => {
         e.preventDefault();
         setCurrentSlideIndex(i => Math.max(0, i - 1));
       } else if (e.key === 'Escape') {
-        setIsPresentationMode(false);
+        setBoardMode('whiteboard');
         setPresentationSlides([]);
         setCurrentSlideIndex(0);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isPresentationMode, presentationSlides.length]);
+  }, [boardMode, presentationSlides.length]);
 
   // WebRTC for peer-to-peer video
   const { peerStreams, connectToPeer } = useWebRTC({
@@ -177,7 +196,6 @@ const LiveSessionRoom = () => {
   useEffect(() => {
     const enumerateDevices = async () => {
       try {
-        // Request permission first to get labeled devices
         await navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then(s => s.getTracks().forEach(t => t.stop())).catch(() => {});
         const devices = await navigator.mediaDevices.enumerateDevices();
         setAudioDevices(devices.filter(d => d.kind === 'audioinput'));
@@ -196,6 +214,25 @@ const LiveSessionRoom = () => {
   useEffect(() => {
     if (sessionId && user) fetchSession();
   }, [sessionId, user]);
+
+  // Fetch other live sessions
+  useEffect(() => {
+    if (!user) return;
+    const fetchOtherSessions = async () => {
+      const { data } = await supabase
+        .from('live_sessions')
+        .select('id, title, status, courses(title)')
+        .eq('status', 'live')
+        .neq('id', sessionId || '')
+        .order('scheduled_at', { ascending: false })
+        .limit(20);
+      if (data) setOtherSessions(data as any);
+    };
+    fetchOtherSessions();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchOtherSessions, 30000);
+    return () => clearInterval(interval);
+  }, [user, sessionId]);
 
   // Timer
   useEffect(() => {
@@ -230,10 +267,8 @@ const LiveSessionRoom = () => {
       checkAccess();
     }
 
-    // Realtime subscriptions
     const channels: any[] = [];
 
-    // Chat messages
     const chatChannel = supabase
       .channel(`session-chat-${session.id}`)
       .on('postgres_changes', {
@@ -252,7 +287,6 @@ const LiveSessionRoom = () => {
       .subscribe();
     channels.push(chatChannel);
 
-    // Attendance (participants)
     const attendanceChannel = supabase
       .channel(`session-attendance-${session.id}`)
       .on('postgres_changes', {
@@ -264,7 +298,6 @@ const LiveSessionRoom = () => {
       .subscribe();
     channels.push(attendanceChannel);
 
-    // Notes
     const notesChannel = supabase
       .channel(`session-notes-${session.id}`)
       .on('postgres_changes', {
@@ -280,7 +313,6 @@ const LiveSessionRoom = () => {
       .subscribe();
     channels.push(notesChannel);
 
-    // Files realtime
     const filesChannel = supabase
       .channel(`session-files-${session.id}`)
       .on('postgres_changes', {
@@ -292,7 +324,6 @@ const LiveSessionRoom = () => {
       .subscribe();
     channels.push(filesChannel);
 
-    // Join requests (for instructors or students checking own status)
     if (session.moderation_enabled) {
       const requestsChannel = supabase
         .channel(`session-requests-rt-${session.id}`)
@@ -326,7 +357,7 @@ const LiveSessionRoom = () => {
     return () => { channels.forEach(ch => supabase.removeChannel(ch)); };
   }, [session, user, isInstructor]);
 
-  // Connect to new participants when they join (if we have a local stream)
+  // Connect to new participants
   useEffect(() => {
     if (!localStream || !user) return;
     participants.forEach(p => {
@@ -424,7 +455,6 @@ const LiveSessionRoom = () => {
     const userIds = [...new Set(attendance.map(a => a.user_id))];
     const { data: profiles } = await supabase.from('profiles').select('id, full_name, email, avatar_url').in('id', userIds);
     const profileMap = new Map((profiles || []).map(p => [p.id, p]));
-    // Deduplicate by user_id
     const seen = new Set<string>();
     const unique = attendance.filter(a => { if (seen.has(a.user_id)) return false; seen.add(a.user_id); return true; });
     setParticipants(unique.map(a => ({ ...a, profiles: profileMap.get(a.user_id) })) as Participant[]);
@@ -472,22 +502,12 @@ const LiveSessionRoom = () => {
     if (!sessionId || !user) return;
     setIsUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
       const filePath = `${sessionId}/${Date.now()}-${file.name}`;
-
       const { error: uploadError } = await supabase.storage
         .from('session-files')
         .upload(filePath, file);
-
-      if (uploadError) {
-        toast.error('Failed to upload file');
-        return;
-      }
-
-      const { data: urlData } = supabase.storage
-        .from('session-files')
-        .getPublicUrl(filePath);
-
+      if (uploadError) { toast.error('Failed to upload file'); return; }
+      const { data: urlData } = supabase.storage.from('session-files').getPublicUrl(filePath);
       const { error: dbError } = await supabase.from('session_files').insert({
         session_id: sessionId,
         uploaded_by: user.id,
@@ -496,20 +516,13 @@ const LiveSessionRoom = () => {
         file_size: file.size,
         file_type: file.type || null,
       });
-
-      if (dbError) {
-        toast.error('Failed to save file record');
-        return;
-      }
-
-      // Send system message about file share
+      if (dbError) { toast.error('Failed to save file record'); return; }
       await supabase.from('session_messages').insert({
         session_id: sessionId,
         user_id: user.id,
         content: `📎 shared a file: ${file.name}`,
         message_type: 'system'
       });
-
       toast.success('File shared successfully!');
       setRightPanel('files');
     } catch (err) {
@@ -521,11 +534,8 @@ const LiveSessionRoom = () => {
 
   const deleteFile = async (fileId: string, filePath: string) => {
     const { error } = await supabase.from('session_files').delete().eq('id', fileId);
-    if (error) {
-      toast.error('Failed to delete file');
-    } else {
-      toast.success('File removed');
-    }
+    if (error) toast.error('Failed to delete file');
+    else toast.success('File removed');
   };
 
   const formatFileSize = (bytes: number | null) => {
@@ -586,39 +596,65 @@ const LiveSessionRoom = () => {
     navigate('/lms/instructor/live-sessions');
   };
 
-  // Start presentation mode with images from session files
-  const startPresentation = () => {
-    const imageFiles = sessionFiles.filter(f => 
-      f.file_type?.startsWith('image/') || 
-      f.file_name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)
-    );
-    
-    if (imageFiles.length === 0) {
-      toast.error('No images to present. Please upload image files first, or use "Present PDF" for PDF files.');
-      return;
-    }
-    
-    setPresentationSlides(imageFiles.map(f => f.file_url));
-    setCurrentSlideIndex(0);
-    setIsPresentationMode(true);
+  // Mute a student (sends system message)
+  const muteStudent = async (studentId: string, studentName: string) => {
+    setMutedStudents(prev => new Set(prev).add(studentId));
+    await supabase.from('session_messages').insert({
+      session_id: sessionId,
+      user_id: user!.id,
+      content: `🔇 muted ${studentName}`,
+      message_type: 'system'
+    });
+    toast.success(`${studentName} has been muted`);
   };
 
-  // Start presentation with a PDF file
+  // Unmute a student
+  const unmuteStudent = async (studentId: string, studentName: string) => {
+    setMutedStudents(prev => {
+      const next = new Set(prev);
+      next.delete(studentId);
+      return next;
+    });
+    toast.success(`${studentName} has been unmuted`);
+  };
+
+  // Kick a student from session
+  const kickStudent = async (studentId: string, studentName: string) => {
+    // Remove their attendance record
+    await supabase
+      .from('live_session_attendance')
+      .delete()
+      .eq('session_id', sessionId!)
+      .eq('user_id', studentId);
+
+    // If moderation is enabled, reject their request so they can't rejoin
+    if (session?.moderation_enabled) {
+      await supabase
+        .from('live_session_requests')
+        .update({ status: 'rejected', reviewed_at: new Date().toISOString(), reviewed_by: user?.id })
+        .eq('session_id', sessionId!)
+        .eq('user_id', studentId);
+    }
+
+    await supabase.from('session_messages').insert({
+      session_id: sessionId,
+      user_id: user!.id,
+      content: `🚫 removed ${studentName} from the session`,
+      message_type: 'system'
+    });
+    toast.success(`${studentName} has been removed from the session`);
+  };
+
+  // Start PDF presentation
   const startPDFPresentation = (pdfUrl: string) => {
     setLoadingPDF(pdfUrl);
-    setRightPanel('notes');
   };
 
-  // Handle PDF pages extracted - show in main area, not fullscreen
   const handlePDFPagesExtracted = (pages: string[]) => {
-    setPresentationSlides(prev => {
-      // If we already have slides, this is a background update
-      if (prev.length > 0) return pages;
-      return pages;
-    });
+    setPresentationSlides(pages);
     setCurrentSlideIndex(0);
     setLoadingPDF(null);
-    setIsPresentationMode(true);
+    setBoardMode('presentation');
   };
 
   // Quick upload and present file
@@ -627,21 +663,9 @@ const LiveSessionRoom = () => {
     setIsUploading(true);
     try {
       const filePath = `${sessionId}/${Date.now()}-${file.name}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('session-files')
-        .upload(filePath, file);
-
-      if (uploadError) {
-        toast.error('Failed to upload file');
-        return;
-      }
-
-      const { data: urlData } = supabase.storage
-        .from('session-files')
-        .getPublicUrl(filePath);
-
-      // Save to session files
+      const { error: uploadError } = await supabase.storage.from('session-files').upload(filePath, file);
+      if (uploadError) { toast.error('Failed to upload file'); return; }
+      const { data: urlData } = supabase.storage.from('session-files').getPublicUrl(filePath);
       await supabase.from('session_files').insert({
         session_id: sessionId,
         uploaded_by: user.id,
@@ -650,23 +674,18 @@ const LiveSessionRoom = () => {
         file_size: file.size,
         file_type: file.type || null,
       });
-
-      // Send system message
       await supabase.from('session_messages').insert({
         session_id: sessionId,
         user_id: user.id,
         content: `📊 started presenting: ${file.name}`,
         message_type: 'system'
       });
-
-      // Start presentation based on file type
       if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
         setLoadingPDF(urlData.publicUrl);
-        setRightPanel('notes');
       } else if (file.type.startsWith('image/')) {
         setPresentationSlides([urlData.publicUrl]);
         setCurrentSlideIndex(0);
-        setIsPresentationMode(true);
+        setBoardMode('presentation');
       }
     } catch (err) {
       toast.error('Failed to start presentation');
@@ -802,7 +821,7 @@ const LiveSessionRoom = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left: Main Content Area */}
+        {/* Left: Main Content Area - Presentation Board */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Instructor Moderation Banner */}
           {isInstructor && session?.moderation_enabled && pendingRequests.length > 0 && (
@@ -821,8 +840,87 @@ const LiveSessionRoom = () => {
             </div>
           )}
 
-          {/* Content Area - Presentation or Shared Notes */}
+          {/* Content Area - Presentation Board */}
           <div className="flex-1 p-4 overflow-hidden flex flex-col">
+            {/* Board mode tabs for instructor */}
+            {isInstructor && (
+              <div className="flex items-center justify-between mb-2 flex-shrink-0">
+                <div className="flex items-center gap-2">
+                  {boardMode === 'presentation' ? (
+                    <>
+                      <Presentation className="h-4 w-4 text-primary" />
+                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                        Presentation
+                      </h3>
+                      <Badge variant="secondary" className="text-xs">
+                        {currentSlideIndex + 1} / {presentationSlides.length}
+                      </Badge>
+                    </>
+                  ) : (
+                    <>
+                      <PenTool className="h-4 w-4 text-primary" />
+                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                        Whiteboard
+                      </h3>
+                      <Badge variant="secondary" className="text-xs">Instructor can draw & type</Badge>
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center gap-1">
+                  {boardMode === 'presentation' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs gap-1"
+                      onClick={() => {
+                        setBoardMode('whiteboard');
+                        setPresentationSlides([]);
+                        setCurrentSlideIndex(0);
+                      }}
+                    >
+                      <Type className="h-3 w-3" /> Whiteboard
+                    </Button>
+                  )}
+                  {boardMode === 'whiteboard' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs gap-1"
+                      onClick={() => presentInputRef.current?.click()}
+                    >
+                      <Presentation className="h-3 w-3" /> Load PDF
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Student view label */}
+            {!isInstructor && (
+              <div className="flex items-center gap-2 mb-2 flex-shrink-0">
+                {boardMode === 'presentation' ? (
+                  <>
+                    <Presentation className="h-4 w-4 text-primary" />
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                      Presentation
+                    </h3>
+                    {presentationSlides.length > 0 && (
+                      <Badge variant="secondary" className="text-xs">
+                        {currentSlideIndex + 1} / {presentationSlides.length}
+                      </Badge>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <PenTool className="h-4 w-4 text-primary" />
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                      Board
+                    </h3>
+                  </>
+                )}
+              </div>
+            )}
+
             {/* PDF Loading State */}
             {loadingPDF && (
               <div className="flex-1 flex items-center justify-center bg-muted/30 rounded-xl border">
@@ -837,61 +935,20 @@ const LiveSessionRoom = () => {
               </div>
             )}
 
-            {/* Inline Presentation Mode */}
-            {!loadingPDF && isPresentationMode && presentationSlides.length > 0 && (
+            {/* Presentation Mode - PDF slides */}
+            {!loadingPDF && boardMode === 'presentation' && presentationSlides.length > 0 && (
               <>
-                <div className="flex items-center justify-between mb-2 flex-shrink-0">
-                  <div className="flex items-center gap-2">
-                    <Presentation className="h-4 w-4 text-primary" />
-                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                      Presentation
-                    </h3>
-                    <Badge variant="secondary" className="text-xs">
-                      {currentSlideIndex + 1} / {presentationSlides.length}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {isInstructor && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs gap-1"
-                        onClick={() => {
-                          // Open fullscreen presentation mode
-                          const elem = document.documentElement;
-                          elem.requestFullscreen?.();
-                        }}
-                      >
-                        <Maximize2 className="h-3 w-3" /> Fullscreen
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 text-xs text-destructive"
-                      onClick={() => {
-                        setIsPresentationMode(false);
-                        setPresentationSlides([]);
-                        setCurrentSlideIndex(0);
-                      }}
-                    >
-                      <X className="h-3 w-3 mr-1" /> Close
-                    </Button>
-                  </div>
-                </div>
                 <div ref={slideContainerRef} className="flex-1 bg-black rounded-xl overflow-hidden relative flex items-center justify-center">
                   <img
                     src={presentationSlides[currentSlideIndex]}
                     alt={`Slide ${currentSlideIndex + 1}`}
                     className="max-w-full max-h-full object-contain"
                   />
-                  {/* Annotation canvas overlay */}
                   <SlideAnnotationCanvas
                     slideIndex={currentSlideIndex}
                     isInstructor={isInstructor}
                     containerRef={slideContainerRef}
                   />
-                  {/* Slide navigation */}
                   {currentSlideIndex > 0 && (
                     <Button
                       variant="ghost"
@@ -936,42 +993,39 @@ const LiveSessionRoom = () => {
               </>
             )}
 
-            {/* Default: Shared Notes */}
-            {!loadingPDF && !isPresentationMode && (
-              <>
-                <div className="flex items-center gap-2 mb-3 flex-shrink-0">
-                  <FileText className="h-4 w-4 text-muted-foreground" />
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Shared Notes</h3>
-                  {isInstructor && (
-                    <Badge variant="secondary" className="text-xs">Instructor can edit</Badge>
-                  )}
-                </div>
-                <div className="flex-1 bg-muted/30 rounded-xl border overflow-hidden">
-                  {isInstructor ? (
-                    <Textarea
-                      value={sharedNotes}
-                      onChange={(e) => {
-                        setSharedNotes(e.target.value);
-                        saveNotes(e.target.value);
-                      }}
-                      placeholder="Start typing notes for the session... Students can see these in real-time."
-                      className="h-full w-full resize-none border-0 bg-transparent p-4 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
-                    />
-                  ) : (
-                    <div className="h-full w-full p-4 overflow-y-auto">
-                      {sharedNotes ? (
-                        <div className="prose prose-sm max-w-none whitespace-pre-wrap text-foreground">
-                          {sharedNotes}
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-                          <p>The instructor hasn't shared any notes yet.</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </>
+            {/* Whiteboard Mode - typing + annotation canvas */}
+            {!loadingPDF && boardMode === 'whiteboard' && (
+              <div ref={slideContainerRef} className="flex-1 bg-white dark:bg-slate-900 rounded-xl border overflow-hidden relative">
+                {isInstructor ? (
+                  <Textarea
+                    value={sharedNotes}
+                    onChange={(e) => {
+                      setSharedNotes(e.target.value);
+                      saveNotes(e.target.value);
+                    }}
+                    placeholder="Start typing on the board... Students can see this in real-time. Use the annotation tools below to draw."
+                    className="h-full w-full resize-none border-0 bg-transparent p-4 text-base focus-visible:ring-0 focus-visible:ring-offset-0 relative z-0"
+                  />
+                ) : (
+                  <div className="h-full w-full p-4 overflow-y-auto">
+                    {sharedNotes ? (
+                      <div className="prose prose-sm max-w-none whitespace-pre-wrap text-foreground text-base">
+                        {sharedNotes}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                        <p>The instructor hasn't written anything yet.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {/* Annotation canvas overlay on whiteboard */}
+                <SlideAnnotationCanvas
+                  slideIndex={0}
+                  isInstructor={isInstructor}
+                  containerRef={slideContainerRef}
+                />
+              </div>
             )}
           </div>
 
@@ -1026,25 +1080,17 @@ const LiveSessionRoom = () => {
             {/* Settings */}
             <Popover open={showSettings} onOpenChange={setShowSettings}>
               <PopoverTrigger asChild>
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  className="rounded-full h-10 w-10"
-                  title="Audio & Video Settings"
-                >
+                <Button variant="secondary" size="icon" className="rounded-full h-10 w-10" title="Audio & Video Settings">
                   <Settings className="h-4 w-4" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-80" side="top" align="center">
                 <div className="space-y-4">
                   <h4 className="font-medium text-sm">Audio & Video Settings</h4>
-                  
                   <div className="space-y-2">
                     <Label className="text-xs">Microphone</Label>
                     <Select value={selectedAudioDevice} onValueChange={setSelectedAudioDevice}>
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Default microphone" />
-                      </SelectTrigger>
+                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Default microphone" /></SelectTrigger>
                       <SelectContent>
                         {audioDevices.map(device => (
                           <SelectItem key={device.deviceId} value={device.deviceId}>
@@ -1054,13 +1100,10 @@ const LiveSessionRoom = () => {
                       </SelectContent>
                     </Select>
                   </div>
-
                   <div className="space-y-2">
                     <Label className="text-xs">Camera</Label>
                     <Select value={selectedVideoDevice} onValueChange={setSelectedVideoDevice}>
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Default camera" />
-                      </SelectTrigger>
+                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Default camera" /></SelectTrigger>
                       <SelectContent>
                         {videoDevices.map(device => (
                           <SelectItem key={device.deviceId} value={device.deviceId}>
@@ -1070,34 +1113,18 @@ const LiveSessionRoom = () => {
                       </SelectContent>
                     </Select>
                   </div>
-
                   <div className="flex items-center justify-between">
                     <Label className="text-xs">Noise Suppression</Label>
-                    <Switch
-                      checked={noiseSuppression}
-                      onCheckedChange={setNoiseSuppression}
-                    />
+                    <Switch checked={noiseSuppression} onCheckedChange={setNoiseSuppression} />
                   </div>
-
                   <Separator />
-                  
                   <div className="flex items-center justify-between">
                     <Label className="text-xs">Camera</Label>
-                    <Switch
-                      checked={isVideoOn}
-                      onCheckedChange={(v) => {
-                        setIsVideoOn(v);
-                        if (v) setRightPanel('video');
-                      }}
-                    />
+                    <Switch checked={isVideoOn} onCheckedChange={(v) => { setIsVideoOn(v); if (v) setRightPanel('video'); }} />
                   </div>
-
                   <div className="flex items-center justify-between">
                     <Label className="text-xs">Microphone</Label>
-                    <Switch
-                      checked={!isMuted}
-                      onCheckedChange={(v) => setIsMuted(!v)}
-                    />
+                    <Switch checked={!isMuted} onCheckedChange={(v) => setIsMuted(!v)} />
                   </div>
                 </div>
               </PopoverContent>
@@ -1106,7 +1133,6 @@ const LiveSessionRoom = () => {
             {/* Instructor-only controls */}
             {isInstructor && (
               <>
-                {/* File Upload */}
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -1115,16 +1141,12 @@ const LiveSessionRoom = () => {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      if (file.size > 20 * 1024 * 1024) {
-                        toast.error('File size must be under 20MB');
-                        return;
-                      }
+                      if (file.size > 20 * 1024 * 1024) { toast.error('File size must be under 20MB'); return; }
                       uploadFile(file);
                     }
                     e.target.value = '';
                   }}
                 />
-                {/* Quick Present File Input */}
                 <input
                   ref={presentInputRef}
                   type="file"
@@ -1133,10 +1155,7 @@ const LiveSessionRoom = () => {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      if (file.size > 20 * 1024 * 1024) {
-                        toast.error('File size must be under 20MB');
-                        return;
-                      }
+                      if (file.size > 20 * 1024 * 1024) { toast.error('File size must be under 20MB'); return; }
                       handleQuickPresent(file);
                     }
                     e.target.value = '';
@@ -1153,7 +1172,6 @@ const LiveSessionRoom = () => {
                   {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
                 </Button>
                 
-                {/* Start Presentation Button */}
                 <Button
                   variant="default"
                   size="sm"
@@ -1162,11 +1180,7 @@ const LiveSessionRoom = () => {
                   disabled={isUploading}
                   title="Upload PDF or image and start presenting"
                 >
-                  {isUploading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Presentation className="h-4 w-4" />
-                  )}
+                  {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Presentation className="h-4 w-4" />}
                   <span className="hidden sm:inline">Present</span>
                 </Button>
               </>
@@ -1174,45 +1188,23 @@ const LiveSessionRoom = () => {
             
             {/* Mobile panel toggles */}
             <div className="flex lg:hidden gap-1 ml-2">
-              <Button
-                variant={rightPanel === 'video' ? 'default' : 'ghost'}
-                size="icon"
-                className="rounded-full h-9 w-9"
-                onClick={() => setRightPanel('video')}
-              >
+              <Button variant={rightPanel === 'video' ? 'default' : 'ghost'} size="icon" className="rounded-full h-9 w-9" onClick={() => setRightPanel('video')}>
                 <Video className="h-4 w-4" />
               </Button>
-              <Button
-                variant={rightPanel === 'chat' ? 'default' : 'ghost'}
-                size="icon"
-                className="rounded-full h-9 w-9"
-                onClick={() => setRightPanel('chat')}
-              >
+              <Button variant={rightPanel === 'chat' ? 'default' : 'ghost'} size="icon" className="rounded-full h-9 w-9" onClick={() => setRightPanel('chat')}>
                 <MessageSquare className="h-4 w-4" />
               </Button>
-              <Button
-                variant={rightPanel === 'polls' ? 'default' : 'ghost'}
-                size="icon"
-                className="rounded-full h-9 w-9"
-                onClick={() => setRightPanel('polls')}
-              >
+              <Button variant={rightPanel === 'polls' ? 'default' : 'ghost'} size="icon" className="rounded-full h-9 w-9" onClick={() => setRightPanel('polls')}>
                 <BarChart3 className="h-4 w-4" />
               </Button>
-              <Button
-                variant={rightPanel === 'participants' ? 'default' : 'ghost'}
-                size="icon"
-                className="rounded-full h-9 w-9"
-                onClick={() => setRightPanel('participants')}
-              >
+              <Button variant={rightPanel === 'participants' ? 'default' : 'ghost'} size="icon" className="rounded-full h-9 w-9" onClick={() => setRightPanel('participants')}>
                 <Users className="h-4 w-4" />
               </Button>
-              <Button
-                variant={rightPanel === 'files' ? 'default' : 'ghost'}
-                size="icon"
-                className="rounded-full h-9 w-9"
-                onClick={() => setRightPanel('files')}
-              >
+              <Button variant={rightPanel === 'files' ? 'default' : 'ghost'} size="icon" className="rounded-full h-9 w-9" onClick={() => setRightPanel('files')}>
                 <Paperclip className="h-4 w-4" />
+              </Button>
+              <Button variant={rightPanel === 'sessions' ? 'default' : 'ghost'} size="icon" className="rounded-full h-9 w-9" onClick={() => setRightPanel('sessions')}>
+                <ListVideo className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -1241,12 +1233,14 @@ const LiveSessionRoom = () => {
               <TabsTrigger value="files" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent h-full gap-1">
                 <Paperclip className="h-4 w-4" />
               </TabsTrigger>
+              <TabsTrigger value="sessions" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent h-full gap-1">
+                <ListVideo className="h-4 w-4" />
+              </TabsTrigger>
             </TabsList>
 
             {/* Video Tab */}
             <TabsContent value="video" className="flex-1 m-0 overflow-hidden p-2">
               <div className="h-full flex flex-col gap-2">
-                {/* Self Video */}
                 {user && (
                   <VideoPanel
                     userId={user.id}
@@ -1256,20 +1250,15 @@ const LiveSessionRoom = () => {
                     onStreamChange={(stream) => {
                       setLocalStream(stream);
                       setIsVideoOn(!!stream?.getVideoTracks().length);
-                      // Connect to all current participants when we start streaming
                       if (stream) {
                         participants.forEach(p => {
-                          if (p.user_id !== user.id) {
-                            connectToPeer(p.user_id);
-                          }
+                          if (p.user_id !== user.id) connectToPeer(p.user_id);
                         });
                       }
                     }}
                     onScreenShareChange={setScreenShareStream}
                   />
                 )}
-                
-                {/* Remote Peer Streams */}
                 <ScrollArea className="flex-1">
                   <div className="space-y-2">
                     {peerStreams.map(peer => {
@@ -1285,8 +1274,6 @@ const LiveSessionRoom = () => {
                         />
                       );
                     })}
-                    
-                    {/* Show placeholder for participants without streams */}
                     {participants
                       .filter(p => p.user_id !== user?.id && !peerStreams.find(ps => ps.peerId === p.user_id))
                       .map(p => (
@@ -1382,10 +1369,10 @@ const LiveSessionRoom = () => {
               )}
             </TabsContent>
 
-            {/* Participants Tab */}
+            {/* Participants Tab - with mute/kick controls */}
             <TabsContent value="participants" className="flex-1 m-0 overflow-hidden">
               <ScrollArea className="h-full p-3">
-                {/* Pending Requests (instructor only) */}
+                {/* Pending Requests */}
                 {isInstructor && pendingRequests.length > 0 && (
                   <div className="mb-4">
                     <div className="flex items-center justify-between mb-2">
@@ -1427,24 +1414,57 @@ const LiveSessionRoom = () => {
                   In Session ({participants.length})
                 </p>
                 <div className="space-y-1">
-                  {participants.map(p => (
-                    <div key={p.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                      <Avatar className={`h-8 w-8 ${getColorFromName(p.profiles?.full_name || null)}`}>
-                        <AvatarFallback className="text-xs text-white bg-transparent">
-                          {getInitials(p.profiles?.full_name || null)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{p.profiles?.full_name || p.profiles?.email || 'Unknown'}</p>
-                        <p className="text-[10px] text-muted-foreground">
-                          Joined {format(new Date(p.joined_at), 'h:mm a')}
-                        </p>
+                  {participants.map(p => {
+                    const isThisInstructor = p.user_id === session?.instructor_id;
+                    const isSelf = p.user_id === user?.id;
+                    const studentName = p.profiles?.full_name || p.profiles?.email || 'Unknown';
+                    const isMutedStudent = mutedStudents.has(p.user_id);
+
+                    return (
+                      <div key={p.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 transition-colors group">
+                        <Avatar className={`h-8 w-8 ${getColorFromName(p.profiles?.full_name || null)}`}>
+                          <AvatarFallback className="text-xs text-white bg-transparent">
+                            {getInitials(p.profiles?.full_name || null)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1">
+                            <p className="text-sm font-medium truncate">{studentName}</p>
+                            {isMutedStudent && <VolumeX className="h-3 w-3 text-destructive flex-shrink-0" />}
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">
+                            Joined {format(new Date(p.joined_at), 'h:mm a')}
+                          </p>
+                        </div>
+                        {isThisInstructor && (
+                          <Badge variant="secondary" className="text-[10px] h-5">Instructor</Badge>
+                        )}
+                        {/* Instructor controls for non-instructor participants */}
+                        {isInstructor && !isThisInstructor && !isSelf && (
+                          <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className={`h-6 w-6 ${isMutedStudent ? 'text-amber-600' : 'text-muted-foreground'}`}
+                              onClick={() => isMutedStudent ? unmuteStudent(p.user_id, studentName) : muteStudent(p.user_id, studentName)}
+                              title={isMutedStudent ? 'Unmute student' : 'Mute student'}
+                            >
+                              {isMutedStudent ? <Mic className="h-3 w-3" /> : <VolumeX className="h-3 w-3" />}
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6 text-destructive"
+                              onClick={() => kickStudent(p.user_id, studentName)}
+                              title="Remove from session"
+                            >
+                              <LogOut className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        )}
                       </div>
-                      {p.user_id === session?.instructor_id && (
-                        <Badge variant="secondary" className="text-[10px] h-5">Instructor</Badge>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </ScrollArea>
             </TabsContent>
@@ -1485,12 +1505,9 @@ const LiveSessionRoom = () => {
                           </p>
                         </div>
                         <div className="flex gap-1 flex-shrink-0">
-                          {/* Present button for PDFs and images */}
                           {isInstructor && (file.file_type?.includes('pdf') || file.file_name.endsWith('.pdf')) && (
                             <Button 
-                              size="icon" 
-                              variant="ghost" 
-                              className="h-7 w-7 text-primary hover:text-primary"
+                              size="icon" variant="ghost" className="h-7 w-7 text-primary hover:text-primary"
                               onClick={() => startPDFPresentation(file.file_url)}
                               title="Present PDF"
                             >
@@ -1499,13 +1516,11 @@ const LiveSessionRoom = () => {
                           )}
                           {isInstructor && (file.file_type?.startsWith('image/') || file.file_name.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) && (
                             <Button 
-                              size="icon" 
-                              variant="ghost" 
-                              className="h-7 w-7 text-primary hover:text-primary"
+                              size="icon" variant="ghost" className="h-7 w-7 text-primary hover:text-primary"
                               onClick={() => {
                                 setPresentationSlides([file.file_url]);
                                 setCurrentSlideIndex(0);
-                                setIsPresentationMode(true);
+                                setBoardMode('presentation');
                               }}
                               title="Present Image"
                             >
@@ -1530,32 +1545,42 @@ const LiveSessionRoom = () => {
               </ScrollArea>
             </TabsContent>
 
-            <TabsContent value="notes" className="flex-1 m-0 overflow-hidden p-3 flex flex-col">
-              {/* Slide loading indicator */}
-              {(loadingPDF || (isPresentationMode && presentationSlides.length > 0)) && (
-                <div className="mb-2 flex items-center gap-2 px-1">
-                  <Presentation className="h-3.5 w-3.5 text-primary" />
-                  <span className="text-xs text-muted-foreground">
-                    {loadingPDF
-                      ? 'Converting PDF…'
-                      : `${presentationSlides.length} slide${presentationSlides.length !== 1 ? 's' : ''} loaded`}
-                  </span>
-                  {loadingPDF && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
-                </div>
-              )}
-              <div className="flex-1 bg-muted/30 rounded-lg border overflow-y-auto p-3">
-                {sharedNotes ? (
-                  <div className="whitespace-pre-wrap text-sm">{sharedNotes}</div>
+            {/* Live Sessions Tab - clickable list of other active sessions */}
+            <TabsContent value="sessions" className="flex-1 m-0 overflow-hidden">
+              <ScrollArea className="h-full p-3">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                  Other Live Sessions
+                </p>
+                {otherSessions.length === 0 ? (
+                  <div className="text-center text-muted-foreground text-sm py-8">
+                    <ListVideo className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    No other live sessions right now.
+                  </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">No notes shared yet.</p>
+                  <div className="space-y-2">
+                    {otherSessions.map(s => (
+                      <div
+                        key={s.id}
+                        className="p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer group"
+                        onClick={() => navigate(`/lms/meet/${s.id}`)}
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                          <p className="text-sm font-medium truncate">{s.title}</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{(s.courses as any)?.title}</p>
+                        <Button size="sm" variant="outline" className="mt-2 h-7 text-xs w-full gap-1 opacity-80 group-hover:opacity-100">
+                          <Video className="h-3 w-3" /> Join Session
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 )}
-              </div>
+              </ScrollArea>
             </TabsContent>
           </Tabs>
         </div>
       </div>
-
-      {/* Presentation is now inline in main content area */}
     </div>
   );
 };
