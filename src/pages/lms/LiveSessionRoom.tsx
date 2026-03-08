@@ -205,6 +205,18 @@ const LiveSessionRoom = () => {
       .subscribe();
     channels.push(notesChannel);
 
+    // Files realtime
+    const filesChannel = supabase
+      .channel(`session-files-${session.id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'session_files',
+        filter: `session_id=eq.${session.id}`
+      }, () => fetchSessionFiles())
+      .subscribe();
+    channels.push(filesChannel);
+
     // Join requests (for instructors or students checking own status)
     if (session.moderation_enabled) {
       const requestsChannel = supabase
@@ -225,6 +237,7 @@ const LiveSessionRoom = () => {
               fetchMessages();
               fetchParticipants();
               fetchSharedNotes();
+              fetchSessionFiles();
             } else if (payload.new.status === 'rejected') {
               setAccessStatus('denied');
               toast.error('Your request was denied');
