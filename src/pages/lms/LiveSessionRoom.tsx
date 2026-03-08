@@ -50,6 +50,7 @@ import { format } from 'date-fns';
 import SessionPolls from '@/components/lms/SessionPolls';
 import VideoPanel from '@/components/lms/VideoPanel';
 import PresentationMode from '@/components/lms/PresentationMode';
+import PDFPresenter from '@/components/lms/PDFPresenter';
 
 interface Session {
   id: string;
