@@ -34,7 +34,7 @@ const Footer = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <img src={logo} alt="Microsoft Training Institute" className="h-20 w-auto mb-4 mix-blend-multiply dark:mix-blend-screen dark:invert" />
+            <img src={logo} alt="Microsoft Training Institute" className="h-20 w-auto mb-4 rounded-xl" />
             <p className="text-primary-foreground/80 text-sm leading-relaxed mb-4">
               Africa's premier fully online training institute, empowering learners with 
               world-class digital skills and professional certifications.
