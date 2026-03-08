@@ -32,6 +32,12 @@ import {
   Smile,
   Pin,
   Trash2,
+  Upload,
+  Download,
+  File,
+  Image,
+  FileSpreadsheet,
+  Paperclip,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -73,11 +79,24 @@ interface JoinRequest {
   profiles: { full_name: string | null; email: string | null };
 }
 
+interface SessionFile {
+  id: string;
+  session_id: string;
+  uploaded_by: string;
+  file_name: string;
+  file_url: string;
+  file_size: number | null;
+  file_type: string | null;
+  created_at: string;
+  profiles?: { full_name: string | null };
+}
+
 const LiveSessionRoom = () => {
   const { sessionId } = useParams();
   const { user, loading, isStaff } = useAuth();
   const navigate = useNavigate();
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -87,9 +106,11 @@ const LiveSessionRoom = () => {
   const [accessStatus, setAccessStatus] = useState<'checking' | 'approved' | 'pending' | 'denied' | 'open'>('checking');
   const [isLoading, setIsLoading] = useState(true);
   const [elapsed, setElapsed] = useState(0);
-  const [rightPanel, setRightPanel] = useState<'chat' | 'participants' | 'notes'>('chat');
+  const [rightPanel, setRightPanel] = useState<'chat' | 'participants' | 'notes' | 'files'>('chat');
   const [handRaised, setHandRaised] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [sessionFiles, setSessionFiles] = useState<SessionFile[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   const isInstructor = session?.instructor_id === user?.id || isStaff;
 
@@ -121,6 +142,7 @@ const LiveSessionRoom = () => {
       fetchMessages();
       fetchParticipants();
       fetchSharedNotes();
+      fetchSessionFiles();
       if (session.moderation_enabled) fetchJoinRequests();
     } else if (!session.moderation_enabled) {
       setAccessStatus('open');
@@ -128,6 +150,7 @@ const LiveSessionRoom = () => {
       fetchMessages();
       fetchParticipants();
       fetchSharedNotes();
+      fetchSessionFiles();
     } else {
       checkAccess();
     }
@@ -182,6 +205,18 @@ const LiveSessionRoom = () => {
       .subscribe();
     channels.push(notesChannel);
 
+    // Files realtime
+    const filesChannel = supabase
+      .channel(`session-files-${session.id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'session_files',
+        filter: `session_id=eq.${session.id}`
+      }, () => fetchSessionFiles())
+      .subscribe();
+    channels.push(filesChannel);
+
     // Join requests (for instructors or students checking own status)
     if (session.moderation_enabled) {
       const requestsChannel = supabase
@@ -202,6 +237,7 @@ const LiveSessionRoom = () => {
               fetchMessages();
               fetchParticipants();
               fetchSharedNotes();
+              fetchSessionFiles();
             } else if (payload.new.status === 'rejected') {
               setAccessStatus('denied');
               toast.error('Your request was denied');
@@ -246,6 +282,7 @@ const LiveSessionRoom = () => {
       fetchMessages();
       fetchParticipants();
       fetchSharedNotes();
+      fetchSessionFiles();
     } else if (data?.status === 'pending') {
       setAccessStatus('pending');
     } else if (data?.status === 'rejected') {
@@ -330,6 +367,96 @@ const LiveSessionRoom = () => {
     const { data: profiles } = await supabase.from('profiles').select('id, full_name, email').in('id', userIds);
     const profileMap = new Map((profiles || []).map(p => [p.id, p]));
     setJoinRequests(reqs.map(r => ({ ...r, profiles: profileMap.get(r.user_id) || { full_name: 'Unknown', email: '' } })) as JoinRequest[]);
+  };
+
+  const fetchSessionFiles = async () => {
+    if (!sessionId) return;
+    const { data: files } = await supabase
+      .from('session_files')
+      .select('*')
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: false });
+    if (!files) return;
+    const userIds = [...new Set(files.map(f => f.uploaded_by))];
+    const { data: profiles } = await supabase.from('profiles').select('id, full_name').in('id', userIds);
+    const profileMap = new Map((profiles || []).map(p => [p.id, p]));
+    setSessionFiles(files.map(f => ({ ...f, profiles: profileMap.get(f.uploaded_by) })) as SessionFile[]);
+  };
+
+  const uploadFile = async (file: globalThis.File) => {
+    if (!sessionId || !user) return;
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${sessionId}/${Date.now()}-${file.name}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('session-files')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        toast.error('Failed to upload file');
+        return;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('session-files')
+        .getPublicUrl(filePath);
+
+      const { error: dbError } = await supabase.from('session_files').insert({
+        session_id: sessionId,
+        uploaded_by: user.id,
+        file_name: file.name,
+        file_url: urlData.publicUrl,
+        file_size: file.size,
+        file_type: file.type || null,
+      });
+
+      if (dbError) {
+        toast.error('Failed to save file record');
+        return;
+      }
+
+      // Send system message about file share
+      await supabase.from('session_messages').insert({
+        session_id: sessionId,
+        user_id: user.id,
+        content: `📎 shared a file: ${file.name}`,
+        message_type: 'system'
+      });
+
+      toast.success('File shared successfully!');
+      setRightPanel('files');
+    } catch (err) {
+      toast.error('Upload failed');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const deleteFile = async (fileId: string, filePath: string) => {
+    const { error } = await supabase.from('session_files').delete().eq('id', fileId);
+    if (error) {
+      toast.error('Failed to delete file');
+    } else {
+      toast.success('File removed');
+    }
+  };
+
+  const formatFileSize = (bytes: number | null) => {
+    if (!bytes) return 'Unknown size';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const getFileIcon = (type: string | null) => {
+    if (!type) return <File className="h-5 w-5" />;
+    if (type.startsWith('image/')) return <Image className="h-5 w-5 text-green-600" />;
+    if (type.includes('pdf')) return <FileText className="h-5 w-5 text-red-500" />;
+    if (type.includes('spreadsheet') || type.includes('excel') || type.includes('csv')) return <FileSpreadsheet className="h-5 w-5 text-green-700" />;
+    if (type.includes('word') || type.includes('document')) return <FileText className="h-5 w-5 text-blue-600" />;
+    return <File className="h-5 w-5 text-muted-foreground" />;
   };
 
   const sendMessage = async () => {
@@ -585,7 +712,35 @@ const LiveSessionRoom = () => {
             >
               <Hand className="h-4 w-4" />
             </Button>
-
+            {isInstructor && (
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      if (file.size > 20 * 1024 * 1024) {
+                        toast.error('File size must be under 20MB');
+                        return;
+                      }
+                      uploadFile(file);
+                    }
+                    e.target.value = '';
+                  }}
+                />
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="rounded-full h-10 w-10"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                >
+                  {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+                </Button>
+              </>
+            )}
             {/* Mobile panel toggles */}
             <div className="flex lg:hidden gap-1 ml-4">
               <Button
@@ -603,6 +758,14 @@ const LiveSessionRoom = () => {
                 onClick={() => setRightPanel('participants')}
               >
                 <Users className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={rightPanel === 'files' ? 'default' : 'ghost'}
+                size="icon"
+                className="rounded-full h-10 w-10"
+                onClick={() => setRightPanel('files')}
+              >
+                <Paperclip className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -622,6 +785,10 @@ const LiveSessionRoom = () => {
                 {pendingRequests.length > 0 && (
                   <span className="absolute top-2 right-4 w-2 h-2 bg-red-500 rounded-full" />
                 )}
+              </TabsTrigger>
+              <TabsTrigger value="files" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent h-full gap-1">
+                <Paperclip className="h-4 w-4" />
+                <span>{sessionFiles.length}</span>
               </TabsTrigger>
               <TabsTrigger value="notes" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent h-full gap-1 lg:hidden">
                 <FileText className="h-4 w-4" />
@@ -758,6 +925,60 @@ const LiveSessionRoom = () => {
                     </div>
                   ))}
                 </div>
+              </ScrollArea>
+            </TabsContent>
+
+            {/* Files Tab */}
+            <TabsContent value="files" className="flex-1 m-0 overflow-hidden flex flex-col">
+              <ScrollArea className="flex-1 p-3">
+                {isInstructor && (
+                  <Button
+                    variant="outline"
+                    className="w-full mb-3 border-dashed gap-2"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                  >
+                    {isUploading ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /> Uploading...</>
+                    ) : (
+                      <><Upload className="h-4 w-4" /> Share a File</>
+                    )}
+                  </Button>
+                )}
+                {sessionFiles.length === 0 ? (
+                  <div className="text-center text-muted-foreground text-sm py-8">
+                    <Paperclip className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    No files shared yet.
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {sessionFiles.map(file => (
+                      <div key={file.id} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors group">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-background border flex items-center justify-center">
+                          {getFileIcon(file.file_type)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{file.file_name}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {formatFileSize(file.file_size)} • {file.profiles?.full_name || 'Instructor'} • {format(new Date(file.created_at), 'h:mm a')}
+                          </p>
+                        </div>
+                        <div className="flex gap-1 flex-shrink-0">
+                          <Button size="icon" variant="ghost" className="h-7 w-7" asChild>
+                            <a href={file.file_url} target="_blank" rel="noopener noreferrer" download>
+                              <Download className="h-3.5 w-3.5" />
+                            </a>
+                          </Button>
+                          {isInstructor && (
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => deleteFile(file.id, file.file_url)}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </ScrollArea>
             </TabsContent>
 
