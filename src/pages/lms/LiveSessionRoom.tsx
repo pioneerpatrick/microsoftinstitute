@@ -79,11 +79,24 @@ interface JoinRequest {
   profiles: { full_name: string | null; email: string | null };
 }
 
+interface SessionFile {
+  id: string;
+  session_id: string;
+  uploaded_by: string;
+  file_name: string;
+  file_url: string;
+  file_size: number | null;
+  file_type: string | null;
+  created_at: string;
+  profiles?: { full_name: string | null };
+}
+
 const LiveSessionRoom = () => {
   const { sessionId } = useParams();
   const { user, loading, isStaff } = useAuth();
   const navigate = useNavigate();
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
