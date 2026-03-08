@@ -146,7 +146,7 @@ const CertificateManagement = () => {
   };
 
   const fetchStudents = async () => {
-    // Only fetch students who are enrolled and have admission numbers
+    // Fetch students who are enrolled
     const { data: enrollmentData } = await supabase
       .from('enrollments')
       .select('user_id')
@@ -159,7 +159,6 @@ const CertificateManagement = () => {
           .from('profiles')
           .select('id, full_name, email, admission_number')
           .in('id', enrolledUserIds)
-          .not('admission_number', 'is', null)
           .order('full_name');
         if (data) setStudents(data);
       }
