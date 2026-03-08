@@ -512,14 +512,11 @@ const CertificateManagement = () => {
     doc.setFontSize(3.5);
     doc.text(`${monthStr.toUpperCase()} ${year}`, stX, stY + 5, { align: 'center' });
 
-    // ── Partner logos bar ──
+    // ── Partner logos bar (no background, just a subtle top line) ──
     const partnerBarY = H - 28;
-    // Light background
-    doc.setFillColor(248, 248, 248);
-    doc.rect(14, partnerBarY - 2, W - 28, 20, 'F');
     doc.setDrawColor(BLUE.r, BLUE.g, BLUE.b);
-    doc.setLineWidth(0.2);
-    doc.line(14, partnerBarY - 2, W - 14, partnerBarY - 2);
+    doc.setLineWidth(0.15);
+    doc.line(30, partnerBarY - 2, W - 30, partnerBarY - 2);
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(5.5);
