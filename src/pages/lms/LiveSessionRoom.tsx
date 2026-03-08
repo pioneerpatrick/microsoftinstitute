@@ -164,6 +164,7 @@ const LiveSessionRoom = () => {
     enumerateDevices();
   }, []);
 
+  useEffect(() => {
     if (!loading && !user) navigate('/lms/login');
   }, [user, loading, navigate]);
 
