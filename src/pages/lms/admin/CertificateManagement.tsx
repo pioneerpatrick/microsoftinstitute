@@ -249,7 +249,54 @@ const CertificateManagement = () => {
     doc.setFillColor(255, 252, 240);
     doc.rect(0, 0, W, H, 'F');
 
-    // Subtle texture
+    // ── Holographic guilloche pattern (security wave lines) ──
+    doc.setLineWidth(0.12);
+    // Layer 1: Blue wave pattern
+    doc.setDrawColor(BLUE.r, BLUE.g, BLUE.b);
+    doc.setGState(new doc.GState({ opacity: 0.04 }));
+    for (let row = -20; row < H + 20; row += 12) {
+      const points: { x: number; y: number }[] = [];
+      for (let x = 0; x <= W; x += 2) {
+        const y = row + Math.sin((x / W) * Math.PI * 6) * 8;
+        points.push({ x, y });
+      }
+      for (let p = 0; p < points.length - 1; p++) {
+        doc.line(points[p].x, points[p].y, points[p + 1].x, points[p + 1].y);
+      }
+    }
+    // Layer 2: Orange concentric rosettes
+    doc.setDrawColor(ORANGE.r, ORANGE.g, ORANGE.b);
+    doc.setGState(new doc.GState({ opacity: 0.035 }));
+    for (let cx = 30; cx < W; cx += 60) {
+      for (let cy = 30; cy < H; cy += 60) {
+        for (let r = 4; r <= 20; r += 4) {
+          doc.circle(cx, cy, r, 'S');
+        }
+      }
+    }
+    // Layer 3: Green diagonal crosshatch
+    doc.setDrawColor(GREEN.r, GREEN.g, GREEN.b);
+    doc.setGState(new doc.GState({ opacity: 0.03 }));
+    for (let d = -H; d < W + H; d += 18) {
+      doc.line(d, 0, d + H, H);
+      doc.line(d + H, 0, d, H);
+    }
+    doc.setGState(new doc.GState({ opacity: 1 }));
+
+    // ── Diagonal watermark text "MICROSOFT TRAINING INSTITUTE" ──
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(28);
+    doc.setTextColor(BLUE.r, BLUE.g, BLUE.b);
+    doc.setGState(new doc.GState({ opacity: 0.035 }));
+    const wmText = 'MICROSOFT TRAINING INSTITUTE';
+    for (let wy = -40; wy < H + 80; wy += 50) {
+      for (let wx = -100; wx < W + 100; wx += 160) {
+        doc.text(wmText, wx, wy, { angle: 35 });
+      }
+    }
+    doc.setGState(new doc.GState({ opacity: 1 }));
+
+    // Subtle dot texture overlay
     doc.setDrawColor(245, 238, 220);
     doc.setLineWidth(0.08);
     for (let i = 0; i < W; i += 8) {
