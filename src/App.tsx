@@ -24,6 +24,7 @@ import Assignments from "./pages/lms/Assignments";
 import Messages from "./pages/lms/Messages";
 import LiveSessionRoom from "./pages/lms/LiveSessionRoom";
 import ProfilePage from "./pages/lms/Profile";
+import CodingLab from "./pages/lms/CodingLab";
 
 // Instructor Pages
 import InstructorDashboard from "./pages/lms/instructor/InstructorDashboard";
