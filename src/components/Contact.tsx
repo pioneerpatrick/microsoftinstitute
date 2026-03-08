@@ -70,8 +70,8 @@ const Contact = () => {
     {
       icon: Phone,
       title: "Call Us",
-      details: ["+254 723 821 798"],
-      link: "tel:+254723821798",
+      details: ["+254 711 577 338"],
+      link: "tel:+254711577338",
     },
     {
       icon: Mail,
