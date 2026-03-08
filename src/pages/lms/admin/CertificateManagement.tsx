@@ -146,8 +146,24 @@ const CertificateManagement = () => {
   };
 
   const fetchStudents = async () => {
-    const { data } = await supabase.from('profiles').select('id, full_name, email, admission_number').order('full_name');
-    if (data) setStudents(data);
+    // Only fetch students who are enrolled and have admission numbers
+    const { data: enrollmentData } = await supabase
+      .from('enrollments')
+      .select('user_id')
+      .order('enrolled_at', { ascending: false });
+    
+    if (enrollmentData) {
+      const enrolledUserIds = [...new Set(enrollmentData.map(e => e.user_id))];
+      if (enrolledUserIds.length > 0) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('id, full_name, email, admission_number')
+          .in('id', enrolledUserIds)
+          .not('admission_number', 'is', null)
+          .order('full_name');
+        if (data) setStudents(data);
+      }
+    }
   };
 
   const fetchCourses = async () => {
