@@ -111,8 +111,8 @@ const Certificates = () => {
     doc.setFontSize(9);
     setOpacity(0.09);
     let wmIdx = 0;
-    for (let wy = 4; wy < height; wy += 7) {
-      for (let wx = -10; wx < width + 10; wx += 58) {
+    for (let wy = 4; wy < height; wy += 6) {
+      for (let wx = -10; wx < width + 10; wx += 48) {
         const c = wmColors[wmIdx % wmColors.length];
         doc.setTextColor(c.r, c.g, c.b);
         doc.text(wmText, wx, wy);
