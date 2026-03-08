@@ -459,6 +459,7 @@ const LiveSessionRoom = () => {
     return <File className="h-5 w-5 text-muted-foreground" />;
   };
 
+  const sendMessage = async () => {
     if (!newMessage.trim() || !sessionId || !user) return;
     const { error } = await supabase.from('session_messages').insert({
       session_id: sessionId,
