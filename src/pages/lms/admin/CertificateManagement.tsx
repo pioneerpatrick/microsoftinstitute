@@ -95,6 +95,7 @@ const CertificateManagement = () => {
   const [formCertNumber, setFormCertNumber] = useState('');
   const [formIssuedAt, setFormIssuedAt] = useState(new Date().toISOString().split('T')[0]);
   const [formAdmission, setFormAdmission] = useState('');
+  const [formAggregate, setFormAggregate] = useState('DISTINCTION');
 
   // Edit/Preview overrides
   const [overrides, setOverrides] = useState<CertOverrides>({
