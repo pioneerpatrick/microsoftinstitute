@@ -137,6 +137,7 @@ const LiveSessionRoom = () => {
   const [screenShareStream, setScreenShareStream] = useState<MediaStream | null>(null);
   const [loadingPDF, setLoadingPDF] = useState<string | null>(null);
   const presentInputRef = useRef<HTMLInputElement>(null);
+  const slideContainerRef = useRef<HTMLDivElement>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);
   const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
