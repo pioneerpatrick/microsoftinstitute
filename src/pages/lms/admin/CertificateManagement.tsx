@@ -204,7 +204,7 @@ const CertificateManagement = () => {
       issuedAt: new Date(cert.issued_at).toISOString().split('T')[0],
       institutionTitle: 'MICROSOFT TRAINING INSTITUTE',
       motto: '"Quest for Excellence"',
-      admissionNumber: `MTI/${String(Math.floor(Math.random() * 999) + 1).padStart(3, '0')}/${year}`,
+      admissionNumber: cert.profiles?.admission_number || `MTI/${String(Math.floor(Math.random() * 999) + 1).padStart(3, '0')}/${year}`,
       serialNumber: `MTI/${courseAbbr}/${idx}/${year}`,
       aggregate: 'DISTINCTION',
       congregationText: '',
