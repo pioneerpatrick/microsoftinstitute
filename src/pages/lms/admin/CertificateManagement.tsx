@@ -712,7 +712,7 @@ const CertificateManagement = () => {
             </Button>
             <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
               <DialogTrigger asChild>
-                <Button onClick={() => { resetForm(); setFormCertNumber(generateCertNumber()); setFormAdmission(generateAdmissionNumber()); }}>
+                <Button onClick={() => { resetForm(); }}>
                   <Plus className="h-4 w-4 mr-2" /> Generate Certificate
                 </Button>
               </DialogTrigger>
