@@ -154,6 +154,17 @@ const Dashboard = () => {
 
     setStats(prev => ({ ...prev, totalCertificates: certCount || 0 }));
 
+    // Fetch hours learned from lesson progress
+    const { data: progressData } = await supabase
+      .from('lesson_progress')
+      .select('time_spent_seconds')
+      .eq('user_id', user.id);
+    
+    if (progressData) {
+      const totalSeconds = progressData.reduce((sum, p) => sum + (p.time_spent_seconds || 0), 0);
+      setStats(prev => ({ ...prev, hoursLearned: Math.round(totalSeconds / 3600) }));
+    }
+
     // Fetch announcements
     const { data: announcementData } = await supabase
       .from('announcements')
@@ -184,6 +195,19 @@ const Dashboard = () => {
 
     if (sessionData) {
       setUpcomingSessions(sessionData as LiveSession[]);
+    }
+
+    // Fetch recent notifications
+    const { data: notifData } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('is_read', false)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    if (notifData) {
+      setNotifications(notifData as Notification[]);
     }
   };
 
