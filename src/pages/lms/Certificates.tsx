@@ -9,6 +9,7 @@ import { Award, Download, Share2, ExternalLink, CheckCircle2 } from 'lucide-reac
 import LMSLayout from '@/components/lms/LMSLayout';
 import { jsPDF } from 'jspdf';
 import { toast } from 'sonner';
+import { registerCalligraphyFont, setCalligraphyFont } from '@/lib/registerCalligraphyFont';
 
 interface Certificate {
   id: string;
@@ -80,12 +81,13 @@ const Certificates = () => {
     setIsLoading(false);
   };
 
-  const generateCertificatePDF = (cert: Certificate) => {
+  const generateCertificatePDF = async (cert: Certificate) => {
     const doc = new jsPDF({
       orientation: 'landscape',
       unit: 'mm',
       format: 'a4',
     });
+    await registerCalligraphyFont(doc);
 
     const width = doc.internal.pageSize.getWidth();
     const height = doc.internal.pageSize.getHeight();
@@ -141,11 +143,12 @@ const Certificates = () => {
     doc.setTextColor(100, 100, 100);
     doc.text('This is to certify that', width / 2, 90, { align: 'center' });
 
-    // Student Name
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(28);
+    // Student Name (Calligraphy)
+    setCalligraphyFont(doc);
+    doc.setFontSize(32);
     doc.setTextColor(45, 55, 72);
-    doc.text(studentName.toUpperCase(), width / 2, 105, { align: 'center' });
+    doc.text(studentName, width / 2, 105, { align: 'center' });
+    doc.setFont('helvetica', 'normal'); // reset font
 
     // Underline for name
     doc.setDrawColor(212, 175, 55);

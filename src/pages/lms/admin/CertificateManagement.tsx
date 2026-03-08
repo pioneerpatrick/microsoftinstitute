@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Award, Download, Plus, Edit2, Trash2, Search, RefreshCw, Eye } from 'lucide-react';
 import { jsPDF } from 'jspdf';
+import { registerCalligraphyFont, setCalligraphyFont } from '@/lib/registerCalligraphyFont';
 import { toast } from 'sonner';
 import logoImg from '@/assets/logo-transparent.png';
 import QRCode from 'qrcode';
@@ -299,6 +300,7 @@ const CertificateManagement = () => {
     ]);
 
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    await registerCalligraphyFont(doc);
     const W = doc.internal.pageSize.getWidth();
     const H = doc.internal.pageSize.getHeight();
 
@@ -396,11 +398,12 @@ const CertificateManagement = () => {
     doc.setTextColor(80, 80, 80);
     doc.text('This is to certify that', W / 2, 71, { align: 'center' });
 
-    // ── Student Name ──
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(24);
+    // ── Student Name (Calligraphy) ──
+    setCalligraphyFont(doc);
+    doc.setFontSize(28);
     doc.setTextColor(BLUE.r, BLUE.g, BLUE.b);
     doc.text(studentName, W / 2, 82, { align: 'center' });
+    doc.setFont('helvetica', 'normal'); // reset font
 
     // Orange + green underline
     const nameW = doc.getTextWidth(studentName);
