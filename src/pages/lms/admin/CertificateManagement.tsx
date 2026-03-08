@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Award, Download, Plus, Edit2, Trash2, Search, RefreshCw, Eye } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { toast } from 'sonner';
+import logoImg from '@/assets/logo.png';
 
 interface CertificateRecord {
   id: string;
@@ -230,241 +231,252 @@ const CertificateManagement = () => {
     const issuedAt = o.issuedAt || cert.issued_at;
     const year = new Date(issuedAt).getFullYear();
 
-    // Preload partner logos
-    const logoPromises = PARTNER_LOGOS.map(p => loadImageAsBase64(p.path));
-    const logoImages = await Promise.all(logoPromises);
+    // Brand colors from logo
+    const BLUE = { r: 20, g: 67, b: 140 };    // #14438C
+    const ORANGE = { r: 243, g: 149, b: 25 };  // #F39519
+    const GREEN = { r: 76, g: 140, b: 43 };    // #4C8C2B
+    const GOLD = { r: 212, g: 160, b: 23 };
+
+    // Preload images
+    const [logoBase64, ...logoImages] = await Promise.all([
+      loadImageAsBase64(logoImg),
+      ...PARTNER_LOGOS.map(p => loadImageAsBase64(p.path)),
+    ]);
 
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
     const W = doc.internal.pageSize.getWidth();
     const H = doc.internal.pageSize.getHeight();
 
-    // ── Cream/parchment background ──
+    // ── Cream parchment background ──
     doc.setFillColor(255, 252, 240);
     doc.rect(0, 0, W, H, 'F');
 
-    // Subtle texture dots
+    // Subtle texture
     doc.setDrawColor(245, 238, 220);
     doc.setLineWidth(0.08);
-    for (let i = 0; i < W; i += 6) {
-      for (let j = 0; j < H; j += 6) {
-        if ((i + j) % 12 === 0) doc.circle(i, j, 0.2, 'S');
+    for (let i = 0; i < W; i += 8) {
+      for (let j = 0; j < H; j += 8) {
+        if ((i + j) % 16 === 0) doc.circle(i, j, 0.15, 'S');
       }
     }
 
-    // ── Triple ornate border ──
-    // Outer dark blue
-    doc.setDrawColor(20, 67, 140);
-    doc.setLineWidth(3);
+    // ── Triple ornate border using brand colors ──
+    // Outer blue
+    doc.setDrawColor(BLUE.r, BLUE.g, BLUE.b);
+    doc.setLineWidth(2.5);
     doc.rect(6, 6, W - 12, H - 12);
-    // Gold middle
-    doc.setDrawColor(212, 160, 23);
-    doc.setLineWidth(1.8);
+    // Orange middle
+    doc.setDrawColor(ORANGE.r, ORANGE.g, ORANGE.b);
+    doc.setLineWidth(1.2);
     doc.rect(10, 10, W - 20, H - 20);
-    // Inner dark blue thin
-    doc.setDrawColor(20, 67, 140);
-    doc.setLineWidth(0.6);
+    // Inner blue thin
+    doc.setDrawColor(BLUE.r, BLUE.g, BLUE.b);
+    doc.setLineWidth(0.5);
     doc.rect(13, 13, W - 26, H - 26);
 
-    // ── Corner medallions ──
+    // ── Corner medallions with brand colors ──
     const drawMedallion = (cx: number, cy: number) => {
-      doc.setFillColor(212, 160, 23); doc.circle(cx, cy, 5, 'F');
-      doc.setFillColor(20, 67, 140); doc.circle(cx, cy, 3.5, 'F');
-      doc.setFillColor(212, 160, 23); doc.circle(cx, cy, 2, 'F');
-      doc.setFillColor(255, 252, 240); doc.circle(cx, cy, 0.8, 'F');
+      doc.setFillColor(ORANGE.r, ORANGE.g, ORANGE.b); doc.circle(cx, cy, 4.5, 'F');
+      doc.setFillColor(BLUE.r, BLUE.g, BLUE.b); doc.circle(cx, cy, 3, 'F');
+      doc.setFillColor(GREEN.r, GREEN.g, GREEN.b); doc.circle(cx, cy, 1.5, 'F');
+      doc.setFillColor(255, 252, 240); doc.circle(cx, cy, 0.6, 'F');
     };
     drawMedallion(13, 13); drawMedallion(W - 13, 13);
     drawMedallion(13, H - 13); drawMedallion(W - 13, H - 13);
 
-    // ── Top banner with institution name ──
-    // Blue ribbon
-    doc.setFillColor(20, 67, 140);
-    doc.rect(18, 17, W - 36, 14, 'F');
-    // Gold accent lines
-    doc.setDrawColor(212, 160, 23);
-    doc.setLineWidth(0.8);
-    doc.line(18, 17, W - 18, 17);
-    doc.line(18, 31, W - 18, 31);
+    // ── Logo centered at top ──
+    const logoSize = 22;
+    if (logoBase64) {
+      try {
+        doc.addImage(logoBase64, 'PNG', W / 2 - logoSize / 2, 16, logoSize, logoSize);
+      } catch { /* fallback below */ }
+    }
+
+    // ── Institution name below logo ──
+    doc.setFillColor(BLUE.r, BLUE.g, BLUE.b);
+    doc.roundedRect(W / 2 - 55, 39, 110, 10, 1.5, 1.5, 'F');
+    // Orange accent lines
+    doc.setDrawColor(ORANGE.r, ORANGE.g, ORANGE.b);
+    doc.setLineWidth(0.6);
+    doc.line(W / 2 - 55, 39, W / 2 + 55, 39);
+    doc.line(W / 2 - 55, 49, W / 2 + 55, 49);
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
+    doc.setFontSize(13);
     doc.setTextColor(255, 255, 255);
-    doc.text('Microsoft Training Institute', W / 2, 26, { align: 'center' });
+    doc.text('MICROSOFT TRAINING INSTITUTE', W / 2, 46, { align: 'center' });
 
     // ── Admission & Serial Numbers ──
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    doc.setTextColor(20, 67, 140);
-    doc.text(`ADMISSION: ${o.admissionNumber}`, 25, 38);
-    doc.text(`SERIAL NO. ${o.serialNumber}`, W - 25, 38, { align: 'right' });
+    doc.setFontSize(7.5);
+    doc.setTextColor(BLUE.r, BLUE.g, BLUE.b);
+    doc.text(`ADMISSION: ${o.admissionNumber}`, 20, 55);
+    doc.text(`SERIAL NO: ${o.serialNumber}`, W - 20, 55, { align: 'right' });
 
     // ── Motto ──
     doc.setFont('helvetica', 'bolditalic');
-    doc.setFontSize(11);
-    doc.setTextColor(212, 160, 23);
-    doc.text(o.motto, W / 2, 46, { align: 'center' });
+    doc.setFontSize(10);
+    doc.setTextColor(ORANGE.r, ORANGE.g, ORANGE.b);
+    doc.text(o.motto, W / 2, 61, { align: 'center' });
+
+    // ── Green divider line ──
+    doc.setDrawColor(GREEN.r, GREEN.g, GREEN.b);
+    doc.setLineWidth(0.4);
+    doc.line(W / 2 - 60, 64, W / 2 + 60, 64);
 
     // ── "This is to certify that" ──
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(10);
     doc.setTextColor(80, 80, 80);
-    doc.text('This is to certify that', W / 2, 55, { align: 'center' });
+    doc.text('This is to certify that', W / 2, 71, { align: 'center' });
 
     // ── Student Name ──
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(26);
-    doc.setTextColor(20, 67, 140);
-    doc.text(studentName, W / 2, 68, { align: 'center' });
+    doc.setFontSize(24);
+    doc.setTextColor(BLUE.r, BLUE.g, BLUE.b);
+    doc.text(studentName, W / 2, 82, { align: 'center' });
 
-    // Gold underline
+    // Orange + green underline
     const nameW = doc.getTextWidth(studentName);
-    doc.setDrawColor(212, 160, 23);
+    doc.setDrawColor(ORANGE.r, ORANGE.g, ORANGE.b);
     doc.setLineWidth(0.8);
-    doc.line(W / 2 - nameW / 2 - 10, 71, W / 2 + nameW / 2 + 10, 71);
+    doc.line(W / 2 - nameW / 2 - 8, 85, W / 2 + nameW / 2 + 8, 85);
+    doc.setDrawColor(GREEN.r, GREEN.g, GREEN.b);
     doc.setLineWidth(0.3);
-    doc.line(W / 2 - nameW / 2 - 5, 73, W / 2 + nameW / 2 + 5, 73);
+    doc.line(W / 2 - nameW / 2 - 4, 87, W / 2 + nameW / 2 + 4, 87);
 
-    // ── "having satisfied all the requirements was awarded" ──
+    // ── "having satisfied..." ──
     doc.setFont('helvetica', 'italic');
-    doc.setFontSize(10);
+    doc.setFontSize(9.5);
     doc.setTextColor(80, 80, 80);
-    doc.text('having satisfied all the requirements was awarded', W / 2, 81, { align: 'center' });
+    doc.text('having satisfied all the requirements was awarded', W / 2, 94, { align: 'center' });
 
-    // ── Course Title (Diploma/Certificate in ...) ──
+    // ── Course Title ──
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(20);
-    doc.setTextColor(20, 67, 140);
-    doc.text(courseTitle, W / 2, 93, { align: 'center' });
+    doc.setFontSize(18);
+    doc.setTextColor(BLUE.r, BLUE.g, BLUE.b);
+    doc.text(courseTitle, W / 2, 104, { align: 'center' });
 
     // ── Aggregate ──
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
+    doc.setFontSize(10);
     doc.setTextColor(80, 80, 80);
-    doc.text(`with AGGREGATE: `, W / 2 - 15, 102, { align: 'right' });
-    doc.setTextColor(212, 160, 23);
-    doc.text(o.aggregate, W / 2 - 15, 102);
+    const aggLabel = 'with AGGREGATE: ';
+    const aggLabelW = doc.getTextWidth(aggLabel);
+    doc.text(aggLabel, W / 2 - aggLabelW / 2, 112);
+    doc.setTextColor(ORANGE.r, ORANGE.g, ORANGE.b);
+    doc.text(o.aggregate, W / 2 + aggLabelW / 2, 112);
 
     // ── Congregation text ──
     const congDate = new Date(issuedAt);
     const dayNum = congDate.getDate();
-    const dayStr = dayNum === 1 ? 'First' : dayNum === 2 ? 'Second' : dayNum === 3 ? 'Third' :
-      dayNum === 4 ? 'Fourth' : dayNum === 5 ? 'Fifth' : dayNum === 6 ? 'Sixth' :
-      dayNum === 7 ? 'Seventh' : dayNum === 8 ? 'Eighth' : dayNum === 9 ? 'Ninth' :
-      dayNum === 10 ? 'Tenth' : dayNum === 11 ? 'Eleventh' : dayNum === 12 ? 'Twelfth' :
-      dayNum === 13 ? 'Thirteenth' : dayNum === 14 ? 'Fourteenth' : dayNum === 15 ? 'Fifteenth' :
-      dayNum === 16 ? 'Sixteenth' : dayNum === 17 ? 'Seventeenth' : dayNum === 18 ? 'Eighteenth' :
-      dayNum === 19 ? 'Nineteenth' : dayNum === 20 ? 'Twentieth' : dayNum === 21 ? 'Twenty-first' :
-      dayNum === 22 ? 'Twenty-second' : dayNum === 23 ? 'Twenty-third' : dayNum === 24 ? 'Twenty-fourth' :
-      dayNum === 25 ? 'Twenty-fifth' : dayNum === 26 ? 'Twenty-sixth' : dayNum === 27 ? 'Twenty-seventh' :
-      dayNum === 28 ? 'Twenty-eighth' : dayNum === 29 ? 'Twenty-ninth' : dayNum === 30 ? 'Thirtieth' : 'Thirty-first';
+    const dayWords = ['','First','Second','Third','Fourth','Fifth','Sixth','Seventh','Eighth','Ninth','Tenth',
+      'Eleventh','Twelfth','Thirteenth','Fourteenth','Fifteenth','Sixteenth','Seventeenth','Eighteenth','Nineteenth','Twentieth',
+      'Twenty-first','Twenty-second','Twenty-third','Twenty-fourth','Twenty-fifth','Twenty-sixth','Twenty-seventh','Twenty-eighth','Twenty-ninth','Thirtieth','Thirty-first'];
+    const dayStr = dayWords[dayNum] || String(dayNum);
     const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     const monthStr = monthNames[congDate.getMonth()];
-    const yearWords: Record<number, string> = {};
-    const getYearWord = (y: number) => `Two thousand and ${y - 2000 < 20 ? ['twenty','twenty-one','twenty-two','twenty-three','twenty-four','twenty-five','twenty-six','twenty-seven','twenty-eight','twenty-nine'][y - 2020] || String(y) : String(y)}`;
+    const getYearWord = (y: number) => {
+      const tens = ['twenty','twenty-one','twenty-two','twenty-three','twenty-four','twenty-five','twenty-six','twenty-seven','twenty-eight','twenty-nine'];
+      return `Two thousand and ${tens[y - 2020] || String(y)}`;
+    };
 
     const congText = o.congregationText ||
       `With all rights and privileges thereunto admitted to the award at a congregation held at this College on the ${dayStr} day of ${monthStr} in the year ${getYearWord(year)} and in the testimony whereof we have affixed our signatures and seal of the college`;
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
+    doc.setFontSize(7);
     doc.setTextColor(60, 60, 60);
-    const congLines = doc.splitTextToSize(congText, W - 70);
-    doc.text(congLines, W / 2, 110, { align: 'center' });
+    const congLines = doc.splitTextToSize(congText, W - 80);
+    doc.text(congLines, W / 2, 119, { align: 'center' });
 
-    // ── CENTER SEAL — realistic multi-ring design ──
+    // ── CENTER SEAL with logo colors ──
     const sealX = W / 2;
-    const sealY = 140;
-    const sealR = 16;
+    const sealY = 142;
+    const sealR = 14;
 
-    // Outer decorative ring with dashes
-    doc.setDrawColor(20, 67, 140);
-    doc.setLineWidth(0.3);
-    for (let a = 0; a < 360; a += 5) {
+    // Decorative dashes
+    doc.setDrawColor(BLUE.r, BLUE.g, BLUE.b);
+    doc.setLineWidth(0.25);
+    for (let a = 0; a < 360; a += 8) {
       const rad = (a * Math.PI) / 180;
-      const x1 = sealX + Math.cos(rad) * (sealR + 2);
-      const y1 = sealY + Math.sin(rad) * (sealR + 2);
-      const x2 = sealX + Math.cos(rad) * (sealR + 3.5);
-      const y2 = sealY + Math.sin(rad) * (sealR + 3.5);
-      if (a % 10 === 0) doc.line(x1, y1, x2, y2);
+      if (a % 16 === 0) {
+        doc.line(
+          sealX + Math.cos(rad) * (sealR + 1.5), sealY + Math.sin(rad) * (sealR + 1.5),
+          sealX + Math.cos(rad) * (sealR + 3), sealY + Math.sin(rad) * (sealR + 3)
+        );
+      }
     }
 
-    // Gold outer ring
-    doc.setDrawColor(212, 160, 23);
-    doc.setLineWidth(2);
+    // Orange outer ring
+    doc.setDrawColor(ORANGE.r, ORANGE.g, ORANGE.b);
+    doc.setLineWidth(1.8);
     doc.circle(sealX, sealY, sealR, 'S');
-
     // Blue ring
-    doc.setDrawColor(20, 67, 140);
-    doc.setLineWidth(1);
-    doc.circle(sealX, sealY, sealR - 2.5, 'S');
-
-    // Thin gold ring
-    doc.setDrawColor(212, 160, 23);
-    doc.setLineWidth(0.5);
-    doc.circle(sealX, sealY, sealR - 4, 'S');
-
-    // Inner fill
-    doc.setFillColor(20, 67, 140);
-    doc.circle(sealX, sealY, sealR - 5, 'F');
-
-    // Gold inner accent
-    doc.setDrawColor(212, 160, 23);
+    doc.setDrawColor(BLUE.r, BLUE.g, BLUE.b);
+    doc.setLineWidth(0.8);
+    doc.circle(sealX, sealY, sealR - 2, 'S');
+    // Green ring
+    doc.setDrawColor(GREEN.r, GREEN.g, GREEN.b);
+    doc.setLineWidth(0.4);
+    doc.circle(sealX, sealY, sealR - 3.5, 'S');
+    // Inner blue fill
+    doc.setFillColor(BLUE.r, BLUE.g, BLUE.b);
+    doc.circle(sealX, sealY, sealR - 4.5, 'F');
+    // Orange inner accent
+    doc.setDrawColor(ORANGE.r, ORANGE.g, ORANGE.b);
     doc.setLineWidth(0.3);
-    doc.circle(sealX, sealY, sealR - 6, 'S');
+    doc.circle(sealX, sealY, sealR - 5.5, 'S');
 
-    // Seal text — curved effect simulated
+    // Seal text
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(5.5);
-    doc.text('MICROSOFT', sealX, sealY - 6, { align: 'center' });
-    doc.text('TRAINING', sealX, sealY - 2.5, { align: 'center' });
-
-    // MTI large in center
-    doc.setFontSize(10);
-    doc.setTextColor(212, 160, 23);
-    doc.text('MTI', sealX, sealY + 2.5, { align: 'center' });
-
-    doc.setFontSize(5.5);
+    doc.setFontSize(5);
+    doc.text('MICROSOFT', sealX, sealY - 4.5, { align: 'center' });
+    doc.text('TRAINING', sealX, sealY - 1.5, { align: 'center' });
+    doc.setFontSize(9);
+    doc.setTextColor(ORANGE.r, ORANGE.g, ORANGE.b);
+    doc.text('MTI', sealX, sealY + 3, { align: 'center' });
+    doc.setFontSize(5);
     doc.setTextColor(255, 255, 255);
     doc.text('INSTITUTE', sealX, sealY + 6, { align: 'center' });
 
-    // Small gold star
-    doc.setFillColor(212, 160, 23);
-    doc.circle(sealX - 5, sealY + 8.5, 0.8, 'F');
-    doc.circle(sealX + 5, sealY + 8.5, 0.8, 'F');
-    doc.circle(sealX, sealY - 8.5, 0.8, 'F');
+    // Orange stars
+    doc.setFillColor(ORANGE.r, ORANGE.g, ORANGE.b);
+    doc.circle(sealX - 4, sealY + 7.5, 0.6, 'F');
+    doc.circle(sealX + 4, sealY + 7.5, 0.6, 'F');
+    doc.circle(sealX, sealY - 7.5, 0.6, 'F');
 
-    // Ring text (around seal)
-    doc.setFontSize(3.5);
-    doc.setTextColor(20, 67, 140);
+    // Ring text
+    doc.setFontSize(3.2);
+    doc.setTextColor(BLUE.r, BLUE.g, BLUE.b);
     const ringTexts = ['EXCELLENCE', '•', 'INTEGRITY', '•', 'INNOVATION', '•', 'KNOWLEDGE', '•'];
-    const ringR = sealR + 5;
+    const ringR = sealR + 4.5;
     let angleOffset = -90;
     ringTexts.forEach(txt => {
       const rad = (angleOffset * Math.PI) / 180;
-      const tx = sealX + Math.cos(rad) * ringR;
-      const ty = sealY + Math.sin(rad) * ringR;
-      doc.text(txt, tx, ty, { align: 'center' });
+      doc.text(txt, sealX + Math.cos(rad) * ringR, sealY + Math.sin(rad) * ringR, { align: 'center' });
       angleOffset += 45;
     });
 
-    // ── Signature areas (left: Director, right: Dept Head) ──
-    const sigY = 170;
+    // ── Signature areas ──
+    const sigY = 166;
 
     // Left: Director
-    doc.setDrawColor(45, 55, 72);
+    doc.setDrawColor(BLUE.r, BLUE.g, BLUE.b);
     doc.setLineWidth(0.3);
     doc.line(35, sigY, 95, sigY);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(9);
-    doc.setTextColor(20, 67, 140);
+    doc.setTextColor(BLUE.r, BLUE.g, BLUE.b);
     doc.text(o.directorName, 65, sigY + 5, { align: 'center' });
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
     doc.setTextColor(100, 100, 100);
     doc.text('Director', 65, sigY + 9, { align: 'center' });
 
-    // Center: Year badge
-    doc.setFillColor(212, 160, 23);
+    // Center: Year badge in orange
+    doc.setFillColor(ORANGE.r, ORANGE.g, ORANGE.b);
     doc.roundedRect(W / 2 - 10, sigY - 4, 20, 8, 2, 2, 'F');
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
@@ -472,88 +484,90 @@ const CertificateManagement = () => {
     doc.text(String(year), W / 2, sigY + 2, { align: 'center' });
 
     // Right: Department Head
+    doc.setDrawColor(BLUE.r, BLUE.g, BLUE.b);
     doc.line(W - 95, sigY, W - 35, sigY);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(9);
-    doc.setTextColor(20, 67, 140);
+    doc.setTextColor(BLUE.r, BLUE.g, BLUE.b);
     doc.text(o.deptHeadName, W - 65, sigY + 5, { align: 'center' });
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(7);
     doc.setTextColor(100, 100, 100);
     doc.text('Department Head', W - 65, sigY + 9, { align: 'center' });
 
-    // ── Red CERTIFIED stamp (tilted feel, bottom-right) ──
-    const stX = W - 55;
-    const stY = 152;
+    // ── CERTIFIED stamp (bottom-right) ──
+    const stX = W - 50;
+    const stY = 148;
     doc.setDrawColor(180, 30, 30);
-    doc.setLineWidth(1.5);
-    doc.circle(stX, stY, 11, 'S');
-    doc.setLineWidth(0.5);
-    doc.circle(stX, stY, 9.5, 'S');
+    doc.setLineWidth(1.2);
+    doc.circle(stX, stY, 10, 'S');
+    doc.setLineWidth(0.4);
+    doc.circle(stX, stY, 8.5, 'S');
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7);
+    doc.setFontSize(6.5);
     doc.setTextColor(180, 30, 30);
-    doc.text('CERTIFIED', stX, stY - 2, { align: 'center' });
-    doc.setFontSize(5);
+    doc.text('CERTIFIED', stX, stY - 1.5, { align: 'center' });
+    doc.setFontSize(4.5);
     doc.text('AUTHENTIC', stX, stY + 2, { align: 'center' });
-    doc.setFontSize(4);
-    doc.text(`${monthStr.toUpperCase()} ${year}`, stX, stY + 5.5, { align: 'center' });
-    // Cross lines for stamp effect
-    doc.setDrawColor(180, 30, 30);
-    doc.setLineWidth(0.15);
-    doc.line(stX - 11, stY - 4, stX + 11, stY - 4);
-    doc.line(stX - 11, stY + 4, stX + 11, stY + 4);
+    doc.setFontSize(3.5);
+    doc.text(`${monthStr.toUpperCase()} ${year}`, stX, stY + 5, { align: 'center' });
 
     // ── Partner logos bar ──
-    const partnerBarY = H - 25;
+    const partnerBarY = H - 28;
     // Light background
     doc.setFillColor(248, 248, 248);
-    doc.rect(14, partnerBarY - 3, W - 28, 16, 'F');
-    doc.setDrawColor(220, 220, 220);
-    doc.setLineWidth(0.3);
-    doc.rect(14, partnerBarY - 3, W - 28, 16, 'S');
+    doc.rect(14, partnerBarY - 2, W - 28, 20, 'F');
+    doc.setDrawColor(BLUE.r, BLUE.g, BLUE.b);
+    doc.setLineWidth(0.2);
+    doc.line(14, partnerBarY - 2, W - 14, partnerBarY - 2);
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(5);
-    doc.setTextColor(120, 120, 120);
-    doc.text('IN PARTNERSHIP WITH', W / 2, partnerBarY, { align: 'center' });
+    doc.setFontSize(5.5);
+    doc.setTextColor(BLUE.r, BLUE.g, BLUE.b);
+    doc.text('IN PARTNERSHIP WITH', W / 2, partnerBarY + 1, { align: 'center' });
 
-    // Draw partner logos or branded badges
+    // Draw partner logos — maintain aspect ratio, no stretching
     const pCount = PARTNER_LOGOS.length;
-    const pSpacing = (W - 50) / (pCount - 1);
-    const pStartX = 25;
-    const logoY = partnerBarY + 3;
+    const totalWidth = W - 60;
+    const pSpacing = totalWidth / pCount;
+    const pStartX = 30 + pSpacing / 2;
+    const logoMaxW = 14;
+    const logoMaxH = 8;
+    const logoRowY = partnerBarY + 4;
 
     PARTNER_LOGOS.forEach((partner, i) => {
       const px = pStartX + i * pSpacing;
       const imgData = logoImages[i];
       if (imgData) {
         try {
-          doc.addImage(imgData, 'PNG', px - 6, logoY - 1, 12, 6);
+          // Use square fitting to avoid stretching
+          const fitW = logoMaxW;
+          const fitH = logoMaxH;
+          doc.addImage(imgData, 'PNG', px - fitW / 2, logoRowY, fitW, fitH);
         } catch {
-          // Fallback to text
-          drawPartnerBadge(doc, px, logoY + 2, partner.name);
+          drawPartnerBadge(doc, px, logoRowY + logoMaxH / 2 + 1, partner.name);
         }
       } else {
-        drawPartnerBadge(doc, px, logoY + 2, partner.name);
+        drawPartnerBadge(doc, px, logoRowY + logoMaxH / 2 + 1, partner.name);
       }
-      // Partner name below logo
+      // Partner name below
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(3.5);
-      doc.setTextColor(100, 100, 100);
-      doc.text(partner.name, px, logoY + 6.5, { align: 'center' });
+      doc.setFontSize(3.8);
+      doc.setTextColor(80, 80, 80);
+      doc.text(partner.name, px, logoRowY + logoMaxH + 2.5, { align: 'center' });
     });
 
     // ── Disclaimer ──
     doc.setFont('helvetica', 'italic');
-    doc.setFontSize(5.5);
+    doc.setFontSize(5);
     doc.setTextColor(150, 150, 150);
-    doc.text('(This certificate is issued with no alteration whatsoever)', W / 2, H - 10, { align: 'center' });
+    doc.text('(This certificate is issued with no alteration whatsoever)', W / 2, H - 9, { align: 'center' });
 
     // ── Verification ──
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(4.5);
-    doc.text(`Verify: microsoftinstitute.africa/verify/${certNumber}`, W / 2, H - 7, { align: 'center' });
+    doc.setTextColor(BLUE.r, BLUE.g, BLUE.b);
+    doc.text(`Verify: microsoftinstitute.africa/verify/${certNumber}`, W / 2, H - 6, { align: 'center' });
 
     doc.save(`Certificate-${certNumber}.pdf`);
     toast.success('Certificate PDF downloaded!');
