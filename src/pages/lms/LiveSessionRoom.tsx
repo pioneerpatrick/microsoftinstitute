@@ -855,7 +855,7 @@ const LiveSessionRoom = () => {
                         Presentation
                       </h3>
                       <Badge variant="secondary" className="text-xs">
-                        {currentSlideIndex + 1} / {presentationSlides.length}
+                        {activePdfUrl ? `${currentSlideIndex} / ${totalSlides}` : '1 / 1'}
                       </Badge>
                     </>
                   ) : (
