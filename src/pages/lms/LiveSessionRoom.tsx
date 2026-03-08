@@ -1503,58 +1503,6 @@ const LiveSessionRoom = () => {
             </TabsContent>
 
             <TabsContent value="notes" className="flex-1 m-0 overflow-hidden p-3 flex flex-col">
-              {/* PDF Loading in Notes Panel */}
-              {loadingPDF && (
-                <div className="mb-3">
-                  <PDFPresenter
-                    pdfUrl={loadingPDF}
-                    onPagesExtracted={handlePDFPagesExtracted}
-                    onError={() => {
-                      setLoadingPDF(null);
-                      toast.error('Failed to load PDF for presentation');
-                    }}
-                  />
-                  <div className="text-center mt-2">
-                    <Button variant="ghost" size="sm" onClick={() => setLoadingPDF(null)}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              {/* Presentation Preview Thumbnails */}
-              {!loadingPDF && presentationSlides.length > 0 && !isPresentationMode && (
-                <div className="mb-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Slides ({presentationSlides.length})
-                    </p>
-                    {isInstructor && (
-                      <Button size="sm" variant="default" className="h-6 text-xs gap-1" onClick={() => setIsPresentationMode(true)}>
-                        <Presentation className="h-3 w-3" /> Present
-                      </Button>
-                    )}
-                  </div>
-                  <ScrollArea className="max-h-48">
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {presentationSlides.map((slide, i) => (
-                        <div
-                          key={i}
-                          className="aspect-[4/3] rounded border overflow-hidden cursor-pointer hover:ring-2 ring-primary transition-all"
-                          onClick={() => {
-                            setCurrentSlideIndex(i);
-                            setIsPresentationMode(true);
-                          }}
-                        >
-                          <img src={slide} alt={`Slide ${i + 1}`} className="w-full h-full object-cover" />
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </div>
-              )}
-
-              {/* Notes Content */}
               <div className="flex-1 bg-muted/30 rounded-lg border overflow-y-auto p-3">
                 {sharedNotes ? (
                   <div className="whitespace-pre-wrap text-sm">{sharedNotes}</div>
