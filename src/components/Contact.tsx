@@ -147,7 +147,7 @@ const Contact = () => {
               <p className="text-sm text-muted-foreground mb-4">Need immediate assistance? Reach us directly:</p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <a
-                  href="https://wa.me/254723821798"
+                  href="https://wa.me/254711577338"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground px-5 py-3 rounded-lg font-medium hover:opacity-90 transition-all shadow-sm hover:shadow-md flex-1"
