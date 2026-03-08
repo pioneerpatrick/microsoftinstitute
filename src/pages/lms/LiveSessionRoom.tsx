@@ -369,7 +369,96 @@ const LiveSessionRoom = () => {
     setJoinRequests(reqs.map(r => ({ ...r, profiles: profileMap.get(r.user_id) || { full_name: 'Unknown', email: '' } })) as JoinRequest[]);
   };
 
-  const sendMessage = async () => {
+  const fetchSessionFiles = async () => {
+    if (!sessionId) return;
+    const { data: files } = await supabase
+      .from('session_files')
+      .select('*')
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: false });
+    if (!files) return;
+    const userIds = [...new Set(files.map(f => f.uploaded_by))];
+    const { data: profiles } = await supabase.from('profiles').select('id, full_name').in('id', userIds);
+    const profileMap = new Map((profiles || []).map(p => [p.id, p]));
+    setSessionFiles(files.map(f => ({ ...f, profiles: profileMap.get(f.uploaded_by) })) as SessionFile[]);
+  };
+
+  const uploadFile = async (file: globalThis.File) => {
+    if (!sessionId || !user) return;
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${sessionId}/${Date.now()}-${file.name}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('session-files')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        toast.error('Failed to upload file');
+        return;
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('session-files')
+        .getPublicUrl(filePath);
+
+      const { error: dbError } = await supabase.from('session_files').insert({
+        session_id: sessionId,
+        uploaded_by: user.id,
+        file_name: file.name,
+        file_url: urlData.publicUrl,
+        file_size: file.size,
+        file_type: file.type || null,
+      });
+
+      if (dbError) {
+        toast.error('Failed to save file record');
+        return;
+      }
+
+      // Send system message about file share
+      await supabase.from('session_messages').insert({
+        session_id: sessionId,
+        user_id: user.id,
+        content: `📎 shared a file: ${file.name}`,
+        message_type: 'system'
+      });
+
+      toast.success('File shared successfully!');
+      setRightPanel('files');
+    } catch (err) {
+      toast.error('Upload failed');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const deleteFile = async (fileId: string, filePath: string) => {
+    const { error } = await supabase.from('session_files').delete().eq('id', fileId);
+    if (error) {
+      toast.error('Failed to delete file');
+    } else {
+      toast.success('File removed');
+    }
+  };
+
+  const formatFileSize = (bytes: number | null) => {
+    if (!bytes) return 'Unknown size';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const getFileIcon = (type: string | null) => {
+    if (!type) return <File className="h-5 w-5" />;
+    if (type.startsWith('image/')) return <Image className="h-5 w-5 text-green-600" />;
+    if (type.includes('pdf')) return <FileText className="h-5 w-5 text-red-500" />;
+    if (type.includes('spreadsheet') || type.includes('excel') || type.includes('csv')) return <FileSpreadsheet className="h-5 w-5 text-green-700" />;
+    if (type.includes('word') || type.includes('document')) return <FileText className="h-5 w-5 text-blue-600" />;
+    return <File className="h-5 w-5 text-muted-foreground" />;
+  };
+
     if (!newMessage.trim() || !sessionId || !user) return;
     const { error } = await supabase.from('session_messages').insert({
       session_id: sessionId,
