@@ -920,7 +920,60 @@ const LiveSessionRoom = () => {
               </ScrollArea>
             </TabsContent>
 
-            <TabsContent value="notes" className="flex-1 m-0 overflow-hidden p-3">
+            {/* Files Tab */}
+            <TabsContent value="files" className="flex-1 m-0 overflow-hidden flex flex-col">
+              <ScrollArea className="flex-1 p-3">
+                {isInstructor && (
+                  <Button
+                    variant="outline"
+                    className="w-full mb-3 border-dashed gap-2"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                  >
+                    {isUploading ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /> Uploading...</>
+                    ) : (
+                      <><Upload className="h-4 w-4" /> Share a File</>
+                    )}
+                  </Button>
+                )}
+                {sessionFiles.length === 0 ? (
+                  <div className="text-center text-muted-foreground text-sm py-8">
+                    <Paperclip className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    No files shared yet.
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {sessionFiles.map(file => (
+                      <div key={file.id} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors group">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-background border flex items-center justify-center">
+                          {getFileIcon(file.file_type)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{file.file_name}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {formatFileSize(file.file_size)} • {file.profiles?.full_name || 'Instructor'} • {format(new Date(file.created_at), 'h:mm a')}
+                          </p>
+                        </div>
+                        <div className="flex gap-1 flex-shrink-0">
+                          <Button size="icon" variant="ghost" className="h-7 w-7" asChild>
+                            <a href={file.file_url} target="_blank" rel="noopener noreferrer" download>
+                              <Download className="h-3.5 w-3.5" />
+                            </a>
+                          </Button>
+                          {isInstructor && (
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => deleteFile(file.id, file.file_url)}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </TabsContent>
+
               <div className="h-full bg-muted/30 rounded-lg border overflow-y-auto p-3">
                 {sharedNotes ? (
                   <div className="whitespace-pre-wrap text-sm">{sharedNotes}</div>
