@@ -545,7 +545,7 @@ const CertificateManagement = () => {
           const fitH = logoMaxH;
           doc.addImage(imgData, 'PNG', px - fitW / 2, logoRowY, fitW, fitH);
         } catch {
-          drawPartnerBadge(doc, px, logoRowY + fitH / 2 + 1, partner.name);
+          drawPartnerBadge(doc, px, logoRowY + logoMaxH / 2 + 1, partner.name);
         }
       } else {
         drawPartnerBadge(doc, px, logoRowY + logoMaxH / 2 + 1, partner.name);
