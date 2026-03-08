@@ -1503,6 +1503,18 @@ const LiveSessionRoom = () => {
             </TabsContent>
 
             <TabsContent value="notes" className="flex-1 m-0 overflow-hidden p-3 flex flex-col">
+              {/* Slide loading indicator */}
+              {(loadingPDF || (isPresentationMode && presentationSlides.length > 0)) && (
+                <div className="mb-2 flex items-center gap-2 px-1">
+                  <Presentation className="h-3.5 w-3.5 text-primary" />
+                  <span className="text-xs text-muted-foreground">
+                    {loadingPDF
+                      ? 'Converting PDF…'
+                      : `${presentationSlides.length} slide${presentationSlides.length !== 1 ? 's' : ''} loaded`}
+                  </span>
+                  {loadingPDF && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
+                </div>
+              )}
               <div className="flex-1 bg-muted/30 rounded-lg border overflow-y-auto p-3">
                 {sharedNotes ? (
                   <div className="whitespace-pre-wrap text-sm">{sharedNotes}</div>
