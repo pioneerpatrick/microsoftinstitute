@@ -168,23 +168,25 @@ const LiveSessionRoom = () => {
 
   // Keyboard arrow navigation for presentation slides
   useEffect(() => {
-    if (boardMode !== 'presentation' || presentationSlides.length === 0) return;
+    if (boardMode !== 'presentation' || totalSlides === 0) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
         e.preventDefault();
-        setCurrentSlideIndex(i => Math.min(presentationSlides.length - 1, i + 1));
+        setCurrentSlideIndex(i => Math.min(totalSlides - 1, i + 1));
       } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
         e.preventDefault();
         setCurrentSlideIndex(i => Math.max(0, i - 1));
       } else if (e.key === 'Escape') {
         setBoardMode('whiteboard');
-        setPresentationSlides([]);
+        setActivePdfUrl(null);
+        setActiveImageUrl(null);
         setCurrentSlideIndex(0);
+        setTotalSlides(0);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [boardMode, presentationSlides.length]);
+  }, [boardMode, totalSlides]);
 
   // WebRTC for peer-to-peer video
   const { peerStreams, connectToPeer } = useWebRTC({
