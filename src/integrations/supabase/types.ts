@@ -1340,6 +1340,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          admission_number: string | null
           avatar_url: string | null
           bio: string | null
           created_at: string
@@ -1353,6 +1354,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          admission_number?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
@@ -1366,6 +1368,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          admission_number?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
@@ -1987,6 +1990,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_admission_number: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
