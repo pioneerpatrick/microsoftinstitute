@@ -10,24 +10,10 @@ interface PDFPresenterProps {
   onError?: (error: string) => void;
 }
 
-const canvasToBlob = (canvas: HTMLCanvasElement, quality: number): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) return reject(new Error('toBlob failed'));
-        resolve(URL.createObjectURL(blob));
-      },
-      'image/jpeg',
-      quality
-    );
-  });
-};
-
 const PDFPresenter = ({ pdfUrl, onPagesExtracted, onError }: PDFPresenterProps) => {
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [statusText, setStatusText] = useState('Loading PDF...');
   const hasStarted = useRef(false);
   const onPagesExtractedRef = useRef(onPagesExtracted);
   const onErrorRef = useRef(onError);
@@ -36,7 +22,6 @@ const PDFPresenter = ({ pdfUrl, onPagesExtracted, onError }: PDFPresenterProps) 
   onPagesExtractedRef.current = onPagesExtracted;
   onErrorRef.current = onError;
 
-  // Cleanup blob URLs on unmount
   useEffect(() => {
     return () => {
       blobUrls.current.forEach(url => URL.revokeObjectURL(url));
@@ -47,78 +32,74 @@ const PDFPresenter = ({ pdfUrl, onPagesExtracted, onError }: PDFPresenterProps) 
     if (!pdfUrl || hasStarted.current) return;
     hasStarted.current = true;
 
-    const INITIAL_BATCH = 3;
-
     const renderPage = async (
       pdf: pdfjsLib.PDFDocumentProxy,
       pageNum: number,
       canvas: HTMLCanvasElement,
-      context: CanvasRenderingContext2D,
+      ctx: CanvasRenderingContext2D,
       scale: number
-    ) => {
+    ): Promise<string> => {
       const page = await pdf.getPage(pageNum);
-      const viewport = page.getViewport({ scale });
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      context.clearRect(0, 0, canvas.width, canvas.height);
-      await page.render({ canvasContext: context, viewport }).promise;
-      // Blob URLs are ~10x faster than toDataURL
-      const blobUrl = await canvasToBlob(canvas, 0.8);
-      blobUrls.current.push(blobUrl);
+      const vp = page.getViewport({ scale });
+      canvas.width = vp.width;
+      canvas.height = vp.height;
+      ctx.clearRect(0, 0, vp.width, vp.height);
+      await page.render({ canvasContext: ctx, viewport: vp }).promise;
+      const blob = await new Promise<Blob>((res, rej) =>
+        canvas.toBlob(b => (b ? res(b) : rej(new Error('toBlob failed'))), 'image/jpeg', 0.65)
+      );
+      const url = URL.createObjectURL(blob);
+      blobUrls.current.push(url);
       page.cleanup();
-      return blobUrl;
+      return url;
     };
 
-    const loadPDF = async () => {
+    (async () => {
       try {
         setLoading(true);
         setError(null);
         setProgress(0);
-        setStatusText('Loading PDF...');
 
-        const loadingTask = pdfjsLib.getDocument({
+        const pdf = await pdfjsLib.getDocument({
           url: pdfUrl,
           cMapUrl: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/cmaps/`,
           cMapPacked: true,
-        });
-        const pdf = await loadingTask.promise;
+          disableAutoFetch: true,
+          disableStream: false,
+        }).promise;
+
         const numPages = pdf.numPages;
-        // Lower scale = faster rendering
-        const scale = numPages > 30 ? 0.75 : numPages > 15 ? 1 : 1.25;
+        // Aggressive low scale for speed — 0.6 for large decks, max 1.0
+        const scale = numPages > 20 ? 0.6 : numPages > 10 ? 0.75 : 1.0;
 
         const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        if (!context) throw new Error('Could not create canvas context');
+        const ctx = canvas.getContext('2d', { willReadFrequently: false });
+        if (!ctx) throw new Error('Canvas context failed');
 
         const pages: string[] = [];
-        const initialCount = Math.min(INITIAL_BATCH, numPages);
 
-        // Render first batch fast
-        for (let i = 1; i <= initialCount; i++) {
-          setStatusText(`Page ${i}/${numPages}`);
-          pages.push(await renderPage(pdf, i, canvas, context, scale));
-          setProgress(Math.round((i / numPages) * 100));
-        }
-
+        // Render page 1 immediately and show it
+        pages.push(await renderPage(pdf, 1, canvas, ctx, scale));
+        setProgress(Math.round((1 / numPages) * 100));
         onPagesExtractedRef.current([...pages]);
         setLoading(false);
 
-        // Background load remaining
-        for (let i = initialCount + 1; i <= numPages; i++) {
-          pages.push(await renderPage(pdf, i, canvas, context, scale));
+        // Render rest in background, yielding every page
+        for (let i = 2; i <= numPages; i++) {
+          pages.push(await renderPage(pdf, i, canvas, ctx, scale));
+          setProgress(Math.round((i / numPages) * 100));
           onPagesExtractedRef.current([...pages]);
-          if (i % 4 === 0) await new Promise(r => setTimeout(r, 0));
+          // Yield to main thread every 2 pages
+          if (i % 2 === 0) await new Promise(r => setTimeout(r, 0));
         }
       } catch (err) {
         console.error('PDF load error:', err);
-        const message = err instanceof Error ? err.message : 'Failed to load PDF';
-        setError(message);
-        onErrorRef.current?.(message);
+        const msg = err instanceof Error ? err.message : 'Failed to load PDF';
+        setError(msg);
+        onErrorRef.current?.(msg);
         setLoading(false);
       }
-    };
-
-    loadPDF();
+    })();
   }, [pdfUrl]);
 
   if (error) {
@@ -134,14 +115,10 @@ const PDFPresenter = ({ pdfUrl, onPagesExtracted, onError }: PDFPresenterProps) 
     return (
       <div className="flex flex-col items-center justify-center p-8 gap-3">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground">{statusText}</p>
+        <p className="text-sm text-muted-foreground">Loading first page…</p>
         <div className="w-48 h-2 bg-muted rounded-full overflow-hidden">
-          <div
-            className="h-full bg-primary transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
+          <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
         </div>
-        <p className="text-xs text-muted-foreground">{progress}%</p>
       </div>
     );
   }
