@@ -22,7 +22,7 @@ const PaymentInstructionsCard = ({ studentName, studentEmail, balance }: Payment
 
   const paybillNumber = '889100';
   const accountNumber = '9067620016';
-  const phoneNumber = '+254723821798';
+  const phoneNumber = '+254711577338';
 
   // Generate QR code data for M-Pesa (using a simple QR API)
   const mpesaPaybillQR = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`Paybill: ${paybillNumber}\nAccount: ${accountNumber}\nName: PATRICK KIMANTHI`)}`;
