@@ -36,9 +36,11 @@ import {
   DollarSign,
   Calculator,
   Wallet,
+  Code2,
 } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import { cn } from '@/lib/utils';
+import NotificationBell from './NotificationBell';
 
 interface LMSLayoutProps {
   children: ReactNode;
