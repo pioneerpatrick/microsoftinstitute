@@ -148,7 +148,22 @@ const LiveSessionRoom = () => {
     localStream,
   });
 
+  // Enumerate media devices
   useEffect(() => {
+    const enumerateDevices = async () => {
+      try {
+        // Request permission first to get labeled devices
+        await navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then(s => s.getTracks().forEach(t => t.stop())).catch(() => {});
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        setAudioDevices(devices.filter(d => d.kind === 'audioinput'));
+        setVideoDevices(devices.filter(d => d.kind === 'videoinput'));
+      } catch (err) {
+        console.error('Failed to enumerate devices:', err);
+      }
+    };
+    enumerateDevices();
+  }, []);
+
     if (!loading && !user) navigate('/lms/login');
   }, [user, loading, navigate]);
 
