@@ -58,6 +58,7 @@ import SessionPolls from '@/components/lms/SessionPolls';
 import VideoPanel from '@/components/lms/VideoPanel';
 import PresentationMode from '@/components/lms/PresentationMode';
 import PDFPresenter from '@/components/lms/PDFPresenter';
+import SlideAnnotationCanvas from '@/components/lms/SlideAnnotationCanvas';
 
 interface Session {
   id: string;
@@ -136,6 +137,7 @@ const LiveSessionRoom = () => {
   const [screenShareStream, setScreenShareStream] = useState<MediaStream | null>(null);
   const [loadingPDF, setLoadingPDF] = useState<string | null>(null);
   const presentInputRef = useRef<HTMLInputElement>(null);
+  const slideContainerRef = useRef<HTMLDivElement>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);
   const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
@@ -877,18 +879,24 @@ const LiveSessionRoom = () => {
                     </Button>
                   </div>
                 </div>
-                <div className="flex-1 bg-black rounded-xl overflow-hidden relative flex items-center justify-center">
+                <div ref={slideContainerRef} className="flex-1 bg-black rounded-xl overflow-hidden relative flex items-center justify-center">
                   <img
                     src={presentationSlides[currentSlideIndex]}
                     alt={`Slide ${currentSlideIndex + 1}`}
                     className="max-w-full max-h-full object-contain"
+                  />
+                  {/* Annotation canvas overlay */}
+                  <SlideAnnotationCanvas
+                    slideIndex={currentSlideIndex}
+                    isInstructor={isInstructor}
+                    containerRef={slideContainerRef}
                   />
                   {/* Slide navigation */}
                   {currentSlideIndex > 0 && (
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full h-10 w-10"
+                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full h-10 w-10 z-20"
                       onClick={() => setCurrentSlideIndex(i => Math.max(0, i - 1))}
                     >
                       <ChevronLeft className="h-5 w-5" />
@@ -898,7 +906,7 @@ const LiveSessionRoom = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full h-10 w-10"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full h-10 w-10 z-20"
                       onClick={() => setCurrentSlideIndex(i => Math.min(presentationSlides.length - 1, i + 1))}
                     >
                       <ChevronRight className="h-5 w-5" />
