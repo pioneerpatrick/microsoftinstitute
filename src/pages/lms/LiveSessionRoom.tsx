@@ -58,6 +58,7 @@ import SessionPolls from '@/components/lms/SessionPolls';
 import VideoPanel from '@/components/lms/VideoPanel';
 import PresentationMode from '@/components/lms/PresentationMode';
 import PDFPresenter from '@/components/lms/PDFPresenter';
+import SlideAnnotationCanvas from '@/components/lms/SlideAnnotationCanvas';
 
 interface Session {
   id: string;
