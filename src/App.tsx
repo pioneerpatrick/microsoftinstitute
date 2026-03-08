@@ -22,7 +22,7 @@ import Forums from "./pages/lms/Forums";
 import ForumTopic from "./pages/lms/ForumTopic";
 import Assignments from "./pages/lms/Assignments";
 import Messages from "./pages/lms/Messages";
-import GoogleMeetRedirect from "./pages/lms/GoogleMeetRedirect";
+import LiveSessionRoom from "./pages/lms/LiveSessionRoom";
 import ProfilePage from "./pages/lms/Profile";
 
 // Instructor Pages
