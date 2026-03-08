@@ -128,6 +128,7 @@ const LiveSessionRoom = () => {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [screenShareStream, setScreenShareStream] = useState<MediaStream | null>(null);
   const [loadingPDF, setLoadingPDF] = useState<string | null>(null);
+  const presentInputRef = useRef<HTMLInputElement>(null);
 
   const isInstructor = session?.instructor_id === user?.id || isStaff;
 
