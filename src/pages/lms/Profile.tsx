@@ -29,6 +29,7 @@ interface Profile {
   email: string | null;
   bio: string | null;
   avatar_url: string | null;
+  admission_number: string | null;
 }
 
 const ProfilePage = () => {
