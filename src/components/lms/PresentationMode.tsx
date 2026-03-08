@@ -71,6 +71,7 @@ const PresentationMode = ({
   const [currentPath, setCurrentPath] = useState<DrawingPath | null>(null);
   const [zoom, setZoom] = useState(100);
   const [showToolbar, setShowToolbar] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
