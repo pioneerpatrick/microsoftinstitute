@@ -124,8 +124,17 @@ const LiveSessionRoom = () => {
   const [isPresentationMode, setIsPresentationMode] = useState(false);
   const [presentationSlides, setPresentationSlides] = useState<string[]>([]);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [screenShareStream, setScreenShareStream] = useState<MediaStream | null>(null);
 
   const isInstructor = session?.instructor_id === user?.id || isStaff;
+
+  // WebRTC for peer-to-peer video
+  const { peerStreams, connectToPeer } = useWebRTC({
+    sessionId: sessionId || '',
+    userId: user?.id || '',
+    localStream,
+  });
 
   useEffect(() => {
     if (!loading && !user) navigate('/lms/login');
