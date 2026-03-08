@@ -142,6 +142,7 @@ const LiveSessionRoom = () => {
       fetchMessages();
       fetchParticipants();
       fetchSharedNotes();
+      fetchSessionFiles();
       if (session.moderation_enabled) fetchJoinRequests();
     } else if (!session.moderation_enabled) {
       setAccessStatus('open');
