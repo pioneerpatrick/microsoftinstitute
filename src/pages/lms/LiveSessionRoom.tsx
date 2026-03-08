@@ -896,15 +896,42 @@ const LiveSessionRoom = () => {
                     userName={user.email?.split('@')[0] || 'You'}
                     isInstructor={isInstructor}
                     isSelf={true}
+                    onStreamChange={(stream) => {
+                      setLocalStream(stream);
+                      setIsVideoOn(!!stream?.getVideoTracks().length);
+                      // Connect to all current participants when we start streaming
+                      if (stream) {
+                        participants.forEach(p => {
+                          if (p.user_id !== user.id) {
+                            connectToPeer(p.user_id);
+                          }
+                        });
+                      }
+                    }}
+                    onScreenShareChange={setScreenShareStream}
                   />
                 )}
                 
-                {/* Other Participants */}
+                {/* Remote Peer Streams */}
                 <ScrollArea className="flex-1">
                   <div className="space-y-2">
+                    {peerStreams.map(peer => {
+                      const participant = participants.find(p => p.user_id === peer.peerId);
+                      return (
+                        <VideoPanel
+                          key={peer.peerId}
+                          userId={peer.peerId}
+                          userName={participant?.profiles?.full_name || participant?.profiles?.email || 'Participant'}
+                          isInstructor={peer.peerId === session?.instructor_id}
+                          isSelf={false}
+                          remoteStream={peer.stream}
+                        />
+                      );
+                    })}
+                    
+                    {/* Show placeholder for participants without streams */}
                     {participants
-                      .filter(p => p.user_id !== user?.id)
-                      .slice(0, 4)
+                      .filter(p => p.user_id !== user?.id && !peerStreams.find(ps => ps.peerId === p.user_id))
                       .map(p => (
                         <div key={p.id} className="aspect-video bg-muted rounded-lg flex items-center justify-center">
                           <div className="text-center">
@@ -916,6 +943,7 @@ const LiveSessionRoom = () => {
                             <p className="text-xs text-muted-foreground mt-1 truncate">
                               {p.profiles?.full_name || p.profiles?.email || 'Participant'}
                             </p>
+                            <p className="text-[10px] text-muted-foreground">Camera off</p>
                           </div>
                         </div>
                       ))
