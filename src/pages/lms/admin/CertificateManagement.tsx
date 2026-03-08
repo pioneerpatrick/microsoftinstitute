@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Award, Download, Plus, Edit2, Trash2, Search, RefreshCw, Eye } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { toast } from 'sonner';
+import logoImg from '@/assets/logo.png';
 
 interface CertificateRecord {
   id: string;
