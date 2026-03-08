@@ -475,9 +475,11 @@ const MasterStudents = () => {
   };
 
   const filteredStudents = students.filter(s => {
+    const q = searchQuery.toLowerCase();
     const matchesSearch = 
-      s.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.email?.toLowerCase().includes(searchQuery.toLowerCase());
+      s.full_name?.toLowerCase().includes(q) ||
+      s.email?.toLowerCase().includes(q) ||
+      s.admission_number?.toLowerCase().includes(q);
     const matchesStatus = statusFilter === 'all' || (s.student_status || 'active') === statusFilter;
     return matchesSearch && matchesStatus;
   });
