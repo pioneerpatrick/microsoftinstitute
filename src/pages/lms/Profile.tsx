@@ -73,7 +73,8 @@ const ProfilePage = () => {
         full_name: user.user_metadata?.full_name || null,
         email: user.email || null,
         bio: null,
-        avatar_url: null
+        avatar_url: null,
+        admission_number: null,
       };
       await supabase.from('profiles').insert(newProfile);
       setProfile(newProfile);
