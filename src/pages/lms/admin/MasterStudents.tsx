@@ -243,6 +243,9 @@ const MasterStudents = () => {
       }
 
       if (userId) {
+        // Auto-assign admission number
+        const admNo = await assignAdmissionNumber(userId);
+        
         const selectedFeeStructure = feeStructures.find(f => f.id === newStudent.fee_structure_id);
         const course = selectedFeeStructure?.course_id 
           ? courses.find(c => c.id === selectedFeeStructure.course_id)
