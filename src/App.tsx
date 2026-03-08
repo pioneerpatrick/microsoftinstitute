@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import Scholarships from "./pages/Scholarships";
+import Verify from "./pages/Verify";
 
 // LMS Pages
 import LMSLogin from "./pages/lms/Login";
