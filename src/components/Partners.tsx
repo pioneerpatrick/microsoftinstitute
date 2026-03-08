@@ -79,7 +79,7 @@ const Partners = () => {
               {technologyPartners.map((partner, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-center p-4 grayscale hover:grayscale-0 opacity-70 hover:opacity-100 transition-all duration-300"
+                  className="flex items-center justify-center p-4 hover:opacity-80 transition-all duration-300"
                 >
                   <img
                     src={partner.logo}
