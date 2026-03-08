@@ -254,37 +254,6 @@ const CertificateManagement = () => {
       doc.setGState(new doc.GState({ opacity: o }));
     };
 
-    // ── Holographic guilloche pattern (security wave lines) ──
-    doc.setLineWidth(0.12);
-    // Layer 1: Blue wave pattern
-    doc.setDrawColor(BLUE.r, BLUE.g, BLUE.b);
-    setOpacity(0.04);
-    for (let row = -20; row < H + 20; row += 12) {
-      for (let x = 0; x < W - 2; x += 2) {
-        const y1 = row + Math.sin((x / W) * Math.PI * 6) * 8;
-        const y2 = row + Math.sin(((x + 2) / W) * Math.PI * 6) * 8;
-        doc.line(x, y1, x + 2, y2);
-      }
-    }
-    // Layer 2: Orange concentric rosettes
-    doc.setDrawColor(ORANGE.r, ORANGE.g, ORANGE.b);
-    setOpacity(0.035);
-    for (let cx = 30; cx < W; cx += 60) {
-      for (let cy = 30; cy < H; cy += 60) {
-        for (let r = 4; r <= 20; r += 4) {
-          doc.circle(cx, cy, r, 'S');
-        }
-      }
-    }
-    // Layer 3: Green diagonal crosshatch
-    doc.setDrawColor(GREEN.r, GREEN.g, GREEN.b);
-    setOpacity(0.03);
-    for (let d = -H; d < W + H; d += 18) {
-      doc.line(d, 0, d + H, H);
-      doc.line(d + H, 0, d, H);
-    }
-    setOpacity(1);
-
     // ── Diagonal watermark text "Microsoft Training Institute" ──
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(24);
@@ -297,15 +266,6 @@ const CertificateManagement = () => {
       }
     }
     setOpacity(1);
-
-    // Subtle dot texture overlay
-    doc.setDrawColor(245, 238, 220);
-    doc.setLineWidth(0.08);
-    for (let i = 0; i < W; i += 8) {
-      for (let j = 0; j < H; j += 8) {
-        if ((i + j) % 16 === 0) doc.circle(i, j, 0.15, 'S');
-      }
-    }
 
     // ── Triple ornate border using brand colors ──
     // Outer blue
