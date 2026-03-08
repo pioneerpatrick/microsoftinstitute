@@ -22,10 +22,10 @@ interface CertificateRecord {
   user_id: string;
   course_id: string;
   courses: { title: string; category: string | null; duration_hours: number | null } | null;
-  profiles: { full_name: string | null; email: string | null } | null;
+  profiles: { full_name: string | null; email: string | null; admission_number: string | null } | null;
 }
 
-interface StudentOption { id: string; full_name: string | null; email: string | null; }
+interface StudentOption { id: string; full_name: string | null; email: string | null; admission_number: string | null; }
 interface CourseOption { id: string; title: string; category: string | null; duration_hours: number | null; }
 
 interface CertOverrides {
