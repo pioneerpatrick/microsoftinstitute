@@ -48,6 +48,7 @@ import AdminSettings from "./pages/lms/admin/Settings";
 import MasterStudents from "./pages/lms/admin/MasterStudents";
 import MasterStaff from "./pages/lms/admin/MasterStaff";
 import AdminReports from "./pages/lms/admin/AdminReports";
+import CertificateManagement from "./pages/lms/admin/CertificateManagement";
 
 // Instructor Pages (continued)
 import Attendance from "./pages/lms/instructor/Attendance";
@@ -116,6 +117,7 @@ const App = () => (
             <Route path="/lms/admin/master-students" element={<MasterStudents />} />
             <Route path="/lms/admin/all-staff" element={<MasterStaff />} />
             <Route path="/lms/admin/reports" element={<AdminReports />} />
+            <Route path="/lms/admin/certificates" element={<CertificateManagement />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
