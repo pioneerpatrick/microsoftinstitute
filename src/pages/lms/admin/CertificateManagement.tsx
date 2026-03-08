@@ -232,8 +232,7 @@ const CertificateManagement = () => {
 
   const openPreview = (cert: CertificateRecord) => {
     setSelectedCert(cert);
-    const year = new Date(cert.issued_at).getFullYear();
-    const courseAbbr = (cert.courses?.title || 'CP').split(' ').map(w => w[0]).join('').toUpperCase();
+    const admNum = cert.profiles?.admission_number || '';
     setOverrides({
       studentName: cert.profiles?.full_name || '',
       courseTitle: cert.courses?.title || '',
@@ -241,8 +240,8 @@ const CertificateManagement = () => {
       issuedAt: new Date(cert.issued_at).toISOString().split('T')[0],
       institutionTitle: 'MICROSOFT TRAINING INSTITUTE',
       motto: '"Quest for Excellence"',
-      admissionNumber: cert.profiles?.admission_number || '',
-      serialNumber: `MTI/${courseAbbr}/${String(certificates.filter(c => c.course_id === cert.course_id).indexOf(cert) + 1).padStart(2, '0')}/${year}`,
+      admissionNumber: admNum,
+      serialNumber: generateSerialNumber(admNum, cert.courses?.title || ''),
       aggregate: 'DISTINCTION',
       congregationText: '',
       directorName: 'Director',
