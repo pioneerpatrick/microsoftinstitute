@@ -956,6 +956,7 @@ const MasterStudents = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Adm. No.</TableHead>
                       <TableHead>Student</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Courses</TableHead>
