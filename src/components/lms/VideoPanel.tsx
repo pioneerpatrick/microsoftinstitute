@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +10,6 @@ import {
   Maximize2,
   Minimize2,
   Settings,
-  RefreshCw,
   MonitorUp,
   MonitorOff,
 } from 'lucide-react';
@@ -35,6 +34,11 @@ interface VideoPanelProps {
   isSelf: boolean;
   isExpanded?: boolean;
   onToggleExpand?: () => void;
+  // For remote peers
+  remoteStream?: MediaStream | null;
+  // For local user - callbacks to manage streams
+  onStreamChange?: (stream: MediaStream | null) => void;
+  onScreenShareChange?: (stream: MediaStream | null) => void;
 }
 
 const VideoPanel = ({
@@ -44,6 +48,9 @@ const VideoPanel = ({
   isSelf,
   isExpanded = false,
   onToggleExpand,
+  remoteStream,
+  onStreamChange,
+  onScreenShareChange,
 }: VideoPanelProps) => {
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [isAudioOn, setIsAudioOn] = useState(false);
@@ -81,21 +88,29 @@ const VideoPanel = ({
     };
     
     getDevices();
-  }, [isSelf]);
+  }, [isSelf, selectedVideoDevice, selectedAudioDevice]);
+
+  // Handle remote stream for non-self panels
+  useEffect(() => {
+    if (!isSelf && remoteStream && videoRef.current) {
+      videoRef.current.srcObject = remoteStream;
+    }
+  }, [isSelf, remoteStream]);
 
   // Start/stop video stream
   const toggleVideo = async () => {
     if (!isSelf) return;
     
     if (isVideoOn && stream) {
-      // Stop video
       stream.getVideoTracks().forEach(track => track.stop());
+      const newStream = new MediaStream(stream.getAudioTracks());
+      setStream(newStream.getTracks().length > 0 ? newStream : null);
       setIsVideoOn(false);
+      onStreamChange?.(newStream.getTracks().length > 0 ? newStream : null);
       if (videoRef.current) {
         videoRef.current.srcObject = null;
       }
     } else {
-      // Start video
       try {
         const constraints: MediaStreamConstraints = {
           video: selectedVideoDevice 
@@ -107,8 +122,15 @@ const VideoPanel = ({
         };
         
         const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+        
+        // Merge with existing audio if we have it
+        if (stream && !isAudioOn) {
+          stream.getAudioTracks().forEach(track => newStream.addTrack(track));
+        }
+        
         setStream(newStream);
         setIsVideoOn(true);
+        onStreamChange?.(newStream);
         
         if (videoRef.current) {
           videoRef.current.srcObject = newStream;
@@ -132,7 +154,6 @@ const VideoPanel = ({
         });
         setIsAudioOn(!isAudioOn);
       } else if (!isAudioOn) {
-        // Add audio track
         try {
           const audioStream = await navigator.mediaDevices.getUserMedia({
             audio: selectedAudioDevice 
@@ -143,12 +164,12 @@ const VideoPanel = ({
             stream.addTrack(track);
           });
           setIsAudioOn(true);
+          onStreamChange?.(stream);
         } catch (error) {
           toast.error('Could not access microphone.');
         }
       }
     } else if (!isAudioOn) {
-      // Start audio only
       try {
         const audioStream = await navigator.mediaDevices.getUserMedia({
           audio: selectedAudioDevice 
@@ -157,6 +178,7 @@ const VideoPanel = ({
         });
         setStream(audioStream);
         setIsAudioOn(true);
+        onStreamChange?.(audioStream);
       } catch (error) {
         toast.error('Could not access microphone.');
       }
@@ -171,6 +193,7 @@ const VideoPanel = ({
       screenStream.getTracks().forEach(track => track.stop());
       setScreenStream(null);
       setIsScreenSharing(false);
+      onScreenShareChange?.(null);
       if (screenVideoRef.current) {
         screenVideoRef.current.srcObject = null;
       }
@@ -183,15 +206,16 @@ const VideoPanel = ({
         
         setScreenStream(screen);
         setIsScreenSharing(true);
+        onScreenShareChange?.(screen);
         
         if (screenVideoRef.current) {
           screenVideoRef.current.srcObject = screen;
         }
         
-        // Handle when user stops sharing via browser UI
         screen.getVideoTracks()[0].onended = () => {
           setScreenStream(null);
           setIsScreenSharing(false);
+          onScreenShareChange?.(null);
         };
         
         toast.success('Screen sharing started');
@@ -212,10 +236,10 @@ const VideoPanel = ({
 
   // Update video element when stream changes
   useEffect(() => {
-    if (videoRef.current && stream) {
+    if (videoRef.current && stream && isSelf) {
       videoRef.current.srcObject = stream;
     }
-  }, [stream]);
+  }, [stream, isSelf]);
 
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -223,6 +247,9 @@ const VideoPanel = ({
 
   const videoDevices = devices.filter(d => d.kind === 'videoinput');
   const audioDevices = devices.filter(d => d.kind === 'audioinput');
+  
+  // Determine if video is active
+  const hasActiveVideo = isSelf ? (isVideoOn && stream) : (remoteStream && remoteStream.getVideoTracks().length > 0);
 
   return (
     <div 
@@ -242,7 +269,7 @@ const VideoPanel = ({
       )}
 
       {/* Video Display */}
-      {isVideoOn && stream && !isScreenSharing ? (
+      {hasActiveVideo && !isScreenSharing ? (
         <video
           ref={videoRef}
           autoPlay
@@ -279,7 +306,7 @@ const VideoPanel = ({
           </div>
           
           <div className="flex items-center gap-1">
-            {!isAudioOn && (
+            {!isAudioOn && isSelf && (
               <div className="h-5 w-5 rounded-full bg-red-500/80 flex items-center justify-center">
                 <MicOff className="h-3 w-3 text-white" />
               </div>
