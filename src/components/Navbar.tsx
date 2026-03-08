@@ -71,15 +71,25 @@ const Navbar = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8">
-              {navLinks.map((link) => (
-                <button
-                  key={link.name}
-                  onClick={() => scrollToSection(link.href)}
-                  className="text-foreground hover:text-primary font-medium transition-colors"
-                >
-                  {link.name}
-                </button>
-              ))}
+              {navLinks.map((link) =>
+                'isPage' in link && link.isPage ? (
+                  <Link
+                    key={link.name}
+                    to={link.href}
+                    className="text-foreground hover:text-primary font-medium transition-colors"
+                  >
+                    {link.name}
+                  </Link>
+                ) : (
+                  <button
+                    key={link.name}
+                    onClick={() => scrollToSection(link.href)}
+                    className="text-foreground hover:text-primary font-medium transition-colors"
+                  >
+                    {link.name}
+                  </button>
+                )
+              )}
               <Button
                 onClick={() => scrollToSection("#apply")}
                 className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold px-6"
