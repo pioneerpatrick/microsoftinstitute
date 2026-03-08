@@ -23,7 +23,7 @@ export const registerCalligraphyFont = async (doc: jsPDF) => {
 
 export const setCalligraphyFont = (doc: jsPDF) => {
   try {
-    doc.setFont('EdwardianScript', 'normal');
+    doc.setFont('EdwardianScript', 'bold');
   } catch {
     doc.setFont('helvetica', 'bolditalic');
   }
