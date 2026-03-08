@@ -73,8 +73,6 @@ const PARTNER_LOGOS = [
   { name: 'CompTIA', path: '/images/partners/comptia.png' },
   { name: 'AWS', path: '/images/partners/aws.png' },
   { name: 'Oracle', path: '/images/partners/oracle.png' },
-  { name: 'Safaricom', path: '/images/partners/safaricom.png' },
-  { name: 'Andela', path: '/images/partners/andela.png' },
 ];
 
 const CertificateManagement = () => {
@@ -284,11 +282,11 @@ const CertificateManagement = () => {
     drawMedallion(13, 13); drawMedallion(W - 13, 13);
     drawMedallion(13, H - 13); drawMedallion(W - 13, H - 13);
 
-    // ── Logo centered at top ──
-    const logoSize = 22;
+    // ── Logo centered at top (no background, expanded) ──
+    const logoSize = 28;
     if (logoBase64) {
       try {
-        doc.addImage(logoBase64, 'PNG', W / 2 - logoSize / 2, 16, logoSize, logoSize);
+        doc.addImage(logoBase64, 'PNG', W / 2 - logoSize / 2, 14, logoSize, logoSize);
       } catch { /* fallback below */ }
     }
 
@@ -428,18 +426,13 @@ const CertificateManagement = () => {
     doc.setLineWidth(0.3);
     doc.circle(sealX, sealY, sealR - 5.5, 'S');
 
-    // Seal text
+    // Seal text (no MTI monogram)
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(5);
-    doc.text('MICROSOFT', sealX, sealY - 4.5, { align: 'center' });
-    doc.text('TRAINING', sealX, sealY - 1.5, { align: 'center' });
-    doc.setFontSize(9);
-    doc.setTextColor(ORANGE.r, ORANGE.g, ORANGE.b);
-    doc.text('MTI', sealX, sealY + 3, { align: 'center' });
-    doc.setFontSize(5);
-    doc.setTextColor(255, 255, 255);
-    doc.text('INSTITUTE', sealX, sealY + 6, { align: 'center' });
+    doc.text('MICROSOFT', sealX, sealY - 3, { align: 'center' });
+    doc.text('TRAINING', sealX, sealY + 0.5, { align: 'center' });
+    doc.text('INSTITUTE', sealX, sealY + 4, { align: 'center' });
 
     // Orange stars
     doc.setFillColor(ORANGE.r, ORANGE.g, ORANGE.b);
