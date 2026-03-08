@@ -863,6 +863,13 @@ const LiveSessionRoom = () => {
               </div>
             </TabsContent>
 
+            {/* Polls Tab */}
+            <TabsContent value="polls" className="flex-1 m-0 overflow-hidden">
+              {session && user && (
+                <SessionPolls sessionId={session.id} userId={user.id} isInstructor={isInstructor} />
+              )}
+            </TabsContent>
+
             {/* Participants Tab */}
             <TabsContent value="participants" className="flex-1 m-0 overflow-hidden">
               <ScrollArea className="h-full p-3">
