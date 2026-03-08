@@ -9,12 +9,12 @@ const Partners = () => {
   ];
 
   const technologyPartners = [
-    { name: "Microsoft", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Microsoft_logo.svg/512px-Microsoft_logo.svg.png" },
-    { name: "Google", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Google_2015_logo.svg/500px-Google_2015_logo.svg.png" },
-    { name: "Cisco", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Cisco_logo_blue_2016.svg/500px-Cisco_logo_blue_2016.svg.png" },
-    { name: "Amazon Web Services", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Amazon_Web_Services_Logo.svg/500px-Amazon_Web_Services_Logo.svg.png" },
-    { name: "CompTIA", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/CompTIA_logo.svg/500px-CompTIA_logo.svg.png" },
-    { name: "Oracle", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Oracle_logo.svg/500px-Oracle_logo.svg.png" },
+    { name: "Microsoft", logo: "/images/partners/microsoft.png" },
+    { name: "Google", logo: "/images/partners/google.png" },
+    { name: "Cisco", logo: "/images/partners/cisco.png" },
+    { name: "Amazon Web Services", logo: "/images/partners/aws.png" },
+    { name: "CompTIA", logo: "/images/partners/comptia.png" },
+    { name: "Oracle", logo: "/images/partners/oracle.png" },
   ];
 
   const industryPartners = [
