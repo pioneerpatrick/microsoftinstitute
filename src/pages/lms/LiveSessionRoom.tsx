@@ -273,6 +273,16 @@ const LiveSessionRoom = () => {
     return () => { channels.forEach(ch => supabase.removeChannel(ch)); };
   }, [session, user, isInstructor]);
 
+  // Connect to new participants when they join (if we have a local stream)
+  useEffect(() => {
+    if (!localStream || !user) return;
+    participants.forEach(p => {
+      if (p.user_id !== user.id) {
+        connectToPeer(p.user_id);
+      }
+    });
+  }, [participants, localStream, user, connectToPeer]);
+
   // Scroll chat to bottom
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
