@@ -38,9 +38,11 @@ import {
   Image,
   FileSpreadsheet,
   Paperclip,
+  BarChart3,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import SessionPolls from '@/components/lms/SessionPolls';
 
 interface Session {
   id: string;
