@@ -110,15 +110,26 @@ const Navbar = () => {
           {/* Mobile Navigation */}
           {isOpen && (
             <div className="md:hidden py-4 border-t border-border">
-              {navLinks.map((link) => (
-                <button
-                  key={link.name}
-                  onClick={() => scrollToSection(link.href)}
-                  className="block w-full text-left py-3 px-4 text-foreground hover:bg-muted transition-colors"
-                >
-                  {link.name}
-                </button>
-              ))}
+              {navLinks.map((link) =>
+                'isPage' in link && link.isPage ? (
+                  <Link
+                    key={link.name}
+                    to={link.href}
+                    className="block w-full text-left py-3 px-4 text-foreground hover:bg-muted transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {link.name}
+                  </Link>
+                ) : (
+                  <button
+                    key={link.name}
+                    onClick={() => scrollToSection(link.href)}
+                    className="block w-full text-left py-3 px-4 text-foreground hover:bg-muted transition-colors"
+                  >
+                    {link.name}
+                  </button>
+                )
+              )}
               <div className="px-4 pt-4">
                 <Button
                   onClick={() => scrollToSection("#apply")}
