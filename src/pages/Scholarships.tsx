@@ -260,7 +260,7 @@ const Scholarships = () => {
             {isSubmitted ? (
               <Card className="text-center p-10">
                 <CardContent className="flex flex-col items-center gap-4">
-                  <CheckCircle2 className="h-16 w-16 text-green-500" />
+                  <CheckCircle2 className="h-16 w-16 text-secondary" />
                   <h3 className="text-2xl font-bold text-foreground">Application Received!</h3>
                   <p className="text-muted-foreground">Thank you for applying. Our team will review your application and contact you within 7 business days.</p>
                   <Button onClick={() => setIsSubmitted(false)} variant="outline" className="mt-4">Submit Another Application</Button>
