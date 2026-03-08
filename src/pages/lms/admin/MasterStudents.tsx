@@ -152,6 +152,28 @@ const MasterStudents = () => {
     return password;
   };
 
+  const assignAdmissionNumber = async (userId: string) => {
+    // Check if already has admission number
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('admission_number')
+      .eq('id', userId)
+      .single();
+    
+    if (profile?.admission_number) return profile.admission_number;
+
+    // Generate via DB function
+    const { data: result } = await supabase.rpc('generate_admission_number');
+    if (result) {
+      await supabase
+        .from('profiles')
+        .update({ admission_number: result })
+        .eq('id', userId);
+      return result as string;
+    }
+    return null;
+  };
+
   const copyCredentials = () => {
     if (createdCredentials) {
       navigator.clipboard.writeText(
