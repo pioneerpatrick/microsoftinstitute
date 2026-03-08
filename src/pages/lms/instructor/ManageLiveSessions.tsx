@@ -83,7 +83,6 @@ const ManageLiveSessions = () => {
     scheduled_at: '',
     duration_minutes: 60,
     moderation_enabled: true,
-    meeting_url: ''
   });
 
   useEffect(() => {
