@@ -633,6 +633,7 @@ const LiveSessionRoom = () => {
       // Start presentation based on file type
       if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
         setLoadingPDF(urlData.publicUrl);
+        setRightPanel('notes');
       } else if (file.type.startsWith('image/')) {
         setPresentationSlides([urlData.publicUrl]);
         setCurrentSlideIndex(0);
