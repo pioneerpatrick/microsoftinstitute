@@ -282,6 +282,7 @@ const LiveSessionRoom = () => {
       fetchMessages();
       fetchParticipants();
       fetchSharedNotes();
+      fetchSessionFiles();
     } else if (data?.status === 'pending') {
       setAccessStatus('pending');
     } else if (data?.status === 'rejected') {
