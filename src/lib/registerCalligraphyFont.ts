@@ -14,6 +14,8 @@ export const registerCalligraphyFont = async (doc: jsPDF) => {
     }
     doc.addFileToVFS('EdwardianScriptITC.ttf', cachedBase64);
     doc.addFont('EdwardianScriptITC.ttf', 'EdwardianScript', 'normal');
+    // Register same font as bold (single-weight font)
+    doc.addFont('EdwardianScriptITC.ttf', 'EdwardianScript', 'bold');
   } catch (err) {
     console.warn('Failed to load calligraphy font, falling back to default', err);
   }
