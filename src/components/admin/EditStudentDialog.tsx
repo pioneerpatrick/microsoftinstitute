@@ -389,6 +389,12 @@ const EditStudentDialog = ({
           </TabsList>
 
           <TabsContent value="profile" className="space-y-4 pt-4">
+            {student.admission_number && (
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <Label className="text-xs text-muted-foreground">Admission Number</Label>
+                <p className="font-mono font-bold text-primary text-lg">{student.admission_number}</p>
+              </div>
+            )}
             <div className="grid gap-4">
               <div className="space-y-2">
                 <Label htmlFor="full_name">Full Name</Label>
