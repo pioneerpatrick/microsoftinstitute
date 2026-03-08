@@ -146,7 +146,7 @@ const CertificateManagement = () => {
   };
 
   const fetchStudents = async () => {
-    const { data } = await supabase.from('profiles').select('id, full_name, email').order('full_name');
+    const { data } = await supabase.from('profiles').select('id, full_name, email, admission_number').order('full_name');
     if (data) setStudents(data);
   };
 
