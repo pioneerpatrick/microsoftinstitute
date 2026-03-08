@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { useWebRTC, PeerStream } from '@/hooks/useWebRTC';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -123,8 +124,17 @@ const LiveSessionRoom = () => {
   const [isPresentationMode, setIsPresentationMode] = useState(false);
   const [presentationSlides, setPresentationSlides] = useState<string[]>([]);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [screenShareStream, setScreenShareStream] = useState<MediaStream | null>(null);
 
   const isInstructor = session?.instructor_id === user?.id || isStaff;
+
+  // WebRTC for peer-to-peer video
+  const { peerStreams, connectToPeer } = useWebRTC({
+    sessionId: sessionId || '',
+    userId: user?.id || '',
+    localStream,
+  });
 
   useEffect(() => {
     if (!loading && !user) navigate('/lms/login');
@@ -262,6 +272,16 @@ const LiveSessionRoom = () => {
 
     return () => { channels.forEach(ch => supabase.removeChannel(ch)); };
   }, [session, user, isInstructor]);
+
+  // Connect to new participants when they join (if we have a local stream)
+  useEffect(() => {
+    if (!localStream || !user) return;
+    participants.forEach(p => {
+      if (p.user_id !== user.id) {
+        connectToPeer(p.user_id);
+      }
+    });
+  }, [participants, localStream, user, connectToPeer]);
 
   // Scroll chat to bottom
   useEffect(() => {
@@ -886,15 +906,42 @@ const LiveSessionRoom = () => {
                     userName={user.email?.split('@')[0] || 'You'}
                     isInstructor={isInstructor}
                     isSelf={true}
+                    onStreamChange={(stream) => {
+                      setLocalStream(stream);
+                      setIsVideoOn(!!stream?.getVideoTracks().length);
+                      // Connect to all current participants when we start streaming
+                      if (stream) {
+                        participants.forEach(p => {
+                          if (p.user_id !== user.id) {
+                            connectToPeer(p.user_id);
+                          }
+                        });
+                      }
+                    }}
+                    onScreenShareChange={setScreenShareStream}
                   />
                 )}
                 
-                {/* Other Participants */}
+                {/* Remote Peer Streams */}
                 <ScrollArea className="flex-1">
                   <div className="space-y-2">
+                    {peerStreams.map(peer => {
+                      const participant = participants.find(p => p.user_id === peer.peerId);
+                      return (
+                        <VideoPanel
+                          key={peer.peerId}
+                          userId={peer.peerId}
+                          userName={participant?.profiles?.full_name || participant?.profiles?.email || 'Participant'}
+                          isInstructor={peer.peerId === session?.instructor_id}
+                          isSelf={false}
+                          remoteStream={peer.stream}
+                        />
+                      );
+                    })}
+                    
+                    {/* Show placeholder for participants without streams */}
                     {participants
-                      .filter(p => p.user_id !== user?.id)
-                      .slice(0, 4)
+                      .filter(p => p.user_id !== user?.id && !peerStreams.find(ps => ps.peerId === p.user_id))
                       .map(p => (
                         <div key={p.id} className="aspect-video bg-muted rounded-lg flex items-center justify-center">
                           <div className="text-center">
@@ -906,6 +953,7 @@ const LiveSessionRoom = () => {
                             <p className="text-xs text-muted-foreground mt-1 truncate">
                               {p.profiles?.full_name || p.profiles?.email || 'Participant'}
                             </p>
+                            <p className="text-[10px] text-muted-foreground">Camera off</p>
                           </div>
                         </div>
                       ))
