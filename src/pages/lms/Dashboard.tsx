@@ -73,6 +73,7 @@ const Dashboard = () => {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [upcomingSessions, setUpcomingSessions] = useState<LiveSession[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [stats, setStats] = useState({
     totalCourses: 0,
     completedCourses: 0,
