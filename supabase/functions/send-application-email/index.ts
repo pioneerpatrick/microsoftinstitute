@@ -106,7 +106,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Send notification to admin
     try {
       const adminEmail = await resend.emails.send({
-        from: "Microsoft Institute Africa <admissions@microsoftinstitute.africa>",
+        from: "Microsoft Institute Africa <admissions@mail.microsoftinstitute.africa>",
         to: ["admissions@microsoftinstitute.africa"],
         subject: `New Application: ${fullName} - ${course}`,
         html: `
