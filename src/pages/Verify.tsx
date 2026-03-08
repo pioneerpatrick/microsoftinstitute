@@ -31,7 +31,7 @@ const Verify = () => {
     if (certParam) {
       setCertNumber(certParam);
       // Trigger verification
-      verifyCertificate(certParam);
+      handleVerify(certParam);
     }
   }, [searchParams]);
 
