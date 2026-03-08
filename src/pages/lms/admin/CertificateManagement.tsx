@@ -267,6 +267,7 @@ const CertificateManagement = () => {
   const resetForm = () => {
     setFormStudentId(''); setFormCourseId(''); setFormCertNumber('');
     setFormIssuedAt(new Date().toISOString().split('T')[0]); setFormAdmission('');
+    setFormAggregate('DISTINCTION');
   };
 
   const setOv = (key: keyof CertOverrides, val: string) => setOverrides(p => ({ ...p, [key]: val }));
