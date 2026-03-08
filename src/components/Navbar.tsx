@@ -11,6 +11,7 @@ const Navbar = () => {
     { name: "Home", href: "#home" },
     { name: "About", href: "#about" },
     { name: "Courses", href: "#courses" },
+    { name: "Scholarships", href: "/scholarships", isPage: true },
     { name: "Contact", href: "#contact" },
   ];
 
@@ -70,15 +71,25 @@ const Navbar = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8">
-              {navLinks.map((link) => (
-                <button
-                  key={link.name}
-                  onClick={() => scrollToSection(link.href)}
-                  className="text-foreground hover:text-primary font-medium transition-colors"
-                >
-                  {link.name}
-                </button>
-              ))}
+              {navLinks.map((link) =>
+                'isPage' in link && link.isPage ? (
+                  <Link
+                    key={link.name}
+                    to={link.href}
+                    className="text-foreground hover:text-primary font-medium transition-colors"
+                  >
+                    {link.name}
+                  </Link>
+                ) : (
+                  <button
+                    key={link.name}
+                    onClick={() => scrollToSection(link.href)}
+                    className="text-foreground hover:text-primary font-medium transition-colors"
+                  >
+                    {link.name}
+                  </button>
+                )
+              )}
               <Button
                 onClick={() => scrollToSection("#apply")}
                 className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold px-6"
@@ -99,15 +110,26 @@ const Navbar = () => {
           {/* Mobile Navigation */}
           {isOpen && (
             <div className="md:hidden py-4 border-t border-border">
-              {navLinks.map((link) => (
-                <button
-                  key={link.name}
-                  onClick={() => scrollToSection(link.href)}
-                  className="block w-full text-left py-3 px-4 text-foreground hover:bg-muted transition-colors"
-                >
-                  {link.name}
-                </button>
-              ))}
+              {navLinks.map((link) =>
+                'isPage' in link && link.isPage ? (
+                  <Link
+                    key={link.name}
+                    to={link.href}
+                    className="block w-full text-left py-3 px-4 text-foreground hover:bg-muted transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {link.name}
+                  </Link>
+                ) : (
+                  <button
+                    key={link.name}
+                    onClick={() => scrollToSection(link.href)}
+                    className="block w-full text-left py-3 px-4 text-foreground hover:bg-muted transition-colors"
+                  >
+                    {link.name}
+                  </button>
+                )
+              )}
               <div className="px-4 pt-4">
                 <Button
                   onClick={() => scrollToSection("#apply")}

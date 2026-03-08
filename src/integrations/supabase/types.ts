@@ -1556,6 +1556,42 @@ export type Database = {
           },
         ]
       }
+      scholarship_applications: {
+        Row: {
+          course: string
+          created_at: string
+          education_level: string
+          email: string
+          full_name: string
+          id: string
+          phone: string
+          statement: string
+          status: string
+        }
+        Insert: {
+          course: string
+          created_at?: string
+          education_level: string
+          email: string
+          full_name: string
+          id?: string
+          phone: string
+          statement: string
+          status?: string
+        }
+        Update: {
+          course?: string
+          created_at?: string
+          education_level?: string
+          email?: string
+          full_name?: string
+          id?: string
+          phone?: string
+          statement?: string
+          status?: string
+        }
+        Relationships: []
+      }
       staff_contracts: {
         Row: {
           contract_type: string

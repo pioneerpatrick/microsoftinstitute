@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import Scholarships from "./pages/Scholarships";
 
 // LMS Pages
 import LMSLogin from "./pages/lms/Login";
@@ -67,6 +68,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/scholarships" element={<Scholarships />} />
             
             {/* LMS Routes */}
             <Route path="/lms/login" element={<LMSLogin />} />
