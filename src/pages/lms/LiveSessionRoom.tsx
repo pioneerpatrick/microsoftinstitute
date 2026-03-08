@@ -855,26 +855,65 @@ const LiveSessionRoom = () => {
         <div className="w-80 border-l bg-card flex flex-col flex-shrink-0 hidden lg:flex">
           <Tabs value={rightPanel} onValueChange={(v) => setRightPanel(v as any)} className="flex flex-col h-full">
             <TabsList className="w-full rounded-none border-b bg-transparent h-12 p-0">
+              <TabsTrigger value="video" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent h-full gap-1">
+                <Video className="h-4 w-4" />
+              </TabsTrigger>
               <TabsTrigger value="chat" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent h-full gap-1">
                 <MessageSquare className="h-4 w-4" />
-                Chat
               </TabsTrigger>
               <TabsTrigger value="polls" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent h-full gap-1">
                 <BarChart3 className="h-4 w-4" />
-                Polls
               </TabsTrigger>
               <TabsTrigger value="participants" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent h-full gap-1 relative">
                 <Users className="h-4 w-4" />
-                <span>{participants.length}</span>
+                <span className="text-xs">{participants.length}</span>
                 {pendingRequests.length > 0 && (
-                  <span className="absolute top-2 right-4 w-2 h-2 bg-destructive rounded-full" />
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full" />
                 )}
               </TabsTrigger>
               <TabsTrigger value="files" className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent h-full gap-1">
                 <Paperclip className="h-4 w-4" />
-                <span>{sessionFiles.length}</span>
               </TabsTrigger>
             </TabsList>
+
+            {/* Video Tab */}
+            <TabsContent value="video" className="flex-1 m-0 overflow-hidden p-2">
+              <div className="h-full flex flex-col gap-2">
+                {/* Self Video */}
+                {user && (
+                  <VideoPanel
+                    userId={user.id}
+                    userName={user.email?.split('@')[0] || 'You'}
+                    isInstructor={isInstructor}
+                    isSelf={true}
+                  />
+                )}
+                
+                {/* Other Participants */}
+                <ScrollArea className="flex-1">
+                  <div className="space-y-2">
+                    {participants
+                      .filter(p => p.user_id !== user?.id)
+                      .slice(0, 4)
+                      .map(p => (
+                        <div key={p.id} className="aspect-video bg-muted rounded-lg flex items-center justify-center">
+                          <div className="text-center">
+                            <Avatar className={`h-10 w-10 mx-auto ${getColorFromName(p.profiles?.full_name || null)}`}>
+                              <AvatarFallback className="text-sm text-white bg-transparent">
+                                {getInitials(p.profiles?.full_name || null)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <p className="text-xs text-muted-foreground mt-1 truncate">
+                              {p.profiles?.full_name || p.profiles?.email || 'Participant'}
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                    }
+                  </div>
+                </ScrollArea>
+              </div>
+            </TabsContent>
 
             {/* Chat Tab */}
             <TabsContent value="chat" className="flex-1 flex flex-col m-0 overflow-hidden">
