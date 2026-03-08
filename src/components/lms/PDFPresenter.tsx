@@ -28,6 +28,20 @@ const PDFPresenter = ({ pdfUrl, onPagesExtracted, onError }: PDFPresenterProps) 
     if (!pdfUrl || hasStarted.current) return;
     hasStarted.current = true;
 
+    const INITIAL_BATCH = 3;
+
+    const renderPage = async (pdf: any, pageNum: number, canvas: HTMLCanvasElement, context: CanvasRenderingContext2D, scale: number) => {
+      const page = await pdf.getPage(pageNum);
+      const viewport = page.getViewport({ scale });
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      await page.render({ canvasContext: context, viewport }).promise;
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      page.cleanup();
+      return dataUrl;
+    };
+
     const loadPDF = async () => {
       try {
         setLoading(true);
@@ -35,7 +49,6 @@ const PDFPresenter = ({ pdfUrl, onPagesExtracted, onError }: PDFPresenterProps) 
         setProgress(0);
         setStatusText('Loading PDF...');
 
-        console.log('Loading PDF from:', pdfUrl);
         const loadingTask = pdfjsLib.getDocument({
           url: pdfUrl,
           cMapUrl: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/cmaps/`,
@@ -43,51 +56,35 @@ const PDFPresenter = ({ pdfUrl, onPagesExtracted, onError }: PDFPresenterProps) 
         });
         const pdf = await loadingTask.promise;
         const numPages = pdf.numPages;
-        console.log(`PDF loaded: ${numPages} pages`);
-        setStatusText(`Converting ${numPages} pages...`);
-
-        const pages: string[] = [];
-        
-        // Use a single reusable canvas for memory efficiency
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
-        if (!context) {
-          throw new Error('Could not create canvas context');
-        }
-
-        // Use scale 1.5 for good quality without being too heavy
-        // For very large page counts, reduce further
         const scale = numPages > 20 ? 1 : 1.5;
 
-        for (let i = 1; i <= numPages; i++) {
-          const page = await pdf.getPage(i);
-          const viewport = page.getViewport({ scale });
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        if (!context) throw new Error('Could not create canvas context');
 
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-          
-          // Clear canvas before rendering
-          context.clearRect(0, 0, canvas.width, canvas.height);
-
-          await page.render({
-            canvasContext: context,
-            viewport: viewport,
-          }).promise;
-
-          // Use JPEG for faster encoding and smaller data URLs
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-          pages.push(dataUrl);
-          
-          // Clean up page resources
-          page.cleanup();
-          
-          const pct = Math.round((i / numPages) * 100);
-          setProgress(pct);
-          setStatusText(`Converting page ${i} of ${numPages}...`);
+        // Render first batch immediately
+        const initialCount = Math.min(INITIAL_BATCH, numPages);
+        const pages: string[] = [];
+        for (let i = 1; i <= initialCount; i++) {
+          setStatusText(`Loading page ${i}...`);
+          pages.push(await renderPage(pdf, i, canvas, context, scale));
+          setProgress(Math.round((i / numPages) * 100));
         }
 
-        onPagesExtractedRef.current(pages);
+        // Send initial pages right away so presentation can start
+        onPagesExtractedRef.current([...pages]);
         setLoading(false);
+
+        // Load remaining pages in background
+        if (numPages > initialCount) {
+          for (let i = initialCount + 1; i <= numPages; i++) {
+            pages.push(await renderPage(pdf, i, canvas, context, scale));
+            // Update with all pages so far
+            onPagesExtractedRef.current([...pages]);
+            // Yield to main thread every few pages
+            if (i % 3 === 0) await new Promise(r => setTimeout(r, 0));
+          }
+        }
       } catch (err) {
         console.error('PDF load error:', err);
         const message = err instanceof Error ? err.message : 'Failed to load PDF';
