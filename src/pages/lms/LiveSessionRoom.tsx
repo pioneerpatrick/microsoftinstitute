@@ -796,40 +796,152 @@ const LiveSessionRoom = () => {
             </div>
           )}
 
-          {/* Content Area - Shared Notes / Whiteboard */}
+          {/* Content Area - Presentation or Shared Notes */}
           <div className="flex-1 p-4 overflow-hidden flex flex-col">
-            <div className="flex items-center gap-2 mb-3 flex-shrink-0">
-              <FileText className="h-4 w-4 text-muted-foreground" />
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Shared Notes</h3>
-              {isInstructor && (
-                <Badge variant="secondary" className="text-xs">Instructor can edit</Badge>
-              )}
-            </div>
-            <div className="flex-1 bg-muted/30 rounded-xl border overflow-hidden">
-              {isInstructor ? (
-                <Textarea
-                  value={sharedNotes}
-                  onChange={(e) => {
-                    setSharedNotes(e.target.value);
-                    saveNotes(e.target.value);
+            {/* PDF Loading State */}
+            {loadingPDF && (
+              <div className="flex-1 flex items-center justify-center bg-muted/30 rounded-xl border">
+                <PDFPresenter
+                  pdfUrl={loadingPDF}
+                  onPagesExtracted={handlePDFPagesExtracted}
+                  onError={() => {
+                    setLoadingPDF(null);
+                    toast.error('Failed to load PDF for presentation');
                   }}
-                  placeholder="Start typing notes for the session... Students can see these in real-time."
-                  className="h-full w-full resize-none border-0 bg-transparent p-4 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
                 />
-              ) : (
-                <div className="h-full w-full p-4 overflow-y-auto">
-                  {sharedNotes ? (
-                    <div className="prose prose-sm max-w-none whitespace-pre-wrap text-foreground">
-                      {sharedNotes}
-                    </div>
+              </div>
+            )}
+
+            {/* Inline Presentation Mode */}
+            {!loadingPDF && isPresentationMode && presentationSlides.length > 0 && (
+              <>
+                <div className="flex items-center justify-between mb-2 flex-shrink-0">
+                  <div className="flex items-center gap-2">
+                    <Presentation className="h-4 w-4 text-primary" />
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                      Presentation
+                    </h3>
+                    <Badge variant="secondary" className="text-xs">
+                      {currentSlideIndex + 1} / {presentationSlides.length}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {isInstructor && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs gap-1"
+                        onClick={() => {
+                          // Open fullscreen presentation mode
+                          const elem = document.documentElement;
+                          elem.requestFullscreen?.();
+                        }}
+                      >
+                        <Maximize2 className="h-3 w-3" /> Fullscreen
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs text-destructive"
+                      onClick={() => {
+                        setIsPresentationMode(false);
+                        setPresentationSlides([]);
+                        setCurrentSlideIndex(0);
+                      }}
+                    >
+                      <X className="h-3 w-3 mr-1" /> Close
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex-1 bg-black rounded-xl overflow-hidden relative flex items-center justify-center">
+                  <img
+                    src={presentationSlides[currentSlideIndex]}
+                    alt={`Slide ${currentSlideIndex + 1}`}
+                    className="max-w-full max-h-full object-contain"
+                  />
+                  {/* Slide navigation */}
+                  {currentSlideIndex > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full h-10 w-10"
+                      onClick={() => setCurrentSlideIndex(i => Math.max(0, i - 1))}
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </Button>
+                  )}
+                  {currentSlideIndex < presentationSlides.length - 1 && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full h-10 w-10"
+                      onClick={() => setCurrentSlideIndex(i => Math.min(presentationSlides.length - 1, i + 1))}
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </Button>
+                  )}
+                </div>
+                {/* Slide thumbnails strip */}
+                {isInstructor && presentationSlides.length > 1 && (
+                  <div className="mt-2 flex-shrink-0">
+                    <ScrollArea className="w-full">
+                      <div className="flex gap-1.5 pb-1">
+                        {presentationSlides.map((slide, i) => (
+                          <div
+                            key={i}
+                            className={`flex-shrink-0 w-16 h-12 rounded border overflow-hidden cursor-pointer transition-all ${
+                              i === currentSlideIndex ? 'ring-2 ring-primary border-primary' : 'opacity-60 hover:opacity-100'
+                            }`}
+                            onClick={() => setCurrentSlideIndex(i)}
+                          >
+                            <img src={slide} alt={`Slide ${i + 1}`} className="w-full h-full object-cover" />
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Default: Shared Notes */}
+            {!loadingPDF && !isPresentationMode && (
+              <>
+                <div className="flex items-center gap-2 mb-3 flex-shrink-0">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Shared Notes</h3>
+                  {isInstructor && (
+                    <Badge variant="secondary" className="text-xs">Instructor can edit</Badge>
+                  )}
+                </div>
+                <div className="flex-1 bg-muted/30 rounded-xl border overflow-hidden">
+                  {isInstructor ? (
+                    <Textarea
+                      value={sharedNotes}
+                      onChange={(e) => {
+                        setSharedNotes(e.target.value);
+                        saveNotes(e.target.value);
+                      }}
+                      placeholder="Start typing notes for the session... Students can see these in real-time."
+                      className="h-full w-full resize-none border-0 bg-transparent p-4 text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+                    />
                   ) : (
-                    <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-                      <p>The instructor hasn't shared any notes yet.</p>
+                    <div className="h-full w-full p-4 overflow-y-auto">
+                      {sharedNotes ? (
+                        <div className="prose prose-sm max-w-none whitespace-pre-wrap text-foreground">
+                          {sharedNotes}
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                          <p>The instructor hasn't shared any notes yet.</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
-            </div>
+              </>
+            )}
           </div>
 
           {/* Bottom Controls */}
