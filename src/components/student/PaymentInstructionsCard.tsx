@@ -138,7 +138,7 @@ const PaymentInstructionsCard = ({ studentName, studentEmail, balance }: Payment
                 <Button 
                   variant={copiedItem === 'Phone' ? 'default' : 'outline'} 
                   size="sm" 
-                  onClick={() => copyToClipboard('0723821798', 'Phone')}
+                  onClick={() => copyToClipboard('0711577338', 'Phone')}
                 >
                   {copiedItem === 'Phone' ? <CheckCircle2 className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 </Button>

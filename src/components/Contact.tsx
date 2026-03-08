@@ -156,7 +156,7 @@ const Contact = () => {
                   WhatsApp Us
                 </a>
                 <a
-                  href="tel:+254723821798"
+                  href="tel:+254711577338"
                   className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-5 py-3 rounded-lg font-medium hover:opacity-90 transition-all shadow-sm hover:shadow-md flex-1"
                 >
                   <Phone className="h-4 w-4" />
