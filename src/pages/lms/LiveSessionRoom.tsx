@@ -874,6 +874,86 @@ const LiveSessionRoom = () => {
               <Hand className="h-4 w-4" />
             </Button>
             
+            {/* Settings */}
+            <Popover open={showSettings} onOpenChange={setShowSettings}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="rounded-full h-10 w-10"
+                  title="Audio & Video Settings"
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80" side="top" align="center">
+                <div className="space-y-4">
+                  <h4 className="font-medium text-sm">Audio & Video Settings</h4>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-xs">Microphone</Label>
+                    <Select value={selectedAudioDevice} onValueChange={setSelectedAudioDevice}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Default microphone" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {audioDevices.map(device => (
+                          <SelectItem key={device.deviceId} value={device.deviceId}>
+                            {device.label || `Microphone ${device.deviceId.slice(0, 5)}`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs">Camera</Label>
+                    <Select value={selectedVideoDevice} onValueChange={setSelectedVideoDevice}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Default camera" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {videoDevices.map(device => (
+                          <SelectItem key={device.deviceId} value={device.deviceId}>
+                            {device.label || `Camera ${device.deviceId.slice(0, 5)}`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Noise Suppression</Label>
+                    <Switch
+                      checked={noiseSuppression}
+                      onCheckedChange={setNoiseSuppression}
+                    />
+                  </div>
+
+                  <Separator />
+                  
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Camera</Label>
+                    <Switch
+                      checked={isVideoOn}
+                      onCheckedChange={(v) => {
+                        setIsVideoOn(v);
+                        if (v) setRightPanel('video');
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Microphone</Label>
+                    <Switch
+                      checked={!isMuted}
+                      onCheckedChange={(v) => setIsMuted(!v)}
+                    />
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+            
             {/* Instructor-only controls */}
             {isInstructor && (
               <>
