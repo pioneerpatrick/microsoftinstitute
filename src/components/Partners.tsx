@@ -18,12 +18,12 @@ const Partners = () => {
   ];
 
   const industryPartners = [
-    { name: "Safaricom", description: "Kenya's leading telecom", type: "Kenyan" },
-    { name: "KCB Bank", description: "East Africa's largest bank", type: "Kenyan" },
-    { name: "Equity Bank", description: "Financial services leader", type: "Kenyan" },
-    { name: "Andela", description: "African tech talent network", type: "African" },
-    { name: "iHub", description: "Innovation hub for startups", type: "Kenyan" },
-    { name: "Konza Technopolis", description: "Kenya's Silicon Savannah", type: "Kenyan" },
+    { name: "Safaricom", logo: "/images/partners/safaricom.png", description: "Kenya's leading telecom", type: "Kenyan" },
+    { name: "KCB Bank", logo: "/images/partners/kcb.png", description: "East Africa's largest bank", type: "Kenyan" },
+    { name: "Equity Bank", logo: "/images/partners/equity.png", description: "Financial services leader", type: "Kenyan" },
+    { name: "Andela", logo: "/images/partners/andela.png", description: "African tech talent network", type: "African" },
+    { name: "iHub", logo: "/images/partners/ihub.png", description: "Innovation hub for startups", type: "Kenyan" },
+    { name: "Konza Technopolis", logo: "/images/partners/konza.png", description: "Kenya's Silicon Savannah", type: "Kenyan" },
   ];
 
   return (
@@ -107,8 +107,13 @@ const Partners = () => {
                 key={index}
                 className="bg-card border border-border rounded-xl p-5 text-center hover:shadow-lg hover:border-secondary/30 transition-all duration-300 group"
               >
-                <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mx-auto mb-3 group-hover:bg-secondary/20 transition-colors">
-                  <span className="text-secondary font-bold text-sm">{partner.name.slice(0, 2).toUpperCase()}</span>
+                <div className="w-16 h-16 flex items-center justify-center mx-auto mb-3">
+                  <img
+                    src={partner.logo}
+                    alt={partner.name}
+                    className="max-h-14 w-auto object-contain"
+                    loading="lazy"
+                  />
                 </div>
                 <h4 className="font-semibold text-foreground text-sm mb-1">{partner.name}</h4>
                 <p className="text-xs text-muted-foreground">{partner.description}</p>
