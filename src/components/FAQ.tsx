@@ -17,7 +17,7 @@ const FAQ = () => {
         },
         {
           question: "How do I apply for a course?",
-          answer: "Applying is simple! Fill out our online application form on this website, and our admissions team will contact you within 24-48 hours to guide you through the enrollment process. You can also reach us directly via WhatsApp at +254 723 821 798.",
+          answer: "Applying is simple! Fill out our online application form on this website, and our admissions team will contact you within 24-48 hours to guide you through the enrollment process. You can also reach us directly via WhatsApp at +254 711 577 338.",
         },
         {
           question: "When can I start my studies?",
