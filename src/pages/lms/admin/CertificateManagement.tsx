@@ -332,11 +332,12 @@ const CertificateManagement = () => {
     drawMedallion(13, 13); drawMedallion(W - 13, 13);
     drawMedallion(13, H - 13); drawMedallion(W - 13, H - 13);
 
-    // ── Logo centered at top (no background, expanded) ──
-    const logoSize = 28;
+    // ── Logo centered at top (no background, expanded, proper aspect ratio) ──
+    const logoW = 32;
+    const logoH = 30;
     if (logoBase64) {
       try {
-        doc.addImage(logoBase64, 'PNG', W / 2 - logoSize / 2, 14, logoSize, logoSize);
+        doc.addImage(logoBase64, 'PNG', W / 2 - logoW / 2, 12, logoW, logoH);
       } catch { /* fallback below */ }
     }
 
