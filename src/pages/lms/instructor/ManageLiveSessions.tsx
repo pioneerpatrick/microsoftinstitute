@@ -409,7 +409,7 @@ const ManageLiveSessions = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Live Sessions</h1>
-            <p className="text-muted-foreground">Schedule and manage live classes with Google Meet</p>
+            <p className="text-muted-foreground">Schedule and manage interactive live classes</p>
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
