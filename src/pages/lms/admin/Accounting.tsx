@@ -1056,6 +1056,14 @@ const Accounting = () => {
             </Card>
           </TabsContent>
 
+          <TabsContent value="reconciliation">
+            <ReconciliationTable />
+          </TabsContent>
+
+          <TabsContent value="sponsored">
+            <SponsoredStudentsSection />
+          </TabsContent>
+
           <TabsContent value="expenses">
             <ExpensesSection />
           </TabsContent>
