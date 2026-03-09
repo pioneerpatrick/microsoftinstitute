@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,8 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Save, Plus, Trash2, BookOpen, User, GraduationCap, RefreshCw } from 'lucide-react';
+import { Loader2, Save, Plus, Trash2, BookOpen, User, GraduationCap, RefreshCw, Camera, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Student {
@@ -68,23 +69,22 @@ const EditStudentDialog = ({
   const [addingEnrollment, setAddingEnrollment] = useState(false);
   const [removingEnrollment, setRemovingEnrollment] = useState<string | null>(null);
   const [changingEnrollment, setChangingEnrollment] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Form state
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
     student_status: 'active',
   });
   
-  // New enrollment form
   const [newEnrollment, setNewEnrollment] = useState({
     fee_structure_id: '',
   });
   
-  // Track which enrollment is being changed and to what
   const [enrollmentChanges, setEnrollmentChanges] = useState<Record<string, string>>({});
 
-  // Load student data when dialog opens
   useEffect(() => {
     if (student && open) {
       setFormData({
@@ -94,8 +94,69 @@ const EditStudentDialog = ({
       });
       setNewEnrollment({ fee_structure_id: '' });
       setEnrollmentChanges({});
+      // Fetch current avatar
+      fetchAvatar(student.id);
     }
   }, [student, open]);
+
+  const fetchAvatar = async (studentId: string) => {
+    const { data } = await supabase.from('profiles').select('avatar_url').eq('id', studentId).single();
+    setAvatarUrl(data?.avatar_url || null);
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!student || !e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be under 5MB');
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const filePath = `${student.id}/photo.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('student-photos')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('student-photos')
+        .getPublicUrl(filePath);
+
+      // Add cache-bust
+      const url = `${publicUrl}?t=${Date.now()}`;
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: url })
+        .eq('id', student.id);
+
+      if (updateError) throw updateError;
+
+      setAvatarUrl(url);
+      toast.success('Student photo uploaded successfully!');
+      onStudentUpdated();
+    } catch (err: any) {
+      toast.error('Failed to upload photo: ' + err.message);
+    } finally {
+      setUploadingPhoto(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const getInitials = (name: string | null) => {
+    if (!name) return 'ST';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
 
   const handleSaveProfile = async () => {
     if (!student) return;
@@ -113,7 +174,6 @@ const EditStudentDialog = ({
 
       if (error) throw error;
 
-      // Send status notification if status changed
       if (formData.student_status !== student.student_status) {
         try {
           await supabase.functions.invoke('send-student-status-notification', {
@@ -146,85 +206,42 @@ const EditStudentDialog = ({
 
     setAddingEnrollment(true);
     try {
-      const selectedFeeStructure = feeStructures.find(
-        (f) => f.id === newEnrollment.fee_structure_id,
-      );
+      const selectedFeeStructure = feeStructures.find(f => f.id === newEnrollment.fee_structure_id);
+      if (!selectedFeeStructure) { toast.error('Selected program not found.'); return; }
+      if (!selectedFeeStructure.course_id) { toast.error('This program is not linked to a course.'); return; }
 
-      if (!selectedFeeStructure) {
-        toast.error('Selected program not found. Please refresh and try again.');
-        return;
-      }
+      const course = courses.find(c => c.id === selectedFeeStructure.course_id) ?? null;
 
-      // Fee structures without a linked course cannot create an LMS enrollment record.
-      if (!selectedFeeStructure.course_id) {
-        toast.error(
-          'This program is not linked to a course, so an enrollment record cannot be created. Please link it to a course first.',
-        );
-        return;
-      }
+      const { data: existingEnroll } = await supabase
+        .from('enrollments').select('id')
+        .eq('user_id', student.id).eq('course_id', selectedFeeStructure.course_id).maybeSingle();
 
-      const course = courses.find((c) => c.id === selectedFeeStructure.course_id) ?? null;
+      if (existingEnroll) { toast.error('Student is already enrolled in this course'); return; }
 
-      // Check if already enrolled in this course
-      const { data: existingEnroll, error: existingEnrollError } = await supabase
-        .from('enrollments')
-        .select('id')
-        .eq('user_id', student.id)
-        .eq('course_id', selectedFeeStructure.course_id)
-        .maybeSingle();
-
-      if (existingEnrollError) throw existingEnrollError;
-
-      if (existingEnroll) {
-        toast.error('Student is already enrolled in this course');
-        return;
-      }
-
-      // Create enrollment
-      const { error: enrollInsertError } = await supabase.from('enrollments').insert({
-        user_id: student.id,
-        course_id: selectedFeeStructure.course_id,
-        status: 'active',
-        progress_percentage: 0,
+      await supabase.from('enrollments').insert({
+        user_id: student.id, course_id: selectedFeeStructure.course_id, status: 'active', progress_percentage: 0,
       });
 
-      if (enrollInsertError) throw enrollInsertError;
-
-      // Create student fee record
-      const { error: feeInsertError } = await supabase.from('student_fees').insert({
-        user_id: student.id,
-        fee_structure_id: selectedFeeStructure.id,
-        course_id: selectedFeeStructure.course_id,
-        amount_due: selectedFeeStructure.amount,
-        amount_paid: 0,
-        balance: selectedFeeStructure.amount,
-        status: 'pending',
+      await supabase.from('student_fees').insert({
+        user_id: student.id, fee_structure_id: selectedFeeStructure.id,
+        course_id: selectedFeeStructure.course_id, amount_due: selectedFeeStructure.amount,
+        amount_paid: 0, balance: selectedFeeStructure.amount, status: 'pending',
       });
 
-      if (feeInsertError) throw feeInsertError;
-
-      // Send enrollment email (only after records are created)
       try {
         await supabase.functions.invoke('send-enrollment-email', {
           body: {
-            studentEmail: student.email,
-            studentName: formData.full_name || student.full_name,
+            studentEmail: student.email, studentName: formData.full_name || student.full_name,
             courseTitle: course?.title || selectedFeeStructure?.name || 'New Program',
-            courseDescription: course?.description,
-            courseDuration: course?.duration_hours,
+            courseDescription: course?.description, courseDuration: course?.duration_hours,
             courseCategory: course?.category,
             courseSchedule: 'Classes held Monday to Friday, 8:00 AM - 5:00 PM EAT',
-            feeStructure: {
-              name: selectedFeeStructure.name,
-              amount: selectedFeeStructure.amount,
-              currency: selectedFeeStructure.currency,
-            },
+            feeStructure: { name: selectedFeeStructure.name, amount: selectedFeeStructure.amount, currency: selectedFeeStructure.currency },
           },
         });
-        toast.success('Student enrolled successfully! Confirmation email sent.');
-      } catch (emailError) {
-        console.error('Enrollment email failed:', emailError);
-        toast.success('Student enrolled successfully! (Email notification failed)');
+        toast.success('Student enrolled! Confirmation email sent.');
+      } catch {
+        toast.success('Student enrolled! (Email notification failed)');
       }
 
       setNewEnrollment({ fee_structure_id: '' });
@@ -238,49 +255,17 @@ const EditStudentDialog = ({
 
   const handleRemoveEnrollment = async (courseId: string) => {
     if (!student) return;
-
     setRemovingEnrollment(courseId);
     try {
-      // Remove enrollment first
-      const { error: enrollError } = await supabase
-        .from('enrollments')
-        .delete()
-        .eq('user_id', student.id)
-        .eq('course_id', courseId);
+      await supabase.from('enrollments').delete().eq('user_id', student.id).eq('course_id', courseId);
+      await supabase.from('student_fees').delete().eq('user_id', student.id).eq('course_id', courseId);
 
-      if (enrollError) {
-        console.error('Enrollment delete error:', enrollError);
-        throw enrollError;
-      }
-
-      // Remove associated fee records
-      const { error: feeError } = await supabase
-        .from('student_fees')
-        .delete()
-        .eq('user_id', student.id)
-        .eq('course_id', courseId);
-
-      if (feeError) {
-        console.error('Fee delete error:', feeError);
-        // Don't throw - enrollment was deleted successfully
-      }
-
-      // Also delete any fee payments associated with the student fees for this course
-      const { data: studentFees } = await supabase
-        .from('student_fees')
-        .select('id')
-        .eq('user_id', student.id)
-        .eq('course_id', courseId);
-
+      const { data: studentFees } = await supabase.from('student_fees').select('id').eq('user_id', student.id).eq('course_id', courseId);
       if (studentFees && studentFees.length > 0) {
-        const feeIds = studentFees.map(f => f.id);
-        await supabase
-          .from('fee_payments')
-          .delete()
-          .in('student_fee_id', feeIds);
+        await supabase.from('fee_payments').delete().in('student_fee_id', studentFees.map(f => f.id));
       }
 
-      toast.success('Enrollment removed successfully. You can now add a new enrollment.');
+      toast.success('Enrollment removed.');
       onStudentUpdated();
     } catch (error: any) {
       toast.error('Failed to remove enrollment: ' + error.message);
@@ -291,78 +276,41 @@ const EditStudentDialog = ({
 
   const handleChangeEnrollment = async (oldCourseId: string, newFeeStructureId: string) => {
     if (!student) return;
-
     const newFeeStructure = feeStructures.find(f => f.id === newFeeStructureId);
-    if (!newFeeStructure || !newFeeStructure.course_id) {
-      toast.error('Invalid program selected');
-      return;
-    }
-
-    // Check if already enrolled in the new course
-    if (student.enrollments.some(e => e.course_id === newFeeStructure.course_id)) {
-      toast.error('Student is already enrolled in this course');
-      return;
-    }
+    if (!newFeeStructure || !newFeeStructure.course_id) { toast.error('Invalid program'); return; }
+    if (student.enrollments.some(e => e.course_id === newFeeStructure.course_id)) { toast.error('Already enrolled'); return; }
 
     setChangingEnrollment(oldCourseId);
     try {
-      // Update enrollment to new course
-      const { error: enrollError } = await supabase
-        .from('enrollments')
-        .update({ course_id: newFeeStructure.course_id })
-        .eq('user_id', student.id)
-        .eq('course_id', oldCourseId);
+      await supabase.from('enrollments').update({ course_id: newFeeStructure.course_id }).eq('user_id', student.id).eq('course_id', oldCourseId);
 
-      if (enrollError) throw enrollError;
-
-      // Update student_fees to new course and fee structure
-      const { error: feeError } = await supabase
-        .from('student_fees')
-        .update({ 
-          course_id: newFeeStructure.course_id,
-          fee_structure_id: newFeeStructure.id,
-          amount_due: newFeeStructure.amount,
-        })
-        .eq('user_id', student.id)
-        .eq('course_id', oldCourseId);
+      const { error: feeError } = await supabase.from('student_fees').update({
+        course_id: newFeeStructure.course_id, fee_structure_id: newFeeStructure.id, amount_due: newFeeStructure.amount,
+      }).eq('user_id', student.id).eq('course_id', oldCourseId);
 
       if (feeError) {
-        console.error('Fee update error:', feeError);
-        // Try to create a new fee record if update failed
         await supabase.from('student_fees').insert({
-          user_id: student.id,
-          fee_structure_id: newFeeStructure.id,
-          course_id: newFeeStructure.course_id,
-          amount_due: newFeeStructure.amount,
-          amount_paid: 0,
-          status: 'pending',
+          user_id: student.id, fee_structure_id: newFeeStructure.id,
+          course_id: newFeeStructure.course_id, amount_due: newFeeStructure.amount,
+          amount_paid: 0, status: 'pending',
         });
       }
 
-      toast.success('Enrollment changed successfully!');
+      toast.success('Enrollment changed!');
       setEnrollmentChanges({});
       onStudentUpdated();
     } catch (error: any) {
-      toast.error('Failed to change enrollment: ' + error.message);
+      toast.error('Failed: ' + error.message);
     } finally {
       setChangingEnrollment(null);
     }
   };
 
-  // Get fee structures for changing enrollment (exclude current enrollments except the one being changed)
   const getAvailableFeeStructuresForChange = (currentCourseId: string) => {
-    return feeStructures.filter((f) => {
-      if (!f.course_id) return false;
-      // Allow the current course and any course the student is not enrolled in
-      return f.course_id === currentCourseId || !student?.enrollments.some((e) => e.course_id === f.course_id);
-    });
+    return feeStructures.filter(f => f.course_id && (f.course_id === currentCourseId || !student?.enrollments.some(e => e.course_id === f.course_id)));
   };
 
-  // Get courses the student is not enrolled in (only fee structures linked to a course)
-  const availableFeeStructures = feeStructures.filter((f) => {
-    if (!f.course_id) return false;
-    return !student?.enrollments.some((e) => e.course_id === f.course_id);
-  });
+  const availableFeeStructures = feeStructures.filter(f => f.course_id && !student?.enrollments.some(e => e.course_id === f.course_id));
 
   if (!student) return null;
 
@@ -379,16 +327,60 @@ const EditStudentDialog = ({
         <Tabs defaultValue="profile" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="profile" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              Profile
+              <User className="h-4 w-4" /> Profile
             </TabsTrigger>
             <TabsTrigger value="enrollments" className="flex items-center gap-2">
-              <GraduationCap className="h-4 w-4" />
-              Enrollments
+              <GraduationCap className="h-4 w-4" /> Enrollments
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="space-y-4 pt-4">
+            {/* Photo Upload Section */}
+            <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg border border-border/50">
+              <div className="relative group">
+                <Avatar className="h-20 w-20 border-2 border-primary/30">
+                  <AvatarImage src={avatarUrl || undefined} alt={formData.full_name} />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
+                    {getInitials(formData.full_name)}
+                  </AvatarFallback>
+                </Avatar>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingPhoto}
+                  className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                >
+                  {uploadingPhoto ? (
+                    <Loader2 className="h-5 w-5 text-white animate-spin" />
+                  ) : (
+                    <Camera className="h-5 w-5 text-white" />
+                  )}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-foreground">Student Photo</p>
+                <p className="text-xs text-muted-foreground mb-2">Used on ID card and profile. Max 5MB.</p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingPhoto}
+                >
+                  {uploadingPhoto ? (
+                    <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Uploading...</>
+                  ) : (
+                    <><Upload className="h-3.5 w-3.5 mr-1.5" /> Upload Photo</>
+                  )}
+                </Button>
+              </div>
+            </div>
+
             {student.admission_number && (
               <div className="p-3 bg-muted/50 rounded-lg">
                 <Label className="text-xs text-muted-foreground">Admission Number</Label>
@@ -398,37 +390,17 @@ const EditStudentDialog = ({
             <div className="grid gap-4">
               <div className="space-y-2">
                 <Label htmlFor="full_name">Full Name</Label>
-                <Input
-                  id="full_name"
-                  value={formData.full_name}
-                  onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                  placeholder="Student's full name"
-                />
+                <Input id="full_name" value={formData.full_name} onChange={e => setFormData({ ...formData, full_name: e.target.value })} placeholder="Student's full name" />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  disabled
-                  className="bg-muted"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Email cannot be changed. Contact support if needed.
-                </p>
+                <Input id="email" type="email" value={formData.email} disabled className="bg-muted" />
+                <p className="text-xs text-muted-foreground">Email cannot be changed. Contact support if needed.</p>
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="status">Student Status</Label>
-                <Select
-                  value={formData.student_status}
-                  onValueChange={(value) => setFormData({ ...formData, student_status: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
+                <Select value={formData.student_status} onValueChange={value => setFormData({ ...formData, student_status: value })}>
+                  <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="suspended">Suspended</SelectItem>
@@ -441,28 +413,16 @@ const EditStudentDialog = ({
 
             <DialogFooter>
               <Button onClick={handleSaveProfile} disabled={saving}>
-                {saving ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Changes
-                  </>
-                )}
+                {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</> : <><Save className="h-4 w-4 mr-2" /> Save Changes</>}
               </Button>
             </DialogFooter>
           </TabsContent>
 
           <TabsContent value="enrollments" className="space-y-4 pt-4">
-            {/* Current Enrollments */}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <BookOpen className="h-4 w-4" />
-                  Current Enrollments
+                  <BookOpen className="h-4 w-4" /> Current Enrollments
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -471,72 +431,38 @@ const EditStudentDialog = ({
                 ) : (
                   <div className="space-y-3">
                     {student.enrollments.map((enrollment, index) => (
-                      <div
-                        key={index}
-                        className="p-3 bg-muted/50 rounded-lg space-y-3"
-                      >
+                      <div key={index} className="p-3 bg-muted/50 rounded-lg space-y-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <GraduationCap className="h-4 w-4 text-muted-foreground" />
                             <div>
                               <p className="font-medium">{enrollment.courses?.title}</p>
-                              <Badge variant="outline" className="mt-1">
-                                {enrollment.status}
-                              </Badge>
+                              <Badge variant="outline" className="mt-1">{enrollment.status}</Badge>
                             </div>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveEnrollment(enrollment.course_id)}
+                          <Button variant="ghost" size="sm" onClick={() => handleRemoveEnrollment(enrollment.course_id)}
                             disabled={removingEnrollment === enrollment.course_id || changingEnrollment === enrollment.course_id}
-                            className="text-destructive hover:text-destructive"
-                          >
-                            {removingEnrollment === enrollment.course_id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
+                            className="text-destructive hover:text-destructive">
+                            {removingEnrollment === enrollment.course_id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                           </Button>
                         </div>
-                        
-                        {/* Change Program Section */}
                         <div className="flex items-center gap-2 pt-2 border-t border-border/50">
                           <RefreshCw className="h-3 w-3 text-muted-foreground" />
                           <span className="text-xs text-muted-foreground">Change to:</span>
-                          <Select
-                            value={enrollmentChanges[enrollment.course_id] || ''}
-                            onValueChange={(value) => setEnrollmentChanges({
-                              ...enrollmentChanges,
-                              [enrollment.course_id]: value
-                            })}
-                          >
-                            <SelectTrigger className="flex-1 h-8 text-xs">
-                              <SelectValue placeholder="Select different program..." />
-                            </SelectTrigger>
+                          <Select value={enrollmentChanges[enrollment.course_id] || ''}
+                            onValueChange={value => setEnrollmentChanges({ ...enrollmentChanges, [enrollment.course_id]: value })}>
+                            <SelectTrigger className="flex-1 h-8 text-xs"><SelectValue placeholder="Select different program..." /></SelectTrigger>
                             <SelectContent className="max-h-[200px]">
-                              {getAvailableFeeStructuresForChange(enrollment.course_id)
-                                .filter(f => f.course_id !== enrollment.course_id)
-                                .map((fee) => (
-                                  <SelectItem key={fee.id} value={fee.id} className="text-xs">
-                                    {fee.name} - {fee.currency} {fee.amount.toLocaleString()}
-                                  </SelectItem>
-                                ))}
+                              {getAvailableFeeStructuresForChange(enrollment.course_id).filter(f => f.course_id !== enrollment.course_id).map(fee => (
+                                <SelectItem key={fee.id} value={fee.id} className="text-xs">{fee.name} - {fee.currency} {fee.amount.toLocaleString()}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           {enrollmentChanges[enrollment.course_id] && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-8 text-xs"
+                            <Button size="sm" variant="outline" className="h-8 text-xs"
                               onClick={() => handleChangeEnrollment(enrollment.course_id, enrollmentChanges[enrollment.course_id])}
-                              disabled={changingEnrollment === enrollment.course_id}
-                            >
-                              {changingEnrollment === enrollment.course_id ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                              ) : (
-                                'Apply'
-                              )}
+                              disabled={changingEnrollment === enrollment.course_id}>
+                              {changingEnrollment === enrollment.course_id ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Apply'}
                             </Button>
                           )}
                         </div>
@@ -547,39 +473,29 @@ const EditStudentDialog = ({
               </CardContent>
             </Card>
 
-            {/* Add New Enrollment */}
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  Add New Enrollment
+                  <Plus className="h-4 w-4" /> Add New Enrollment
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Select Program / Fee Structure</Label>
-                  <Select
-                    value={newEnrollment.fee_structure_id}
-                    onValueChange={(value) => setNewEnrollment({ fee_structure_id: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a program to enroll" />
-                    </SelectTrigger>
+                  <Select value={newEnrollment.fee_structure_id} onValueChange={value => setNewEnrollment({ fee_structure_id: value })}>
+                    <SelectTrigger><SelectValue placeholder="Select a program to enroll" /></SelectTrigger>
                     <SelectContent className="max-h-[300px]">
                       {availableFeeStructures.length === 0 ? (
-                        <div className="p-4 text-center text-sm text-muted-foreground">
-                          No available programs to enroll
-                        </div>
+                        <div className="p-4 text-center text-sm text-muted-foreground">No available programs to enroll</div>
                       ) : (
-                        availableFeeStructures.map((fee) => {
+                        availableFeeStructures.map(fee => {
                           const linkedCourse = courses.find(c => c.id === fee.course_id);
                           return (
                             <SelectItem key={fee.id} value={fee.id}>
                               <div className="flex flex-col">
                                 <span className="font-medium">{fee.name}</span>
                                 <span className="text-xs text-muted-foreground">
-                                  {linkedCourse ? `Course: ${linkedCourse.title} • ` : ''}
-                                  {fee.currency} {fee.amount.toLocaleString()}
+                                  {linkedCourse ? `Course: ${linkedCourse.title} • ` : ''}{fee.currency} {fee.amount.toLocaleString()}
                                 </span>
                               </div>
                             </SelectItem>
@@ -589,27 +505,10 @@ const EditStudentDialog = ({
                     </SelectContent>
                   </Select>
                 </div>
-
-                <Button
-                  onClick={handleAddEnrollment}
-                  disabled={addingEnrollment || !newEnrollment.fee_structure_id}
-                  className="w-full"
-                >
-                  {addingEnrollment ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Enrolling...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Enrollment & Send Email
-                    </>
-                  )}
+                <Button onClick={handleAddEnrollment} disabled={addingEnrollment || !newEnrollment.fee_structure_id} className="w-full">
+                  {addingEnrollment ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Enrolling...</> : <><Plus className="h-4 w-4 mr-2" /> Add Enrollment & Send Email</>}
                 </Button>
-                <p className="text-xs text-muted-foreground text-center">
-                  An enrollment confirmation email will be automatically sent to the student.
-                </p>
+                <p className="text-xs text-muted-foreground text-center">An enrollment confirmation email will be automatically sent.</p>
               </CardContent>
             </Card>
           </TabsContent>
