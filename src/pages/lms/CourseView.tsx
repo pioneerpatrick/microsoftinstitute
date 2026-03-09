@@ -59,6 +59,24 @@ interface LessonProgress {
   completed: boolean;
 }
 
+interface CourseExam {
+  id: string;
+  title: string;
+  description: string | null;
+  duration_minutes: number | null;
+  max_score: number | null;
+  passing_score: number | null;
+  is_published: boolean | null;
+}
+
+interface ExamAttempt {
+  id: string;
+  exam_id: string;
+  score: number | null;
+  passed: boolean | null;
+  completed_at: string | null;
+}
+
 const CourseView = () => {
   const { courseId } = useParams();
   const { user, loading } = useAuth();
@@ -69,6 +87,9 @@ const CourseView = () => {
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [enrollment, setEnrollment] = useState<{ progress_percentage: number } | null>(null);
+  const [exams, setExams] = useState<CourseExam[]>([]);
+  const [examAttempts, setExamAttempts] = useState<ExamAttempt[]>([]);
+  const [allLessonsCompleted, setAllLessonsCompleted] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
