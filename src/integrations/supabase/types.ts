@@ -1879,6 +1879,9 @@ export type Database = {
           due_date: string | null
           fee_structure_id: string | null
           id: string
+          is_sponsored: boolean | null
+          sponsor_name: string | null
+          sponsorship_amount: number | null
           status: string
           updated_at: string
           user_id: string
@@ -1892,6 +1895,9 @@ export type Database = {
           due_date?: string | null
           fee_structure_id?: string | null
           id?: string
+          is_sponsored?: boolean | null
+          sponsor_name?: string | null
+          sponsorship_amount?: number | null
           status?: string
           updated_at?: string
           user_id: string
@@ -1905,6 +1911,9 @@ export type Database = {
           due_date?: string | null
           fee_structure_id?: string | null
           id?: string
+          is_sponsored?: boolean | null
+          sponsor_name?: string | null
+          sponsorship_amount?: number | null
           status?: string
           updated_at?: string
           user_id?: string

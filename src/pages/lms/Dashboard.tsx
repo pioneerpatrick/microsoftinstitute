@@ -14,13 +14,16 @@ import {
   Calendar,
   Bell,
   Play,
-  ChevronRight
+  ChevronRight,
+  CreditCard
 } from 'lucide-react';
 import LMSLayout from '@/components/lms/LMSLayout';
 import AttendanceCard from '@/components/lms/dashboard/AttendanceCard';
 import PendingFeesCard from '@/components/lms/dashboard/PendingFeesCard';
 import UpcomingAssignmentsCard from '@/components/lms/dashboard/UpcomingAssignmentsCard';
 import RecentCertificatesCard from '@/components/lms/dashboard/RecentCertificatesCard';
+import StudentIDCard from '@/components/lms/dashboard/StudentIDCard';
+import QuickPayFeesCard from '@/components/lms/dashboard/QuickPayFeesCard';
 
 interface Enrollment {
   id: string;
@@ -393,6 +396,10 @@ const Dashboard = () => {
 
           {/* Right Sidebar */}
           <div className="space-y-6 min-w-0 overflow-hidden">
+            {/* Student ID Card */}
+            {user && <StudentIDCard userId={user.id} />}
+            {/* Quick Pay Fees */}
+            {user && <QuickPayFeesCard userId={user.id} />}
             {/* Recent Certificates */}
             {user && <RecentCertificatesCard userId={user.id} />}
             {/* Upcoming Sessions */}
