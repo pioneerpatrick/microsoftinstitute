@@ -1062,6 +1062,10 @@ const Accounting = () => {
             <ReconciliationTable />
           </TabsContent>
 
+          <TabsContent value="donors">
+            <DonorsSection />
+          </TabsContent>
+
           <TabsContent value="sponsored">
             <SponsoredStudentsSection />
           </TabsContent>
