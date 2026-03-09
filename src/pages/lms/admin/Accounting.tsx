@@ -880,6 +880,7 @@ const Accounting = () => {
             <TabsTrigger value="fees" className="text-xs sm:text-sm">Student Fees</TabsTrigger>
             <TabsTrigger value="payments" className="text-xs sm:text-sm">Payments</TabsTrigger>
             <TabsTrigger value="reconciliation" className="text-xs sm:text-sm">Reconciliation</TabsTrigger>
+            <TabsTrigger value="donors" className="text-xs sm:text-sm">Donors</TabsTrigger>
             <TabsTrigger value="sponsored" className="text-xs sm:text-sm">Sponsored</TabsTrigger>
             <TabsTrigger value="expenses" className="text-xs sm:text-sm">Expenses</TabsTrigger>
           </TabsList>
