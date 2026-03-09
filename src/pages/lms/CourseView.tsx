@@ -349,16 +349,20 @@ const CourseView = () => {
               </Card>
             )}
 
-            {/* Tabs for Resources, Quizzes, Discussion */}
+            {/* Tabs for Resources, Exams, Discussion */}
             <Tabs defaultValue="resources">
               <TabsList>
                 <TabsTrigger value="resources">
                   <FileText className="h-4 w-4 mr-2" />
                   Resources
                 </TabsTrigger>
-                <TabsTrigger value="quizzes">
-                  <Award className="h-4 w-4 mr-2" />
-                  Quizzes
+                <TabsTrigger value="exams">
+                  {allLessonsCompleted ? (
+                    <Unlock className="h-4 w-4 mr-2" />
+                  ) : (
+                    <Lock className="h-4 w-4 mr-2" />
+                  )}
+                  Exams
                 </TabsTrigger>
                 <TabsTrigger value="discussion">
                   <MessageSquare className="h-4 w-4 mr-2" />
@@ -372,12 +376,78 @@ const CourseView = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
-              <TabsContent value="quizzes" className="mt-4">
-                <Card>
-                  <CardContent className="p-6">
-                    <p className="text-muted-foreground">No quizzes available for this lesson.</p>
-                  </CardContent>
-                </Card>
+              <TabsContent value="exams" className="mt-4">
+                {!allLessonsCompleted ? (
+                  <Card>
+                    <CardContent className="p-8 text-center">
+                      <Lock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h3 className="font-semibold mb-2">Exams Locked</h3>
+                      <p className="text-muted-foreground">
+                        Complete all lessons to unlock exams. Finish your coursework first!
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : exams.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-6">
+                      <p className="text-muted-foreground">No exams available for this course.</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {exams.map((exam) => {
+                      const attempts = examAttempts.filter(a => a.exam_id === exam.id);
+                      const bestAttempt = attempts.filter(a => a.completed_at).sort((a, b) => (b.score || 0) - (a.score || 0))[0];
+                      
+                      return (
+                        <Card key={exam.id}>
+                          <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <h3 className="font-semibold text-lg">{exam.title}</h3>
+                                {exam.description && (
+                                  <p className="text-sm text-muted-foreground mt-1">{exam.description}</p>
+                                )}
+                                <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                                  {exam.duration_minutes && (
+                                    <span className="flex items-center gap-1">
+                                      <Clock className="h-3 w-3" /> {exam.duration_minutes} min
+                                    </span>
+                                  )}
+                                  <span>Passing: {exam.passing_score || 50}%</span>
+                                  <span>Max: {exam.max_score || 100} pts</span>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                {bestAttempt?.passed ? (
+                                  <div>
+                                    <Badge className="bg-green-500 mb-2">
+                                      <CheckCircle className="h-3 w-3 mr-1" /> Passed ({bestAttempt.score}/{exam.max_score || 100})
+                                    </Badge>
+                                    <p className="text-xs text-muted-foreground">Certificate auto-issued</p>
+                                  </div>
+                                ) : bestAttempt?.completed_at ? (
+                                  <div>
+                                    <Badge variant="destructive" className="mb-2">
+                                      Failed ({bestAttempt.score}/{exam.max_score || 100})
+                                    </Badge>
+                                    <Button size="sm" onClick={() => navigate(`/lms/exams/${exam.id}`)}>
+                                      Retry
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <Button onClick={() => navigate(`/lms/exams/${exam.id}`)}>
+                                    <Play className="h-4 w-4 mr-2" /> Start Exam
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
               </TabsContent>
               <TabsContent value="discussion" className="mt-4">
                 <Card>
