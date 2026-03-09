@@ -396,6 +396,10 @@ const Dashboard = () => {
 
           {/* Right Sidebar */}
           <div className="space-y-6 min-w-0 overflow-hidden">
+            {/* Student ID Card */}
+            {user && <StudentIDCard userId={user.id} />}
+            {/* Quick Pay Fees */}
+            {user && <QuickPayFeesCard userId={user.id} />}
             {/* Recent Certificates */}
             {user && <RecentCertificatesCard userId={user.id} />}
             {/* Upcoming Sessions */}
