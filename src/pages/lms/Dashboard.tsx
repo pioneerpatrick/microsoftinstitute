@@ -20,6 +20,7 @@ import LMSLayout from '@/components/lms/LMSLayout';
 import AttendanceCard from '@/components/lms/dashboard/AttendanceCard';
 import PendingFeesCard from '@/components/lms/dashboard/PendingFeesCard';
 import UpcomingAssignmentsCard from '@/components/lms/dashboard/UpcomingAssignmentsCard';
+import RecentCertificatesCard from '@/components/lms/dashboard/RecentCertificatesCard';
 
 interface Enrollment {
   id: string;
@@ -392,6 +393,8 @@ const Dashboard = () => {
 
           {/* Right Sidebar */}
           <div className="space-y-6 min-w-0 overflow-hidden">
+            {/* Recent Certificates */}
+            {user && <RecentCertificatesCard userId={user.id} />}
             {/* Upcoming Sessions */}
             <Card>
               <CardHeader>
