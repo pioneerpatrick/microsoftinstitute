@@ -14,7 +14,8 @@ import {
   Calendar,
   Bell,
   Play,
-  ChevronRight
+  ChevronRight,
+  CreditCard
 } from 'lucide-react';
 import LMSLayout from '@/components/lms/LMSLayout';
 import AttendanceCard from '@/components/lms/dashboard/AttendanceCard';
