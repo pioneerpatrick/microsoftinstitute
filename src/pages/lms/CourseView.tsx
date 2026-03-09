@@ -19,9 +19,11 @@ import {
   Award,
   ChevronLeft,
   Video,
-  Lock
+  Lock,
+  Unlock
 } from 'lucide-react';
 import LMSLayout from '@/components/lms/LMSLayout';
+import { toast } from 'sonner';
 
 interface Course {
   id: string;
