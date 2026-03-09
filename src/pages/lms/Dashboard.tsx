@@ -393,6 +393,8 @@ const Dashboard = () => {
 
           {/* Right Sidebar */}
           <div className="space-y-6 min-w-0 overflow-hidden">
+            {/* Recent Certificates */}
+            {user && <RecentCertificatesCard userId={user.id} />}
             {/* Upcoming Sessions */}
             <Card>
               <CardHeader>
