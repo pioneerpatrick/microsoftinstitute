@@ -1815,6 +1815,111 @@ export type Database = {
           },
         ]
       }
+      sponsor_disbursements: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          disbursement_date: string
+          id: string
+          notes: string | null
+          payment_method: string | null
+          purpose: string
+          receipt_number: string | null
+          recorded_by: string | null
+          sponsor_id: string
+          student_fee_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          disbursement_date?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          purpose: string
+          receipt_number?: string | null
+          recorded_by?: string | null
+          sponsor_id: string
+          student_fee_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          disbursement_date?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          purpose?: string
+          receipt_number?: string | null
+          recorded_by?: string | null
+          sponsor_id?: string
+          student_fee_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sponsor_disbursements_sponsor_id_fkey"
+            columns: ["sponsor_id"]
+            isOneToOne: false
+            referencedRelation: "sponsors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsor_disbursements_student_fee_id_fkey"
+            columns: ["student_fee_id"]
+            isOneToOne: false
+            referencedRelation: "student_fees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sponsors: {
+        Row: {
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          currency: string
+          id: string
+          name: string
+          notes: string | null
+          organization: string | null
+          status: string
+          total_disbursed: number
+          total_pledged: number
+          updated_at: string
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          name: string
+          notes?: string | null
+          organization?: string | null
+          status?: string
+          total_disbursed?: number
+          total_pledged?: number
+          updated_at?: string
+        }
+        Update: {
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          organization?: string | null
+          status?: string
+          total_disbursed?: number
+          total_pledged?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       staff_contracts: {
         Row: {
           contract_type: string
