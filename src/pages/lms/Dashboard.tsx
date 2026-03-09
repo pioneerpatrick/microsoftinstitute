@@ -22,6 +22,8 @@ import AttendanceCard from '@/components/lms/dashboard/AttendanceCard';
 import PendingFeesCard from '@/components/lms/dashboard/PendingFeesCard';
 import UpcomingAssignmentsCard from '@/components/lms/dashboard/UpcomingAssignmentsCard';
 import RecentCertificatesCard from '@/components/lms/dashboard/RecentCertificatesCard';
+import StudentIDCard from '@/components/lms/dashboard/StudentIDCard';
+import QuickPayFeesCard from '@/components/lms/dashboard/QuickPayFeesCard';
 
 interface Enrollment {
   id: string;
