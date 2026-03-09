@@ -28,6 +28,7 @@ import ExpensesSection from '@/components/admin/ExpensesSection';
 import { downloadReceiptForPayment } from '@/components/admin/ReceiptPDF';
 import ReconciliationTable from '@/components/admin/ReconciliationTable';
 import SponsoredStudentsSection from '@/components/admin/SponsoredStudentsSection';
+import DonorsSection from '@/components/admin/DonorsSection';
 
 interface StudentFee {
   id: string;
