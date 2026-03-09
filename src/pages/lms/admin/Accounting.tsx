@@ -28,6 +28,7 @@ import ExpensesSection from '@/components/admin/ExpensesSection';
 import { downloadReceiptForPayment } from '@/components/admin/ReceiptPDF';
 import ReconciliationTable from '@/components/admin/ReconciliationTable';
 import SponsoredStudentsSection from '@/components/admin/SponsoredStudentsSection';
+import DonorsSection from '@/components/admin/DonorsSection';
 
 interface StudentFee {
   id: string;
@@ -879,6 +880,7 @@ const Accounting = () => {
             <TabsTrigger value="fees" className="text-xs sm:text-sm">Student Fees</TabsTrigger>
             <TabsTrigger value="payments" className="text-xs sm:text-sm">Payments</TabsTrigger>
             <TabsTrigger value="reconciliation" className="text-xs sm:text-sm">Reconciliation</TabsTrigger>
+            <TabsTrigger value="donors" className="text-xs sm:text-sm">Donors</TabsTrigger>
             <TabsTrigger value="sponsored" className="text-xs sm:text-sm">Sponsored</TabsTrigger>
             <TabsTrigger value="expenses" className="text-xs sm:text-sm">Expenses</TabsTrigger>
           </TabsList>
@@ -1058,6 +1060,10 @@ const Accounting = () => {
 
           <TabsContent value="reconciliation">
             <ReconciliationTable />
+          </TabsContent>
+
+          <TabsContent value="donors">
+            <DonorsSection />
           </TabsContent>
 
           <TabsContent value="sponsored">
