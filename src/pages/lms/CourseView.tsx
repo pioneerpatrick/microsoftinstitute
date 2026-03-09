@@ -172,6 +172,34 @@ const CourseView = () => {
 
     if (progressData) {
       setLessonProgress(progressData);
+      
+      // Check if all lessons are completed
+      if (modulesData) {
+        const allLessonIds = modulesData.flatMap(m => (m.lessons || []).map(l => l.id));
+        const completedIds = new Set(progressData.filter(p => p.completed).map(p => p.lesson_id));
+        setAllLessonsCompleted(allLessonIds.length > 0 && allLessonIds.every(id => completedIds.has(id)));
+      }
+    }
+
+    // Fetch exams for this course
+    const { data: examData } = await supabase
+      .from('exams')
+      .select('id, title, description, duration_minutes, max_score, passing_score, is_published')
+      .eq('course_id', courseId)
+      .eq('is_published', true);
+
+    if (examData) {
+      setExams(examData);
+    }
+
+    // Fetch user's exam attempts
+    const { data: attemptData } = await supabase
+      .from('exam_attempts')
+      .select('id, exam_id, score, passed, completed_at')
+      .eq('user_id', user.id);
+
+    if (attemptData) {
+      setExamAttempts(attemptData as ExamAttempt[]);
     }
 
     setIsLoading(false);
