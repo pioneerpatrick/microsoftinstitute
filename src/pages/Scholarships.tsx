@@ -316,7 +316,7 @@ const Scholarships = () => {
                       </div>
                       <div className="space-y-2">
                         <Label>Education Level *</Label>
-                        <Select required value={formData.education_level} onValueChange={(v) => setFormData({ ...formData, education_level: v })}>
+                        <Select value={formData.education_level} onValueChange={(v) => setFormData({ ...formData, education_level: v })}>
                           <SelectTrigger><SelectValue placeholder="Select level" /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="Primary">Primary</SelectItem>
