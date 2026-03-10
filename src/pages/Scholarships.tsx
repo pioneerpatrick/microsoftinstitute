@@ -89,6 +89,12 @@ const Scholarships = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    if (!formData.course || !formData.education_level) {
+      toast({ title: "Missing Fields", description: "Please select a course and education level.", variant: "destructive" });
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const { error } = await supabase.from("scholarship_applications").insert([formData]);
       if (error) throw error;
