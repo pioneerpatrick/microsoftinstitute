@@ -305,7 +305,7 @@ const Scholarships = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label>Course Interested In *</Label>
-                        <Select required value={formData.course} onValueChange={(v) => setFormData({ ...formData, course: v })}>
+                        <Select value={formData.course} onValueChange={(v) => setFormData({ ...formData, course: v })}>
                           <SelectTrigger><SelectValue placeholder="Select a course" /></SelectTrigger>
                           <SelectContent>
                             {courses.map((c) => (
