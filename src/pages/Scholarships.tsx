@@ -89,6 +89,12 @@ const Scholarships = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    if (!formData.course || !formData.education_level) {
+      toast({ title: "Missing Fields", description: "Please select a course and education level.", variant: "destructive" });
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const { error } = await supabase.from("scholarship_applications").insert([formData]);
       if (error) throw error;
@@ -305,7 +311,7 @@ const Scholarships = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label>Course Interested In *</Label>
-                        <Select required value={formData.course} onValueChange={(v) => setFormData({ ...formData, course: v })}>
+                        <Select value={formData.course} onValueChange={(v) => setFormData({ ...formData, course: v })}>
                           <SelectTrigger><SelectValue placeholder="Select a course" /></SelectTrigger>
                           <SelectContent>
                             {courses.map((c) => (
@@ -316,7 +322,7 @@ const Scholarships = () => {
                       </div>
                       <div className="space-y-2">
                         <Label>Education Level *</Label>
-                        <Select required value={formData.education_level} onValueChange={(v) => setFormData({ ...formData, education_level: v })}>
+                        <Select value={formData.education_level} onValueChange={(v) => setFormData({ ...formData, education_level: v })}>
                           <SelectTrigger><SelectValue placeholder="Select level" /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="Primary">Primary</SelectItem>
