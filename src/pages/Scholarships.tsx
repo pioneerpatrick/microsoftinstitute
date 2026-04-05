@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { allCourseNames } from "@/data/courses";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -53,20 +54,7 @@ const partners = [
   { icon: Heart, label: "Philanthropic Organizations", desc: "Foundations dedicated to education and opportunity" },
 ];
 
-const courses = [
-  "Artificial Intelligence",
-  "Computer Programming",
-  "Software Development",
-  "Web Development",
-  "Cybersecurity",
-  "Digital Marketing",
-  "ICT Support",
-  "Networking",
-  "Mobile App Development",
-  "Python Programming",
-  "Microsoft Office",
-  "Computer Applications",
-];
+const courses = allCourseNames;
 
 const Scholarships = () => {
   const { toast } = useToast();

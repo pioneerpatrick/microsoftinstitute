@@ -74,42 +74,17 @@ interface Student {
   email: string | null;
 }
 
-// Course data from website
-const websiteCourses = [
-  { school: "School of ICT & Digital Technology", courses: [
-    { name: "Information Technology (IT)", level: "Certificate", fee: 29000 },
-    { name: "Computer Programming", level: "Certificate", fee: 30000 },
-    { name: "Web Design & Development", level: "Certificate", fee: 28000 },
-    { name: "Software Development", level: "Craft", fee: 30000 },
-    { name: "Mobile App Development", level: "Certificate", fee: 30000 },
-    { name: "Computer Applications", level: "Artisan", fee: 18000 },
-    { name: "Computerized Accounting", level: "Artisan", fee: 22000 },
-    { name: "Database Management", level: "Certificate", fee: 27000 },
-    { name: "Networking (Theory-Based)", level: "Certificate", fee: 27000 },
-    { name: "Cyber Security (Fundamentals)", level: "Certificate", fee: 30000 },
-  ]},
-  { school: "School of Business & Management", courses: [
-    { name: "Business Management", level: "Certificate", fee: 27500 },
-    { name: "Business Administration", level: "Certificate", fee: 28000 },
-    { name: "Human Resource Management", level: "Craft", fee: 29000 },
-    { name: "Accounting & Finance", level: "Certificate", fee: 29000 },
-    { name: "Banking & Finance", level: "Certificate", fee: 29000 },
-    { name: "Entrepreneurship", level: "Certificate", fee: 22000 },
-    { name: "Project Management", level: "Certificate", fee: 27000 },
-  ]},
-  { school: "Professional & Specialized Courses", courses: [
-    { name: "Digital Marketing", level: "Professional", fee: 30000 },
-    { name: "Artificial Intelligence (AI)", level: "Professional", fee: 15000, isMonthly: true },
-    { name: "English Language Learning", level: "Certificate", fee: 5000, isMonthly: true },
-  ]},
-  { school: "Education, Administration & Office Skills", courses: [
-    { name: "Office Administration", level: "Certificate", fee: 27000 },
-    { name: "Secretarial Studies", level: "Certificate", fee: 27000 },
-    { name: "Records & Information Management", level: "Certificate", fee: 26000 },
-    { name: "Virtual Assistance", level: "Certificate", fee: 18000 },
-    { name: "Business Communication Skills", level: "Certificate", fee: 18000 },
-  ]},
-];
+// Course data from shared catalog
+import { schoolCatalog } from "@/data/courses";
+const websiteCourses = schoolCatalog.map((school) => ({
+  school: school.name,
+  courses: school.courses.map((c) => ({
+    name: c.name,
+    level: c.level,
+    fee: c.feeAmount,
+    isMonthly: c.isMonthly,
+  })),
+}));
 
 const Accounting = () => {
   const { user, loading, isAdmin } = useAuth();

@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { allCourseNames } from "@/data/courses";
 
 const Apply = () => {
   const { toast } = useToast();
@@ -19,32 +20,7 @@ const Apply = () => {
     education: "",
   });
 
-  const courses = [
-    "Information Technology (IT)",
-    "Computer Programming",
-    "Web Design & Development",
-    "Software Development",
-    "Mobile App Development",
-    "Computer Applications",
-    "Computerized Accounting",
-    "Database Management",
-    "Networking",
-    "Cyber Security",
-    "Business Management",
-    "Business Administration",
-    "Human Resource Management",
-    "Accounting & Finance",
-    "Banking & Finance",
-    "Entrepreneurship",
-    "Project Management",
-    "Digital Marketing",
-    "Artificial Intelligence (AI)",
-    "Office Administration",
-    "Secretarial Studies",
-    "Records & Information Management",
-    "Virtual Assistance",
-    "Business Communication Skills",
-  ];
+  const courses = allCourseNames;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
