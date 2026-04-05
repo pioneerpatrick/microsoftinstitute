@@ -122,9 +122,14 @@ const Courses = () => {
                     <h3 className="text-lg font-heading font-semibold text-foreground">
                       {school.name}
                     </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {school.courses.length} courses available
-                    </p>
+                     <p className="text-sm text-muted-foreground">
+                       {school.courses.length} courses available
+                       {(school as School).note === "physical" && (
+                         <span className="ml-2 inline-block bg-secondary/20 text-secondary text-xs font-semibold px-2 py-0.5 rounded">
+                           In-Person / Physical Classes
+                         </span>
+                       )}
+                     </p>
                   </div>
                 </div>
                 {expandedSchool === schoolIndex ? (
