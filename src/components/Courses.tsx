@@ -58,6 +58,21 @@ const Courses = () => {
         { name: "Business Communication Skills", level: "Certificate", duration: "Flexible", fee: "18,000" },
       ],
     },
+    {
+      name: "Welding & Fabrication (NITA Certified – Physical Classes)",
+      icon: Monitor,
+      color: "bg-secondary",
+      courses: [
+        { name: "Arc Welding (SMAW/MMA)", level: "Artisan", duration: "3 Months", fee: "35,000" },
+        { name: "Gas Welding & Cutting (Oxy-Acetylene)", level: "Artisan", duration: "3 Months", fee: "35,000" },
+        { name: "TIG Welding (GTAW)", level: "Artisan", duration: "3 Months", fee: "40,000" },
+        { name: "MIG/MAG Welding (GMAW)", level: "Artisan", duration: "3 Months", fee: "40,000" },
+        { name: "Structural & Pipe Welding", level: "Artisan", duration: "4 Months", fee: "45,000" },
+        { name: "Metal Fabrication & Sheet Metal Work", level: "Artisan", duration: "3 Months", fee: "38,000" },
+        { name: "Welding Inspection & Testing (Basics)", level: "Artisan", duration: "2 Months", fee: "30,000" },
+      ],
+      note: "physical",
+    },
   ];
 
   const scrollToApply = () => {
