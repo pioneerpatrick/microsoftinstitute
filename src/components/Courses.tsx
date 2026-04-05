@@ -5,6 +5,15 @@ import { Button } from "@/components/ui/button";
 const Courses = () => {
   const [expandedSchool, setExpandedSchool] = useState<number | null>(0);
 
+  type SchoolCourse = { name: string; level: string; duration: string; fee: string };
+  type School = {
+    name: string;
+    icon: any;
+    color: string;
+    courses: SchoolCourse[];
+    note?: string;
+  };
+
   const schools = [
     {
       name: "School of ICT & Digital Technology",
