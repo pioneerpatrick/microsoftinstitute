@@ -8,6 +8,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { allCourseNames } from "@/data/courses";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
