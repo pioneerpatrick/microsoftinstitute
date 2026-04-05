@@ -141,6 +141,11 @@ const Courses = () => {
 
               {expandedSchool === schoolIndex && (
                 <div className="border-t border-border">
+                  {(school as School).note === "physical" && (
+                    <div className="bg-secondary/10 border-b border-border px-6 py-3 text-sm text-secondary font-medium">
+                      🏭 This department offers <strong>physical/in-person classes only</strong> at our campus. All courses are NITA (National Industrial Training Authority) certified.
+                    </div>
+                  )}
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead className="bg-muted/50">
