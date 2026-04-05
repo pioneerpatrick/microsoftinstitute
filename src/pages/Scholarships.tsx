@@ -56,20 +56,7 @@ const partners = [
   { icon: Heart, label: "Philanthropic Organizations", desc: "Foundations dedicated to education and opportunity" },
 ];
 
-const courses = [
-  "Artificial Intelligence",
-  "Computer Programming",
-  "Software Development",
-  "Web Development",
-  "Cybersecurity",
-  "Digital Marketing",
-  "ICT Support",
-  "Networking",
-  "Mobile App Development",
-  "Python Programming",
-  "Microsoft Office",
-  "Computer Applications",
-];
+const courses = allCourseNames;
 
 const Scholarships = () => {
   const { toast } = useToast();
