@@ -5,6 +5,15 @@ import { Button } from "@/components/ui/button";
 const Courses = () => {
   const [expandedSchool, setExpandedSchool] = useState<number | null>(0);
 
+  type SchoolCourse = { name: string; level: string; duration: string; fee: string };
+  type School = {
+    name: string;
+    icon: any;
+    color: string;
+    courses: SchoolCourse[];
+    note?: string;
+  };
+
   const schools = [
     {
       name: "School of ICT & Digital Technology",
@@ -58,6 +67,21 @@ const Courses = () => {
         { name: "Business Communication Skills", level: "Certificate", duration: "Flexible", fee: "18,000" },
       ],
     },
+    {
+      name: "Welding & Fabrication (NITA Certified – Physical Classes)",
+      icon: Monitor,
+      color: "bg-secondary",
+      courses: [
+        { name: "Arc Welding (SMAW/MMA)", level: "Artisan", duration: "3 Months", fee: "35,000" },
+        { name: "Gas Welding & Cutting (Oxy-Acetylene)", level: "Artisan", duration: "3 Months", fee: "35,000" },
+        { name: "TIG Welding (GTAW)", level: "Artisan", duration: "3 Months", fee: "40,000" },
+        { name: "MIG/MAG Welding (GMAW)", level: "Artisan", duration: "3 Months", fee: "40,000" },
+        { name: "Structural & Pipe Welding", level: "Artisan", duration: "4 Months", fee: "45,000" },
+        { name: "Metal Fabrication & Sheet Metal Work", level: "Artisan", duration: "3 Months", fee: "38,000" },
+        { name: "Welding Inspection & Testing (Basics)", level: "Artisan", duration: "2 Months", fee: "30,000" },
+      ],
+      note: "physical",
+    },
   ];
 
   const scrollToApply = () => {
@@ -98,9 +122,14 @@ const Courses = () => {
                     <h3 className="text-lg font-heading font-semibold text-foreground">
                       {school.name}
                     </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {school.courses.length} courses available
-                    </p>
+                     <p className="text-sm text-muted-foreground">
+                       {school.courses.length} courses available
+                       {(school as School).note === "physical" && (
+                         <span className="ml-2 inline-block bg-secondary/20 text-secondary text-xs font-semibold px-2 py-0.5 rounded">
+                           In-Person / Physical Classes
+                         </span>
+                       )}
+                     </p>
                   </div>
                 </div>
                 {expandedSchool === schoolIndex ? (
@@ -112,6 +141,11 @@ const Courses = () => {
 
               {expandedSchool === schoolIndex && (
                 <div className="border-t border-border">
+                  {(school as School).note === "physical" && (
+                    <div className="bg-secondary/10 border-b border-border px-6 py-3 text-sm text-secondary font-medium">
+                      🏭 This department offers <strong>physical/in-person classes only</strong> at our campus. All courses are NITA (National Industrial Training Authority) certified.
+                    </div>
+                  )}
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead className="bg-muted/50">
