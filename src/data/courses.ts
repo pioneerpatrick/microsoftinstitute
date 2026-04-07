@@ -35,6 +35,7 @@ export const schoolCatalog: School[] = [
       { name: "Database Management", level: "Certificate", duration: "2 Terms", fee: "27,000", feeAmount: 27000 },
       { name: "Networking (Theory-Based)", level: "Certificate", duration: "2 Terms", fee: "27,000", feeAmount: 27000 },
       { name: "Cyber Security (Fundamentals)", level: "Certificate", duration: "2 Terms", fee: "30,000", feeAmount: 30000 },
+      { name: "Data Science", level: "Diploma", duration: "3 Terms (1 Year)", fee: "30,000", feeAmount: 30000 },
     ],
   },
   {
