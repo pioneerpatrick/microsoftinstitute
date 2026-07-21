@@ -70,14 +70,14 @@ const Contact = () => {
     {
       icon: Phone,
       title: "Call Us",
-      details: ["+254 711 577 338"],
-      link: "tel:+254711577338",
+      details: ["+254 723 821 798"],
+      link: "tel:+254723821798",
     },
     {
       icon: Mail,
       title: "Email Us",
-      details: ["admissions@microsoftinstitute.africa"],
-      link: "mailto:admissions@microsoftinstitute.africa",
+      details: ["info@microsoftinstitute.africa"],
+      link: "mailto:info@microsoftinstitute.africa",
     },
     {
       icon: Clock,
@@ -88,7 +88,7 @@ const Contact = () => {
     {
       icon: MapPin,
       title: "Location",
-      details: ["100% Online Institution", "Serving All of Africa"],
+      details: ["100% Online Academy", "Serving All of Africa"],
       link: null,
     },
   ];
@@ -147,7 +147,7 @@ const Contact = () => {
               <p className="text-sm text-muted-foreground mb-4">Need immediate assistance? Reach us directly:</p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <a
-                  href="https://wa.me/254711577338"
+                  href="https://wa.me/254723821798"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-2 bg-accent text-accent-foreground px-5 py-3 rounded-lg font-medium hover:opacity-90 transition-all shadow-sm hover:shadow-md flex-1"
@@ -156,7 +156,7 @@ const Contact = () => {
                   WhatsApp Us
                 </a>
                 <a
-                  href="tel:+254711577338"
+                  href="tel:+254723821798"
                   className="inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-5 py-3 rounded-lg font-medium hover:opacity-90 transition-all shadow-sm hover:shadow-md flex-1"
                 >
                   <Phone className="h-4 w-4" />
