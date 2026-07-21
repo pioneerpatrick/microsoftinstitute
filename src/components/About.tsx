@@ -15,11 +15,12 @@ const About = () => {
         {/* About Institute */}
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-heading font-bold text-foreground mb-4">
-            About <span className="text-primary">Microsoft Training Institute</span>
+            About <span className="text-primary">Microsoft Institute Africa</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-            We are Africa's leading fully online training institute, dedicated to empowering individuals with 
-            cutting-edge digital skills and professional certifications that open doors to global opportunities.
+            Africa's Remote Work & AI Skills Academy. We equip students with the AI, digital, and
+            remote-work skills that unlock global career opportunities — all delivered online with
+            live instructors, real projects, and career coaching.
           </p>
         </div>
 

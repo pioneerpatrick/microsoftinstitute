@@ -12,8 +12,9 @@ const Navbar = () => {
 
   const navLinks = [
     { name: "Home", href: "#home" },
+    { name: "Programs", href: "#flagship" },
     { name: "About", href: "#about" },
-    { name: "Courses", href: "#courses" },
+    { name: "Full Catalog", href: "#courses" },
     { name: "Scholarships", href: "/scholarships", isPage: true },
     { name: "Contact", href: "#contact" },
   ];
@@ -38,13 +39,13 @@ const Navbar = () => {
       <div className="bg-primary text-primary-foreground py-2 px-4">
         <div className="container mx-auto flex flex-wrap justify-center md:justify-between items-center text-sm gap-2">
           <div className="flex items-center gap-2 sm:gap-4">
-            <a href="tel:+254711577338" className="flex items-center gap-1 hover:text-secondary transition-colors" title="+254 711 577 338">
+            <a href="tel:+254723821798" className="flex items-center gap-1 hover:text-secondary transition-colors" title="+254 723 821 798">
               <Phone className="h-4 w-4" />
-              <span className="hidden sm:inline">+254 711 577 338</span>
+              <span className="hidden sm:inline">+254 723 821 798</span>
             </a>
-            <a href="mailto:admissions@microsoftinstitute.africa" className="flex items-center gap-1 hover:text-secondary transition-colors" title="admissions@microsoftinstitute.africa">
+            <a href="mailto:info@microsoftinstitute.africa" className="flex items-center gap-1 hover:text-secondary transition-colors" title="info@microsoftinstitute.africa">
               <Mail className="h-4 w-4" />
-              <span className="hidden sm:inline">admissions@microsoftinstitute.africa</span>
+              <span className="hidden sm:inline">info@microsoftinstitute.africa</span>
             </a>
           </div>
           <div className="flex items-center gap-4">

@@ -13,19 +13,20 @@ const Footer = () => {
 
   const quickLinks = [
     { name: "Home", href: "#home" },
+    { name: "Flagship Programs", href: "#flagship" },
     { name: "About Us", href: "#about" },
-    { name: "Courses", href: "#courses" },
+    { name: "Full Catalog", href: "#courses" },
     { name: "Apply Now", href: "#apply" },
     { name: "Contact", href: "#contact" },
   ];
 
   const courses = [
-    "Information Technology",
-    "Web Development",
-    "Cyber Security",
-    "Business Management",
-    "Digital Marketing",
-    "Artificial Intelligence",
+    "Virtual Assistant with AI",
+    "AI Digital Marketing",
+    "Data Analytics & Power BI",
+    "Graphic Design with AI",
+    "Microsoft 365 Administration",
+    "Cyber Security Fundamentals",
   ];
 
   return (
@@ -36,8 +37,8 @@ const Footer = () => {
           <div className="lg:col-span-1">
             <img src={logo} alt="Microsoft Training Institute" className="h-20 w-auto mb-4 rounded-xl" />
             <p className="text-primary-foreground/80 text-sm leading-relaxed mb-4">
-              Africa's premier fully online training institute, empowering learners with 
-              world-class digital skills and professional certifications.
+              Africa's Remote Work & AI Skills Academy — empowering learners with the AI,
+              digital, and remote work skills global employers hire for.
             </p>
             <p className="text-secondary font-semibold italic">"Quest for Excellence"</p>
           </div>
@@ -82,20 +83,31 @@ const Footer = () => {
             <ul className="space-y-4">
               <li>
                 <a
-                  href="tel:+254711577338"
+                  href="tel:+254723821798"
                   className="flex items-center gap-3 text-primary-foreground/80 hover:text-secondary transition-colors"
                 >
                   <Phone className="h-4 w-4 text-secondary" />
-                  <span className="text-sm">+254 711 577 338</span>
+                  <span className="text-sm">+254 723 821 798</span>
                 </a>
               </li>
               <li>
                 <a
-                  href="mailto:admissions@microsoftinstitute.africa"
+                  href="https://wa.me/254723821798"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 text-primary-foreground/80 hover:text-secondary transition-colors"
+                >
+                  <Phone className="h-4 w-4 text-secondary" />
+                  <span className="text-sm">WhatsApp: 0723 821 798</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="mailto:info@microsoftinstitute.africa"
                   className="flex items-center gap-3 text-primary-foreground/80 hover:text-secondary transition-colors"
                 >
                   <Mail className="h-4 w-4 text-secondary" />
-                  <span className="text-sm break-all">admissions@microsoftinstitute.africa</span>
+                  <span className="text-sm break-all">info@microsoftinstitute.africa</span>
                 </a>
               </li>
               <li className="flex items-start gap-3 text-primary-foreground/80">
@@ -112,7 +124,7 @@ const Footer = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-primary-foreground/70 text-sm text-center md:text-left">
-              © {currentYear} Microsoft Training Institute Africa. All rights reserved.
+              © {currentYear} Microsoft Institute Africa. All rights reserved.
             </p>
             <div className="flex gap-6 text-sm">
               <a href="#" className="text-primary-foreground/70 hover:text-secondary transition-colors">

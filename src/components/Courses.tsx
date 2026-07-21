@@ -17,12 +17,13 @@ const Courses = () => {
     <section id="courses" className="py-20 bg-muted/30">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-heading font-bold text-foreground mb-4">
-            Our <span className="text-primary">Programs</span>
+          <h2 id="courses-heading" className="text-3xl md:text-4xl font-heading font-bold text-foreground mb-4">
+            Full <span className="text-primary">Program Catalog</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Choose from our wide range of professionally designed courses. All programs are fully online 
-            with flexible scheduling. Fees are payable per term (1 Term = 3 Months).
+            Beyond our flagship Remote Work Academy programs, we offer a full catalog across ICT,
+            Business, Professional Skills and NITA-certified Welding. Fees are payable per term
+            (1 Term = 3 Months).
           </p>
         </div>
 
