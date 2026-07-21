@@ -1,4 +1,4 @@
-import { Monitor, Briefcase, TrendingUp, FileText, Wrench } from "lucide-react";
+import { Monitor, Briefcase, TrendingUp, FileText, Wrench, Sparkles } from "lucide-react";
 
 export interface CourseItem {
   name: string;
@@ -20,6 +20,19 @@ export interface School {
 }
 
 export const schoolCatalog: School[] = [
+  {
+    name: "Remote Work Academy (Flagship)",
+    icon: Sparkles,
+    color: "bg-secondary",
+    courses: [
+      { name: "Virtual Assistant with AI", level: "Professional", duration: "2 Months", fee: "20,000", feeAmount: 20000 },
+      { name: "AI Digital Marketing", level: "Professional", duration: "3 Months", fee: "30,000", feeAmount: 30000 },
+      { name: "Data Analytics & Power BI", level: "Professional", duration: "3 Months", fee: "30,000", feeAmount: 30000 },
+      { name: "Graphic Design with AI", level: "Professional", duration: "2 Months", fee: "22,000", feeAmount: 22000 },
+      { name: "Microsoft 365 Administration", level: "Professional", duration: "3 Months", fee: "28,000", feeAmount: 28000 },
+      { name: "Remote Customer Support Specialist", level: "Professional", duration: "2 Months", fee: "18,000", feeAmount: 18000 },
+    ],
+  },
   {
     name: "School of ICT & Digital Technology",
     icon: Monitor,
