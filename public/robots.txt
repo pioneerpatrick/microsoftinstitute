@@ -1,4 +1,4 @@
-# Microsoft Training Institute Africa - robots.txt
+# Techno Panaly Institute of Technology - robots.txt
 # https://microsoftinstitute.lovable.app
 
 User-agent: Googlebot

@@ -35,7 +35,7 @@ const Footer = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <img src={logo} alt="Microsoft Training Institute" className="h-20 w-auto mb-4 rounded-xl" />
+            <img src={logo} alt="Techno Panaly Institute of Technology" className="h-20 w-auto mb-4 rounded-xl" />
             <p className="text-primary-foreground/80 text-sm leading-relaxed mb-4">
               Africa's Remote Work & AI Skills Academy — empowering learners with the AI,
               digital, and remote work skills global employers hire for.
@@ -124,7 +124,7 @@ const Footer = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-primary-foreground/70 text-sm text-center md:text-left">
-              © {currentYear} Microsoft Institute Africa. All rights reserved.
+              © {currentYear} Techno Panaly Institute of Technology. All rights reserved.
             </p>
             <div className="flex gap-6 text-sm">
               <a href="#" className="text-primary-foreground/70 hover:text-secondary transition-colors">

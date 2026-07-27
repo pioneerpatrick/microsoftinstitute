@@ -158,7 +158,7 @@ const DonorsSection = () => {
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(18);
     doc.setFont('helvetica', 'bold');
-    doc.text('Microsoft Institute of Technology', pageWidth / 2, 15, { align: 'center' });
+    doc.text('Techno Panaly Institute of Technology', pageWidth / 2, 15, { align: 'center' });
     doc.setFontSize(12);
     doc.text(sponsor ? `Sponsor Audit Report: ${sponsor.name}` : 'Sponsors & Donors Financial Report', pageWidth / 2, 27, { align: 'center' });
     doc.setFontSize(9);
@@ -322,7 +322,7 @@ const DonorsSection = () => {
       doc.setPage(i);
       doc.setFontSize(8);
       doc.setTextColor(128, 128, 128);
-      doc.text(`Page ${i} of ${pages} | Confidential - Microsoft Institute of Technology`, pageWidth / 2, 290, { align: 'center' });
+      doc.text(`Page ${i} of ${pages} | Confidential - Techno Panaly Institute of Technology`, pageWidth / 2, 290, { align: 'center' });
     }
 
     doc.save(sponsor ? `sponsor-audit-${sponsor.name.replace(/\s+/g, '-').toLowerCase()}-${format(new Date(), 'yyyy-MM-dd')}.pdf` : `donors-financial-report-${format(new Date(), 'yyyy-MM-dd')}.pdf`);

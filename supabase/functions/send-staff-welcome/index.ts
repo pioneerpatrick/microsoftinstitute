@@ -27,9 +27,9 @@ const handler = async (req: Request): Promise<Response> => {
     const lmsUrl = "https://microsoftinstitute.lovable.app/lms/login";
 
     const emailResponse = await resend.emails.send({
-      from: "Microsoft Institute Africa <admissions@mail.microsoftinstitute.africa>",
+      from: "Techno Panaly Institute of Technology <admissions@mail.microsoftinstitute.africa>",
       to: [email],
-      subject: `Welcome to Microsoft Institute Africa - ${roleTitle} Account Created`,
+      subject: `Welcome to Techno Panaly Institute of Technology - ${roleTitle} Account Created`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -53,7 +53,7 @@ const handler = async (req: Request): Promise<Response> => {
             <div class="content">
               <p>Dear <strong>${fullName}</strong>,</p>
               
-              <p>Welcome to <strong>Microsoft Institute Africa</strong>! Your ${roleTitle.toLowerCase()} account has been successfully created.</p>
+              <p>Welcome to <strong>Techno Panaly Institute of Technology</strong>! Your ${roleTitle.toLowerCase()} account has been successfully created.</p>
               
               <div class="highlight">
                 <h3 style="margin-top: 0;">Your Role: ${roleTitle}</h3>
@@ -93,10 +93,10 @@ const handler = async (req: Request): Promise<Response> => {
               
               <p>Need assistance? Contact HR at <strong>admissions@microsoftinstitute.africa</strong> or call <strong>+254 711 577 338</strong></p>
               
-              <p>Best regards,<br><strong>Microsoft Institute Africa Administration</strong></p>
+              <p>Best regards,<br><strong>Techno Panaly Institute of Technology Administration</strong></p>
             </div>
             <div class="footer">
-              <p>© ${new Date().getFullYear()} Microsoft Institute Africa. All rights reserved.</p>
+              <p>© ${new Date().getFullYear()} Techno Panaly Institute of Technology. All rights reserved.</p>
             </div>
           </div>
         </body>

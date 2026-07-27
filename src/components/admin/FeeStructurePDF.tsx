@@ -54,7 +54,7 @@ const FeeStructurePDF = () => {
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
-    doc.text('MICROSOFT TRAINING INSTITUTE', pageWidth / 2, 18, { align: 'center' });
+    doc.text('TECHNO PANALY INSTITUTE OF TECHNOLOGY', pageWidth / 2, 18, { align: 'center' });
     
     doc.setFontSize(14);
     doc.setFont('helvetica', 'normal');
@@ -189,7 +189,7 @@ const FeeStructurePDF = () => {
     yPos = 280;
     doc.setFontSize(8);
     doc.setTextColor(128, 128, 128);
-    doc.text('Microsoft Training Institute | www.microsoftinstitute.co.ke', pageWidth / 2, yPos, { align: 'center' });
+    doc.text('Techno Panaly Institute of Technology | www.microsoftinstitute.co.ke', pageWidth / 2, yPos, { align: 'center' });
     doc.text(`Generated on ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}`, pageWidth / 2, yPos + 5, { align: 'center' });
     
     // Save

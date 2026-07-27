@@ -22,9 +22,9 @@ const handler = async (req: Request): Promise<Response> => {
     const { email }: NewsletterEmailRequest = await req.json();
 
     const emailResponse = await resend.emails.send({
-      from: "Microsoft Institute Africa <admissions@mail.microsoftinstitute.africa>",
+      from: "Techno Panaly Institute of Technology <admissions@mail.microsoftinstitute.africa>",
       to: [email],
-      subject: "Welcome to Microsoft Institute Africa Newsletter! 🎓",
+      subject: "Welcome to Techno Panaly Institute of Technology Newsletter! 🎓",
       html: `
         <!DOCTYPE html>
         <html>
@@ -51,7 +51,7 @@ const handler = async (req: Request): Promise<Response> => {
             <div class="content">
               <p>Hello there!</p>
               
-              <p>Thank you for subscribing to the <strong>Microsoft Institute Africa</strong> newsletter! You've joined a community of learners committed to advancing their careers through quality education.</p>
+              <p>Thank you for subscribing to the <strong>Techno Panaly Institute of Technology</strong> newsletter! You've joined a community of learners committed to advancing their careers through quality education.</p>
               
               <div class="highlight">
                 <h3 style="margin-top: 0;">🎁 What you'll receive:</h3>
@@ -73,10 +73,10 @@ const handler = async (req: Request): Promise<Response> => {
               
               <p>Questions? Contact us anytime at <a href="mailto:admissions@microsoftinstitute.africa">admissions@microsoftinstitute.africa</a></p>
               
-              <p>Best regards,<br><strong>Microsoft Institute Africa Team</strong></p>
+              <p>Best regards,<br><strong>Techno Panaly Institute of Technology Team</strong></p>
             </div>
             <div class="footer">
-              <p>© ${new Date().getFullYear()} Microsoft Institute Africa. All rights reserved.</p>
+              <p>© ${new Date().getFullYear()} Techno Panaly Institute of Technology. All rights reserved.</p>
               <p>You're receiving this because you subscribed to our newsletter.</p>
             </div>
           </div>

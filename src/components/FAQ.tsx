@@ -26,7 +26,7 @@ const FAQ = () => {
     {
       question: "Is the certificate recognized?",
       answer:
-        "Yes. You receive a Microsoft Institute Africa Certificate of Completion with a unique serial and QR code that anyone can verify online at microsoftinstitute.africa/verify. Select programs also prepare you for globally recognized Microsoft certification exams.",
+        "Yes. You receive a Techno Panaly Institute of Technology Certificate of Completion with a unique serial and QR code that anyone can verify online at microsoftinstitute.africa/verify. Select programs also prepare you for globally recognized Microsoft certification exams.",
     },
     {
       question: "How much do programs cost and can I pay in installments?",

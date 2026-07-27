@@ -25,7 +25,7 @@ const sendConfirmationEmail = async (
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'Microsoft Institute <noreply@microsoftinstitute.co.ke>',
+      from: 'Techno Panaly Institute of Technology <noreply@microsoftinstitute.co.ke>',
       to: [to],
       subject: `Payment Confirmation - Receipt ${receiptNumber}`,
       html: `
@@ -87,7 +87,7 @@ const sendConfirmationEmail = async (
               <p>You can download your official receipt from the student portal.</p>
             </div>
             <div class="footer">
-              <p>Microsoft Training Institute</p>
+              <p>Techno Panaly Institute of Technology</p>
               <p>This is an automated confirmation. Please keep this for your records.</p>
             </div>
           </div>

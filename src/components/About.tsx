@@ -15,7 +15,7 @@ const About = () => {
         {/* About Institute */}
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-heading font-bold text-foreground mb-4">
-            About <span className="text-primary">Microsoft Institute Africa</span>
+            About <span className="text-primary">Techno Panaly Institute of Technology</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
             Africa's Remote Work & AI Skills Academy. We equip students with the AI, digital, and

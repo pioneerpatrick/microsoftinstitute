@@ -66,7 +66,7 @@ const handler = async (req: Request): Promise<Response> => {
     const isPaidInFull = balance <= 0;
 
     const emailResponse = await resend.emails.send({
-      from: "Microsoft Training Institute <admissions@mail.microsoftinstitute.africa>",
+      from: "Techno Panaly Institute of Technology <admissions@mail.microsoftinstitute.africa>",
       to: [email],
       subject: `Payment Receipt - ${receiptNumber}`,
       html: `
@@ -82,7 +82,7 @@ const handler = async (req: Request): Promise<Response> => {
             <div style="background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
               <!-- Header -->
               <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 30px; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 24px;">🎓 Microsoft Training Institute</h1>
+                <h1 style="color: white; margin: 0; font-size: 24px;">🎓 Techno Panaly Institute of Technology</h1>
                 <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0; font-style: italic;">"Quest for Excellence"</p>
               </div>
 
@@ -174,26 +174,26 @@ const handler = async (req: Request): Promise<Response> => {
                 <div style="text-align: center; margin: 30px 0;">
                   <div style="display: inline-block; border: 4px solid #10b981; border-radius: 10px; padding: 15px 30px; transform: rotate(-5deg);">
                     <p style="margin: 0; color: #10b981; font-size: 28px; font-weight: bold; letter-spacing: 3px;">PAID</p>
-                    <p style="margin: 5px 0 0; color: #10b981; font-size: 10px; text-transform: uppercase;">Microsoft Training Institute</p>
+                    <p style="margin: 5px 0 0; color: #10b981; font-size: 10px; text-transform: uppercase;">Techno Panaly Institute of Technology</p>
                   </div>
                 </div>
                 ` : ''}
 
                 <p style="color: #64748b; font-size: 12px; text-align: center; margin-top: 20px;">
-                  This is an official receipt from Microsoft Training Institute.<br>
+                  This is an official receipt from Techno Panaly Institute of Technology.<br>
                   Please keep this for your records.
                 </p>
               </div>
 
               <!-- Footer -->
               <div style="background-color: #1e3a5f; padding: 25px; text-align: center;">
-                <p style="color: white; font-size: 14px; font-weight: bold; margin: 0;">Microsoft Training Institute</p>
+                <p style="color: white; font-size: 14px; font-weight: bold; margin: 0;">Techno Panaly Institute of Technology</p>
                 <p style="color: rgba(255,255,255,0.8); font-size: 12px; margin: 8px 0 0;">Nairobi, Kenya</p>
                 <p style="color: rgba(255,255,255,0.8); font-size: 12px; margin: 8px 0 0;">
                   📧 finance@microsoftinstitute.africa | 📱 +254 711 577 338
                 </p>
                 <p style="color: rgba(255,255,255,0.6); font-size: 11px; margin: 15px 0 0;">
-                  © ${new Date().getFullYear()} Microsoft Training Institute. All rights reserved.
+                  © ${new Date().getFullYear()} Techno Panaly Institute of Technology. All rights reserved.
                 </p>
               </div>
             </div>

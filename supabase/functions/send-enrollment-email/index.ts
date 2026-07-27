@@ -52,7 +52,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Sending enrollment email to ${studentEmail} for course: ${courseTitle}`);
 
-    const institutionName = "Microsoft Training Institute";
+    const institutionName = "Techno Panaly Institute of Technology";
     const institutionPhone = "+254 711 577 338";
     const lmsUrl = "https://microsoftinstitute.lovable.app/lms/login";
 
@@ -61,7 +61,7 @@ const handler = async (req: Request): Promise<Response> => {
     };
 
     const emailResponse = await resend.emails.send({
-      from: "Microsoft Training Institute <admissions@mail.microsoftinstitute.africa>",
+      from: "Techno Panaly Institute of Technology <admissions@mail.microsoftinstitute.africa>",
       to: [studentEmail],
       subject: `🎓 Welcome to ${institutionName} - Enrollment Confirmed!`,
       html: `

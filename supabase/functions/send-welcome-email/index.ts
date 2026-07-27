@@ -23,9 +23,9 @@ const handler = async (req: Request): Promise<Response> => {
     const { email, fullName }: WelcomeEmailRequest = await req.json();
 
     const emailResponse = await resend.emails.send({
-      from: "Microsoft Institute Africa <admissions@mail.microsoftinstitute.africa>",
+      from: "Techno Panaly Institute of Technology <admissions@mail.microsoftinstitute.africa>",
       to: [email],
-      subject: "Welcome to Microsoft Institute Africa LMS! 🎓",
+      subject: "Welcome to Techno Panaly Institute of Technology LMS! 🎓",
       html: `
         <!DOCTYPE html>
         <html>
@@ -52,7 +52,7 @@ const handler = async (req: Request): Promise<Response> => {
             <div class="content">
               <p>Dear <strong>${fullName}</strong>,</p>
               
-              <p>Welcome to <strong>Microsoft Institute Africa</strong>! Your account has been successfully created and you're now part of our growing community of learners.</p>
+              <p>Welcome to <strong>Techno Panaly Institute of Technology</strong>! Your account has been successfully created and you're now part of our growing community of learners.</p>
               
               <div class="steps">
                 <h3 style="margin-top: 0;">🚀 Get Started in 3 Easy Steps:</h3>
@@ -83,10 +83,10 @@ const handler = async (req: Request): Promise<Response> => {
               
               <p>We're excited to have you on board!</p>
               
-              <p>Best regards,<br><strong>Microsoft Institute Africa Team</strong></p>
+              <p>Best regards,<br><strong>Techno Panaly Institute of Technology Team</strong></p>
             </div>
             <div class="footer">
-              <p>© ${new Date().getFullYear()} Microsoft Institute Africa. All rights reserved.</p>
+              <p>© ${new Date().getFullYear()} Techno Panaly Institute of Technology. All rights reserved.</p>
             </div>
           </div>
         </body>
