@@ -31,12 +31,12 @@ const stats = [
 ];
 
 const floatingCards = [
-  { icon: Bot, label: "AI Tools", pos: "top-4 -left-4 md:top-8 md:-left-10", delay: "0s" },
-  { icon: Cloud, label: "Cloud Computing", pos: "top-1/3 -right-3 md:-right-8", delay: "0.8s" },
-  { icon: Code2, label: "Software Engineering", pos: "bottom-28 -left-4 md:-left-12", delay: "1.6s" },
-  { icon: BarChart3, label: "Data Analytics", pos: "bottom-8 right-2 md:right-4", delay: "0.4s" },
+  { icon: Bot, label: "AI Tools", pos: "top-4 left-2 md:top-8 md:-left-6", delay: "0s" },
+  { icon: Cloud, label: "Cloud Computing", pos: "top-1/4 right-2 md:right-4", delay: "0.8s" },
+  { icon: Code2, label: "Software Engineering", pos: "bottom-28 left-2 md:-left-8", delay: "1.6s" },
+  { icon: BarChart3, label: "Data Analytics", pos: "bottom-8 right-2 md:right-6", delay: "0.4s" },
   { icon: ShieldCheck, label: "Cybersecurity", pos: "top-1/2 left-2 md:left-6", delay: "2.2s" },
-  { icon: Megaphone, label: "Digital Marketing", pos: "bottom-1/3 -right-2 md:right-10", delay: "1.2s" },
+  { icon: Megaphone, label: "Digital Marketing", pos: "bottom-1/3 right-3 md:right-10", delay: "1.2s" },
 ];
 
 const useCountUp = (target: number, active: boolean, duration = 1600) => {
