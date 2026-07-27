@@ -15,7 +15,7 @@ const CertificationSection = () => {
               A certificate that <span className="text-primary">opens doors</span> — globally.
             </h2>
             <p className="text-muted-foreground leading-relaxed mb-6">
-              Every graduate receives a <strong>Microsoft Institute Africa Certificate of
+              Every graduate receives a <strong>Techno Panaly Institute of Technology Certificate of
               Completion</strong>, featuring your admission number, a unique serial, and a scannable
               QR code that verifies authenticity online. Select programs also prepare you for
               globally recognized Microsoft certification exams where applicable.
@@ -40,7 +40,7 @@ const CertificationSection = () => {
             <div className="relative bg-card border-8 border-double border-primary/30 rounded-2xl p-8 shadow-2xl">
               <div className="text-center border-b border-border pb-4 mb-4">
                 <img src={logo} alt="MTI" className="h-16 w-auto mx-auto mb-2" />
-                <p className="text-xs font-semibold text-primary tracking-widest">MICROSOFT INSTITUTE AFRICA</p>
+                <p className="text-xs font-semibold text-primary tracking-widest">TECHNO PANALY INSTITUTE OF TECHNOLOGY</p>
                 <p className="text-[10px] text-muted-foreground italic">Quest for Excellence</p>
               </div>
               <p className="text-center text-xs text-muted-foreground uppercase tracking-widest mb-2">Certificate of Completion</p>

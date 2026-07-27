@@ -76,7 +76,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const emailResponse = await resend.emails.send({
-      from: "Microsoft Institute <admissions@mail.microsoftinstitute.africa>",
+      from: "Techno Panaly Institute of Technology <admissions@mail.microsoftinstitute.africa>",
       to: [studentEmail],
       subject: `✅ You're approved to join: ${sessionTitle}`,
       html: `
@@ -123,7 +123,7 @@ const handler = async (req: Request): Promise<Response> => {
             <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
             
             <p style="font-size: 12px; color: #999; text-align: center;">
-              This email was sent by Microsoft Institute Africa<br>
+              This email was sent by Techno Panaly Institute of Technology<br>
               If you have questions, contact your instructor through the LMS.
             </p>
           </div>

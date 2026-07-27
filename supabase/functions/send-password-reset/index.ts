@@ -27,9 +27,9 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const emailResponse = await resend.emails.send({
-      from: "Microsoft Institute Africa <admissions@mail.microsoftinstitute.africa>",
+      from: "Techno Panaly Institute of Technology <admissions@mail.microsoftinstitute.africa>",
       to: [email],
-      subject: "Password Reset Request - Microsoft Institute Africa",
+      subject: "Password Reset Request - Techno Panaly Institute of Technology",
       html: `
         <!DOCTYPE html>
         <html>
@@ -53,7 +53,7 @@ const handler = async (req: Request): Promise<Response> => {
             <div class="content">
               <p>Hello,</p>
               
-              <p>We received a request to reset the password for your account at <strong>Microsoft Institute Africa LMS</strong>.</p>
+              <p>We received a request to reset the password for your account at <strong>Techno Panaly Institute of Technology LMS</strong>.</p>
               
               <p style="text-align: center;">
                 <a href="${resetUrl}" class="btn">Reset My Password</a>
@@ -75,10 +75,10 @@ const handler = async (req: Request): Promise<Response> => {
               
               <p>Need help? Contact us at <strong>admissions@microsoftinstitute.africa</strong> or call <strong>+254 711 577 338</strong></p>
               
-              <p>Best regards,<br><strong>Microsoft Institute Africa Team</strong></p>
+              <p>Best regards,<br><strong>Techno Panaly Institute of Technology Team</strong></p>
             </div>
             <div class="footer">
-              <p>© ${new Date().getFullYear()} Microsoft Institute Africa. All rights reserved.</p>
+              <p>© ${new Date().getFullYear()} Techno Panaly Institute of Technology. All rights reserved.</p>
               <p>This is an automated security email.</p>
             </div>
           </div>

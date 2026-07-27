@@ -23,7 +23,7 @@ const testimonials = [
     name: "Mary A.",
     role: "ICT Support Graduate",
     image: "/images/testimonial-mary.jpg",
-    quote: "Microsoft Institute Africa changed my life. I now work in the technology sector thanks to the opportunity I received.",
+    quote: "Techno Panaly Institute of Technology changed my life. I now work in the technology sector thanks to the opportunity I received.",
   },
   {
     name: "David O.",
@@ -160,7 +160,7 @@ const Scholarships = () => {
           <div className="max-w-3xl mx-auto text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">About the Sponsorship Program</h2>
             <p className="text-lg text-muted-foreground leading-relaxed">
-              Microsoft Institute Africa works with <strong className="text-foreground">government organizations, NGOs, and private companies</strong> to sponsor students who are financially disadvantaged but motivated to learn modern digital ICT skills. We believe that <strong className="text-foreground">equal opportunity and digital empowerment</strong> can transform African youth into tomorrow's tech leaders.
+              Techno Panaly Institute of Technology works with <strong className="text-foreground">government organizations, NGOs, and private companies</strong> to sponsor students who are financially disadvantaged but motivated to learn modern digital ICT skills. We believe that <strong className="text-foreground">equal opportunity and digital empowerment</strong> can transform African youth into tomorrow's tech leaders.
             </p>
           </div>
 

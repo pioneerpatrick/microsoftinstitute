@@ -38,7 +38,7 @@ const handler = async (req: Request): Promise<Response> => {
         title: 'Enrollment Terminated',
         icon: '❌',
         color: '#ef4444',
-        message: 'Your enrollment at Microsoft Institute Africa has been terminated.',
+        message: 'Your enrollment at Techno Panaly Institute of Technology has been terminated.',
         details: 'Your access to all courses and LMS features has been revoked. Please contact the admissions office for more information.'
       },
       deferred: {
@@ -60,9 +60,9 @@ const handler = async (req: Request): Promise<Response> => {
     const info = statusInfo[status];
 
     const emailResponse = await resend.emails.send({
-      from: "Microsoft Institute Africa <admissions@mail.microsoftinstitute.africa>",
+      from: "Techno Panaly Institute of Technology <admissions@mail.microsoftinstitute.africa>",
       to: [email],
-      subject: `${info.icon} ${info.title} - Microsoft Institute Africa`,
+      subject: `${info.icon} ${info.title} - Techno Panaly Institute of Technology`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -105,10 +105,10 @@ const handler = async (req: Request): Promise<Response> => {
                 </ul>
               ` : ''}
               
-              <p>Best regards,<br><strong>Microsoft Institute Africa Administration</strong></p>
+              <p>Best regards,<br><strong>Techno Panaly Institute of Technology Administration</strong></p>
             </div>
             <div class="footer">
-              <p>© ${new Date().getFullYear()} Microsoft Institute Africa. All rights reserved.</p>
+              <p>© ${new Date().getFullYear()} Techno Panaly Institute of Technology. All rights reserved.</p>
               <p>This is an official administrative notification.</p>
             </div>
           </div>

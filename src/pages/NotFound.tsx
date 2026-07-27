@@ -19,7 +19,7 @@ const NotFound = () => {
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
           <Link to="/" className="flex items-center gap-3">
-            <img src={logo} alt="Microsoft Training Institute" className="h-12 w-auto" />
+            <img src={logo} alt="Techno Panaly Institute of Technology" className="h-12 w-auto" />
           </Link>
         </div>
       </header>
@@ -95,7 +95,7 @@ const NotFound = () => {
       {/* Footer */}
       <footer className="border-t bg-card py-6">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Microsoft Training Institute. All rights reserved.
+          © {new Date().getFullYear()} Techno Panaly Institute of Technology. All rights reserved.
         </div>
       </footer>
     </div>

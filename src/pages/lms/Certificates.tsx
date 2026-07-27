@@ -102,7 +102,7 @@ const Certificates = () => {
     const ORANGE_C = { r: 243, g: 149, b: 25 };
     const GOLD_C = { r: 212, g: 160, b: 23 };
     const wmColors = [BLUE_C, GREEN_C, ORANGE_C, { r: 160, g: 160, b: 160 }, GOLD_C];
-    const wmText = 'Microsoft Training Institute';
+    const wmText = 'Techno Panaly Institute of Technology';
     const setOpacity = (o: number) => {
       // @ts-ignore
       doc.setGState(new doc.GState({ opacity: o }));
@@ -140,7 +140,7 @@ const Certificates = () => {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(16);
     doc.setTextColor(45, 55, 72);
-    doc.text('MICROSOFT TRAINING INSTITUTE', width / 2, 35, { align: 'center' });
+    doc.text('TECHNO PANALY INSTITUTE OF TECHNOLOGY', width / 2, 35, { align: 'center' });
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
@@ -259,7 +259,7 @@ const Certificates = () => {
     if (navigator.share) {
       navigator.share({
         title: `${studentName}'s Certificate - ${cert.courses?.title}`,
-        text: `I completed ${cert.courses?.title} at Microsoft Training Institute!`,
+        text: `I completed ${cert.courses?.title} at Techno Panaly Institute of Technology!`,
         url: verifyUrl,
       });
     } else {

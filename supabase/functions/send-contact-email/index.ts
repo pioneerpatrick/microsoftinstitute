@@ -26,9 +26,9 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send confirmation to the person who contacted
     const confirmationEmail = await resend.emails.send({
-      from: "Microsoft Institute Africa <admissions@mail.microsoftinstitute.africa>",
+      from: "Techno Panaly Institute of Technology <admissions@mail.microsoftinstitute.africa>",
       to: [email],
-      subject: "We received your message - Microsoft Institute Africa",
+      subject: "We received your message - Techno Panaly Institute of Technology",
       html: `
         <!DOCTYPE html>
         <html>
@@ -51,7 +51,7 @@ const handler = async (req: Request): Promise<Response> => {
             <div class="content">
               <p>Dear <strong>${name}</strong>,</p>
               
-              <p>Thank you for contacting <strong>Microsoft Institute Africa</strong>. We have received your message and our team will get back to you as soon as possible.</p>
+              <p>Thank you for contacting <strong>Techno Panaly Institute of Technology</strong>. We have received your message and our team will get back to you as soon as possible.</p>
               
               <div class="message-box">
                 <h4 style="margin-top: 0;">Your Message:</h4>
@@ -65,10 +65,10 @@ const handler = async (req: Request): Promise<Response> => {
                 <li>WhatsApp: <a href="https://wa.me/254711577338">+254 711 577 338</a></li>
               </ul>
               
-              <p>Best regards,<br><strong>Microsoft Institute Africa Team</strong></p>
+              <p>Best regards,<br><strong>Techno Panaly Institute of Technology Team</strong></p>
             </div>
             <div class="footer">
-              <p>© ${new Date().getFullYear()} Microsoft Institute Africa. All rights reserved.</p>
+              <p>© ${new Date().getFullYear()} Techno Panaly Institute of Technology. All rights reserved.</p>
             </div>
           </div>
         </body>
@@ -78,7 +78,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send notification to admin
     const adminEmail = await resend.emails.send({
-      from: "Microsoft Institute Africa <admissions@mail.microsoftinstitute.africa>",
+      from: "Techno Panaly Institute of Technology <admissions@mail.microsoftinstitute.africa>",
       to: ["admissions@microsoftinstitute.africa"],
       subject: `New Contact: ${subject || "Website Inquiry"} from ${name}`,
       html: `

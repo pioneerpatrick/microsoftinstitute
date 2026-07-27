@@ -17,26 +17,18 @@ const allCourses = [
     { name: "Networking (Theory-Based)", level: "Certificate", fee: 27000, duration: "3 months" },
     { name: "Cyber Security (Fundamentals)", level: "Certificate", fee: 30000, duration: "3 months" },
   ]},
-  { school: "School of Business & Management", courses: [
-    { name: "Business Management", level: "Certificate", fee: 27500, duration: "3 months" },
-    { name: "Business Administration", level: "Certificate", fee: 28000, duration: "3 months" },
-    { name: "Human Resource Management", level: "Craft", fee: 29000, duration: "6 months" },
-    { name: "Accounting & Finance", level: "Certificate", fee: 29000, duration: "3 months" },
-    { name: "Banking & Finance", level: "Certificate", fee: 29000, duration: "3 months" },
-    { name: "Entrepreneurship", level: "Certificate", fee: 22000, duration: "3 months" },
-    { name: "Project Management", level: "Certificate", fee: 27000, duration: "3 months" },
-  ]},
-  { school: "Professional & Specialized Courses", courses: [
+  { school: "School of Artificial Intelligence & Data", courses: [
+    { name: "Artificial Intelligence (AI) Essentials", level: "Professional", fee: 15000, duration: "Monthly", isMonthly: true },
+    { name: "Prompt Engineering & AI Productivity", level: "Professional", fee: 15000, duration: "1 month" },
+    { name: "Machine Learning Fundamentals", level: "Professional", fee: 30000, duration: "3 months" },
+    { name: "Data Analytics with Excel & SQL", level: "Certificate", fee: 25000, duration: "2 months" },
     { name: "Digital Marketing", level: "Professional", fee: 30000, duration: "3 months" },
-    { name: "Artificial Intelligence (AI)", level: "Professional", fee: 15000, duration: "Monthly", isMonthly: true },
-    { name: "English Language Learning", level: "Certificate", fee: 5000, duration: "Monthly", isMonthly: true },
   ]},
-  { school: "Education, Administration & Office Skills", courses: [
-    { name: "Office Administration", level: "Certificate", fee: 27000, duration: "3 months" },
-    { name: "Secretarial Studies", level: "Certificate", fee: 27000, duration: "3 months" },
-    { name: "Records & Information Management", level: "Certificate", fee: 26000, duration: "3 months" },
-    { name: "Virtual Assistance", level: "Certificate", fee: 18000, duration: "2 months" },
-    { name: "Business Communication Skills", level: "Certificate", fee: 18000, duration: "2 months" },
+  { school: "School of Cloud, Networking & Cyber Security", courses: [
+    { name: "Microsoft 365 & Cloud Administration", level: "Certificate", fee: 28000, duration: "3 months" },
+    { name: "Cyber Security Operations", level: "Certificate", fee: 30000, duration: "3 months" },
+    { name: "Ethical Hacking Fundamentals", level: "Certificate", fee: 28000, duration: "2 months" },
+    { name: "IT Support & Helpdesk (Remote)", level: "Certificate", fee: 22000, duration: "2 months" },
   ]},
 ];
 
@@ -54,7 +46,7 @@ const FeeStructurePDF = () => {
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
-    doc.text('MICROSOFT TRAINING INSTITUTE', pageWidth / 2, 18, { align: 'center' });
+    doc.text('TECHNO PANALY INSTITUTE OF TECHNOLOGY', pageWidth / 2, 18, { align: 'center' });
     
     doc.setFontSize(14);
     doc.setFont('helvetica', 'normal');
@@ -189,11 +181,11 @@ const FeeStructurePDF = () => {
     yPos = 280;
     doc.setFontSize(8);
     doc.setTextColor(128, 128, 128);
-    doc.text('Microsoft Training Institute | www.microsoftinstitute.co.ke', pageWidth / 2, yPos, { align: 'center' });
+    doc.text('Techno Panaly Institute of Technology | www.microsoftinstitute.co.ke', pageWidth / 2, yPos, { align: 'center' });
     doc.text(`Generated on ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}`, pageWidth / 2, yPos + 5, { align: 'center' });
     
     // Save
-    doc.save('Microsoft-Institute-Fee-Structure-2026.pdf');
+    doc.save('Techno-Panaly-Fee-Structure-2026.pdf');
     toast.success('Fee structure PDF downloaded');
   };
 

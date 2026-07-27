@@ -22,7 +22,7 @@ const Courses = () => {
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Beyond our flagship Remote Work Academy programs, we offer a full catalog across ICT,
-            Business, Professional Skills and NITA-certified Welding. Fees are payable per term
+            Artificial Intelligence, Data, Cloud and Cyber Security. Fees are payable per term
             (1 Term = 3 Months).
           </p>
         </div>

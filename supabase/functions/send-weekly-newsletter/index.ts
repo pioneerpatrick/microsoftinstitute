@@ -52,9 +52,9 @@
  
      // Generate AI content for the newsletter
      let newsletterContent = {
-       subject: "📚 Weekly Update from Microsoft Institute Africa",
+       subject: "📚 Weekly Update from Techno Panaly Institute of Technology",
        greeting: "Hello!",
-       mainContent: "This week at Microsoft Institute Africa, we continue our mission to provide quality online education across Africa. Explore our courses in IT, Business, and more!",
+       mainContent: "This week at Techno Panaly Institute of Technology, we continue our mission to provide quality online education across Africa. Explore our courses in IT, Business, and more!",
        tip: "Pro Tip: Set aside dedicated study time each day for better learning outcomes.",
        closing: "Stay curious and keep learning!"
      };
@@ -79,7 +79,7 @@
              messages: [
                {
                  role: "system",
-                 content: `You are the marketing content writer for Microsoft Institute Africa, an online educational institution offering professional courses in IT, Business, Digital Marketing, and more. Generate engaging weekly newsletter content.`
+                 content: `You are the marketing content writer for Techno Panaly Institute of Technology, an online educational institution offering professional courses in IT, Business, Digital Marketing, and more. Generate engaging weekly newsletter content.`
                },
                {
                  role: "user",
@@ -141,7 +141,7 @@
      for (const subscriber of subscribers) {
        try {
          await resend.emails.send({
-           from: "Microsoft Institute Africa <admissions@mail.microsoftinstitute.africa>",
+           from: "Techno Panaly Institute of Technology <admissions@mail.microsoftinstitute.africa>",
            to: [subscriber.email],
            subject: newsletterContent.subject,
            html: `
@@ -164,7 +164,7 @@
                <div class="container">
                  <div class="header">
                    <h1>📚 Weekly Newsletter</h1>
-                   <p style="margin: 10px 0 0;">Microsoft Institute Africa</p>
+                   <p style="margin: 10px 0 0;">Techno Panaly Institute of Technology</p>
                  </div>
                  <div class="content">
                    <p>${newsletterContent.greeting}</p>
@@ -186,10 +186,10 @@
                    
                    <p><em>${newsletterContent.closing}</em></p>
                    
-                   <p>Best regards,<br><strong>Microsoft Institute Africa Team</strong></p>
+                   <p>Best regards,<br><strong>Techno Panaly Institute of Technology Team</strong></p>
                  </div>
                  <div class="footer">
-                   <p>© ${new Date().getFullYear()} Microsoft Institute Africa. All rights reserved.</p>
+                   <p>© ${new Date().getFullYear()} Techno Panaly Institute of Technology. All rights reserved.</p>
                    <p>You're receiving this because you subscribed to our newsletter.</p>
                    <p><a href="mailto:admissions@microsoftinstitute.africa" style="color: #f59e0b;">Unsubscribe</a></p>
                  </div>

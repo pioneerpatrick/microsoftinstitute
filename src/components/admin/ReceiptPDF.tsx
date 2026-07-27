@@ -75,7 +75,7 @@ export const generateReceiptPDF = async (
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
-  doc.text('Microsoft Training Institute', pageWidth / 2, 14, { align: 'center' });
+  doc.text('Techno Panaly Institute of Technology', pageWidth / 2, 14, { align: 'center' });
   
   doc.setFontSize(9);
   doc.setFont('helvetica', 'italic');
@@ -234,7 +234,7 @@ export const generateReceiptPDF = async (
     doc.text('PAID', pageWidth / 2, yPos + 10, { align: 'center' });
     
     doc.setFontSize(5);
-    doc.text('MICROSOFT TRAINING INSTITUTE', pageWidth / 2, yPos + 15, { align: 'center' });
+    doc.text('TECHNO PANALY INSTITUTE OF TECHNOLOGY', pageWidth / 2, yPos + 15, { align: 'center' });
     
     yPos += stampHeight + 6;
   }
@@ -290,7 +290,7 @@ export const generateReceiptPDF = async (
   doc.setFontSize(7);
   doc.setTextColor(...grayText);
   doc.setFont('helvetica', 'normal');
-  doc.text('This is an official receipt from Microsoft Training Institute. Please keep this for your records.', pageWidth / 2, noticeY, { align: 'center' });
+  doc.text('This is an official receipt from Techno Panaly Institute of Technology. Please keep this for your records.', pageWidth / 2, noticeY, { align: 'center' });
 
   // ===== FOOTER =====
   const footerY = pageHeight - 26;
@@ -301,7 +301,7 @@ export const generateReceiptPDF = async (
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
-  doc.text('Microsoft Training Institute', pageWidth / 2, footerY + 6, { align: 'center' });
+  doc.text('Techno Panaly Institute of Technology', pageWidth / 2, footerY + 6, { align: 'center' });
   
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
@@ -312,7 +312,7 @@ export const generateReceiptPDF = async (
   
   doc.setFontSize(6);
   doc.setTextColor(200, 200, 200);
-  doc.text(`© ${new Date().getFullYear()} Microsoft Training Institute. All rights reserved.`, pageWidth / 2, footerY + 22, { align: 'center' });
+  doc.text(`© ${new Date().getFullYear()} Techno Panaly Institute of Technology. All rights reserved.`, pageWidth / 2, footerY + 22, { align: 'center' });
 
   doc.save(`Receipt-${payment.receipt_number || payment.id}.pdf`);
 };

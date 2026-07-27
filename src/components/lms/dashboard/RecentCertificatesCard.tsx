@@ -46,7 +46,7 @@ const RecentCertificatesCard = ({ userId }: RecentCertificatesCardProps) => {
     if (navigator.share) {
       navigator.share({
         title: `Certificate - ${cert.courses?.title}`,
-        text: `I completed ${cert.courses?.title} at Microsoft Training Institute!`,
+        text: `I completed ${cert.courses?.title} at Techno Panaly Institute of Technology!`,
         url: verifyUrl,
       });
     } else {

@@ -21,15 +21,15 @@ import { supabase } from '@/integrations/supabase/client';
 const TEMPLATES: Record<string, { label: string; code: string }> = {
   python: {
     label: 'Python',
-    code: `# Python - Hello World\nprint("Hello, Microsoft Institute Africa!")\n\n# Variables\nname = "Student"\nage = 20\nprint(f"Name: {name}, Age: {age}")\n\n# Loop\nfor i in range(5):\n    print(f"Count: {i}")`,
+    code: `# Python - Hello World\nprint("Hello, Techno Panaly Institute of Technology!")\n\n# Variables\nname = "Student"\nage = 20\nprint(f"Name: {name}, Age: {age}")\n\n# Loop\nfor i in range(5):\n    print(f"Count: {i}")`,
   },
   javascript: {
     label: 'JavaScript',
-    code: `// JavaScript - Hello World\nconsole.log("Hello, Microsoft Institute Africa!");\n\n// Variables\nconst name = "Student";\nconst age = 20;\nconsole.log(\`Name: \${name}, Age: \${age}\`);\n\n// Loop\nfor (let i = 0; i < 5; i++) {\n  console.log(\`Count: \${i}\`);\n}`,
+    code: `// JavaScript - Hello World\nconsole.log("Hello, Techno Panaly Institute of Technology!");\n\n// Variables\nconst name = "Student";\nconst age = 20;\nconsole.log(\`Name: \${name}, Age: \${age}\`);\n\n// Loop\nfor (let i = 0; i < 5; i++) {\n  console.log(\`Count: \${i}\`);\n}`,
   },
   html: {
     label: 'HTML/CSS',
-    code: `<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: Arial; background: #1a1a2e; color: #eee; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }\n    .card { background: #16213e; padding: 2rem; border-radius: 12px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }\n    h1 { color: #e94560; }\n    p { color: #a7a7c5; }\n  </style>\n</head>\n<body>\n  <div class="card">\n    <h1>Microsoft Institute Africa</h1>\n    <p>Welcome to the Coding Lab!</p>\n  </div>\n</body>\n</html>`,
+    code: `<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: Arial; background: #1a1a2e; color: #eee; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }\n    .card { background: #16213e; padding: 2rem; border-radius: 12px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }\n    h1 { color: #e94560; }\n    p { color: #a7a7c5; }\n  </style>\n</head>\n<body>\n  <div class="card">\n    <h1>Techno Panaly Institute of Technology</h1>\n    <p>Welcome to the Coding Lab!</p>\n  </div>\n</body>\n</html>`,
   },
   sql: {
     label: 'SQL',

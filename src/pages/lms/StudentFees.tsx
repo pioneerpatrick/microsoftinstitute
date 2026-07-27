@@ -130,7 +130,7 @@ const StudentFees = () => {
     
     // Institution name
     doc.setFontSize(14);
-    doc.text('Microsoft Institute', 105, 40, { align: 'center' });
+    doc.text('Techno Panaly Institute of Technology', 105, 40, { align: 'center' });
     
     // Receipt details
     doc.setFontSize(10);

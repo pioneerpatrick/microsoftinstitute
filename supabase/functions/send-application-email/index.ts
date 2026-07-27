@@ -35,9 +35,9 @@ const handler = async (req: Request): Promise<Response> => {
     // Send confirmation to applicant
     try {
       const applicantEmail = await resend.emails.send({
-        from: "Microsoft Institute Africa <admissions@mail.microsoftinstitute.africa>",
+        from: "Techno Panaly Institute of Technology <admissions@mail.microsoftinstitute.africa>",
         to: [email],
-        subject: "Application Received - Microsoft Institute Africa",
+        subject: "Application Received - Techno Panaly Institute of Technology",
         html: `
           <!DOCTYPE html>
           <html>
@@ -60,7 +60,7 @@ const handler = async (req: Request): Promise<Response> => {
               <div class="content">
                 <p>Dear <strong>${fullName}</strong>,</p>
                 
-                <p>Thank you for applying to <strong>Microsoft Institute Africa</strong>! We're excited about your interest in joining our learning community.</p>
+                <p>Thank you for applying to <strong>Techno Panaly Institute of Technology</strong>! We're excited about your interest in joining our learning community.</p>
                 
                 <div class="highlight">
                   <h3 style="margin-top: 0;">Your Application Details:</h3>
@@ -79,10 +79,10 @@ const handler = async (req: Request): Promise<Response> => {
                 
                 <p>Have questions? Reply to this email or call us at <strong>+254 711 577 338</strong></p>
                 
-                <p>Best regards,<br><strong>Microsoft Institute Africa Admissions Team</strong></p>
+                <p>Best regards,<br><strong>Techno Panaly Institute of Technology Admissions Team</strong></p>
               </div>
               <div class="footer">
-                <p>© ${new Date().getFullYear()} Microsoft Institute Africa. All rights reserved.</p>
+                <p>© ${new Date().getFullYear()} Techno Panaly Institute of Technology. All rights reserved.</p>
                 <p>This email was sent because you submitted an application on our website.</p>
               </div>
             </div>
@@ -106,7 +106,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Send notification to admin
     try {
       const adminEmail = await resend.emails.send({
-        from: "Microsoft Institute Africa <admissions@mail.microsoftinstitute.africa>",
+        from: "Techno Panaly Institute of Technology <admissions@mail.microsoftinstitute.africa>",
         to: ["admissions@microsoftinstitute.africa"],
         subject: `New Application: ${fullName} - ${course}`,
         html: `

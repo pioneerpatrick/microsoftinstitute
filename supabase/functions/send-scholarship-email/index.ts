@@ -28,7 +28,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Sending scholarship confirmation email to ${email}`);
 
-    const institutionName = "Microsoft Institute Africa";
+    const institutionName = "Techno Panaly Institute of Technology";
     const institutionPhone = "+254 711 577 338";
 
     // Send confirmation to the applicant

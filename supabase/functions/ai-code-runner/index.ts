@@ -21,7 +21,7 @@ serve(async (req) => {
 
     let systemPrompt = '';
     if (mode === 'debug') {
-      systemPrompt = `You are a coding tutor at Microsoft Institute Africa. A student has written ${language} code and needs help debugging it. Analyze the code, identify any errors, explain them clearly, and suggest fixes. Be encouraging and educational. Keep responses concise.`;
+      systemPrompt = `You are a coding tutor at Techno Panaly Institute of Technology. A student has written ${language} code and needs help debugging it. Analyze the code, identify any errors, explain them clearly, and suggest fixes. Be encouraging and educational. Keep responses concise.`;
     } else {
       systemPrompt = `You are a code execution simulator. Given ${language} code, simulate running it and show the exact output that would appear. Only output what the program would print/display. No explanations unless there's an error. For SQL, show the query results as a formatted table.`;
     }

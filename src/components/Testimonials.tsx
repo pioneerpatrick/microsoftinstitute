@@ -16,7 +16,7 @@ const Testimonials = () => {
       location: "Lagos, Nigeria",
       image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
       rating: 5,
-      text: "I was skeptical about online learning at first, but Microsoft Training Institute exceeded my expectations. The practical approach to cybersecurity gave me hands-on skills that employers value. Now I work as a Security Analyst.",
+      text: "I was skeptical about online learning at first, but Techno Panaly Institute of Technology exceeded my expectations. The practical approach to cybersecurity gave me hands-on skills that employers value. Now I work as a Security Analyst.",
     },
     {
       name: "Amina Hassan",

@@ -15,7 +15,7 @@ const About = () => {
         {/* About Institute */}
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-heading font-bold text-foreground mb-4">
-            About <span className="text-primary">Microsoft Institute Africa</span>
+            About <span className="text-primary">Techno Panaly Institute of Technology</span>
           </h2>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
             Africa's Remote Work & AI Skills Academy. We equip students with the AI, digital, and
@@ -50,8 +50,7 @@ const About = () => {
               </h3>
               <div className="space-y-4 text-muted-foreground leading-relaxed">
                 <p>
-                  Patrick Kimanthi is a visionary leader and technology enthusiast who founded Microsoft Training 
-                  Institute Africa with a mission to bridge the digital skills gap across the continent.
+                  Patrick Kimanthi is a visionary leader and technology enthusiast who founded Techno Panaly Institute of Technology with a mission to bridge the digital skills gap across the continent.
                 </p>
                 <p>
                   With over a decade of experience in IT education and a passion for empowering young Africans, 

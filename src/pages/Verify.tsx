@@ -84,15 +84,15 @@ const Verify = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50">
-      <title>Verify Certificate | Microsoft Training Institute</title>
-      <meta name="description" content="Verify the authenticity of certificates issued by Microsoft Training Institute." />
+      <title>Verify Certificate | Techno Panaly Institute of Technology</title>
+      <meta name="description" content="Verify the authenticity of certificates issued by Techno Panaly Institute of Technology." />
 
       {/* Header */}
       <div className="bg-[hsl(var(--primary))] text-white py-6">
         <div className="container mx-auto px-4 flex items-center gap-4">
           <img src={logoImg} alt="MTI Logo" className="h-14 w-auto" />
           <div>
-            <h1 className="text-xl font-bold">MICROSOFT TRAINING INSTITUTE</h1>
+            <h1 className="text-xl font-bold">TECHNO PANALY INSTITUTE OF TECHNOLOGY</h1>
             <p className="text-sm opacity-80">Certificate Verification Portal</p>
           </div>
         </div>
@@ -213,7 +213,7 @@ const Verify = () => {
 
         {/* Footer note */}
         <p className="text-center text-xs text-muted-foreground mt-8">
-          © {new Date().getFullYear()} Microsoft Training Institute. All rights reserved.
+          © {new Date().getFullYear()} Techno Panaly Institute of Technology. All rights reserved.
         </p>
       </div>
     </div>

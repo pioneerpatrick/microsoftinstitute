@@ -123,8 +123,8 @@ const StudentIDCard = ({ userId }: StudentIDCardProps) => {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(5);
     doc.setTextColor(234, 179, 8);
-    doc.text('MICROSOFT TRAINING', 31, 6);
-    doc.text('INSTITUTE', 31, 9.5);
+    doc.text('TECHNO PANALY', 31, 6);
+    doc.text('INSTITUTE OF TECHNOLOGY', 31, 9.5);
 
     doc.setFontSize(3);
     doc.setTextColor(148, 163, 184);
@@ -215,7 +215,7 @@ const StudentIDCard = ({ userId }: StudentIDCardProps) => {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(5.5);
     doc.setTextColor(255, 255, 255);
-    doc.text('MICROSOFT TRAINING INSTITUTE', 43, 6, { align: 'center' });
+    doc.text('TECHNO PANALY INSTITUTE OF TECHNOLOGY', 43, 6, { align: 'center' });
     doc.setFontSize(3);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(234, 179, 8);
@@ -227,7 +227,7 @@ const StudentIDCard = ({ userId }: StudentIDCardProps) => {
     let by = 16;
     const backLines = [
       'This card certifies that the bearer is a duly registered student',
-      'of Microsoft Training Institute, Nairobi, Kenya.',
+      'of Techno Panaly Institute of Technology, Nairobi, Kenya.',
       '',
       'The holder is entitled to all privileges of a registered student',
       'as long as this card remains valid.',
@@ -263,7 +263,7 @@ const StudentIDCard = ({ userId }: StudentIDCardProps) => {
 
     doc.setFontSize(2.5);
     doc.setTextColor(148, 163, 184);
-    doc.text('IF FOUND, RETURN TO: Microsoft Training Institute, Nairobi', 43, by, { align: 'center' });
+    doc.text('IF FOUND, RETURN TO: Techno Panaly Institute of Technology, Nairobi', 43, by, { align: 'center' });
     doc.text('Tel: +254 711 577 338  |  Email: admissions@microsoftinstitute.africa', 43, by + 3, { align: 'center' });
 
     doc.setFillColor(234, 179, 8);

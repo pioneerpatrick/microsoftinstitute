@@ -104,7 +104,7 @@ const CertificateManagement = () => {
     courseTitle: '',
     certNumber: '',
     issuedAt: '',
-    institutionTitle: 'MICROSOFT TRAINING INSTITUTE',
+    institutionTitle: 'TECHNO PANALY INSTITUTE OF TECHNOLOGY',
     motto: '"Quest for Excellence"',
     admissionNumber: '',
     serialNumber: '',
@@ -253,7 +253,7 @@ const CertificateManagement = () => {
       courseTitle: cert.courses?.title || '',
       certNumber: cert.certificate_number,
       issuedAt: new Date(cert.issued_at).toISOString().split('T')[0],
-      institutionTitle: 'MICROSOFT TRAINING INSTITUTE',
+      institutionTitle: 'TECHNO PANALY INSTITUTE OF TECHNOLOGY',
       motto: '"Quest for Excellence"',
       admissionNumber: admNum,
       serialNumber: generateSerialNumber(admNum, cert.courses?.title || ''),
@@ -315,7 +315,7 @@ const CertificateManagement = () => {
     };
 
     // ── Repeating college name pattern background (multi-color) ──
-    const wmText = 'Microsoft Training Institute';
+    const wmText = 'Techno Panaly Institute of Technology';
     const wmColors = [
       { r: BLUE.r, g: BLUE.g, b: BLUE.b },
       { r: GREEN.r, g: GREEN.g, b: GREEN.b },
@@ -382,7 +382,7 @@ const CertificateManagement = () => {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(13);
     doc.setTextColor(255, 255, 255);
-    doc.text('MICROSOFT TRAINING INSTITUTE', W / 2, 46, { align: 'center' });
+    doc.text('TECHNO PANALY INSTITUTE OF TECHNOLOGY', W / 2, 46, { align: 'center' });
 
     // ── Admission & Serial Numbers ──
     doc.setFont('helvetica', 'bold');
@@ -512,9 +512,9 @@ const CertificateManagement = () => {
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(5);
-    doc.text('MICROSOFT', sealX, sealY - 3, { align: 'center' });
-    doc.text('TRAINING', sealX, sealY + 0.5, { align: 'center' });
-    doc.text('INSTITUTE', sealX, sealY + 4, { align: 'center' });
+    doc.text('TECHNO PANALY', sealX, sealY - 3, { align: 'center' });
+    doc.text('INSTITUTE OF', sealX, sealY + 0.5, { align: 'center' });
+    doc.text('TECHNOLOGY', sealX, sealY + 4, { align: 'center' });
 
     // Orange stars
     doc.setFillColor(ORANGE.r, ORANGE.g, ORANGE.b);
