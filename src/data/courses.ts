@@ -1,4 +1,4 @@
-import { Monitor, Briefcase, TrendingUp, FileText, Wrench, Sparkles } from "lucide-react";
+import { Monitor, TrendingUp, FileText, Sparkles } from "lucide-react";
 
 export interface CourseItem {
   name: string;
