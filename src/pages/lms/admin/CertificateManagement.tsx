@@ -512,9 +512,9 @@ const CertificateManagement = () => {
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(5);
-    doc.text('MICROSOFT', sealX, sealY - 3, { align: 'center' });
-    doc.text('TRAINING', sealX, sealY + 0.5, { align: 'center' });
-    doc.text('INSTITUTE', sealX, sealY + 4, { align: 'center' });
+    doc.text('TECHNO PANALY', sealX, sealY - 3, { align: 'center' });
+    doc.text('INSTITUTE OF', sealX, sealY + 0.5, { align: 'center' });
+    doc.text('TECHNOLOGY', sealX, sealY + 4, { align: 'center' });
 
     // Orange stars
     doc.setFillColor(ORANGE.r, ORANGE.g, ORANGE.b);

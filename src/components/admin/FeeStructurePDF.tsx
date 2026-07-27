@@ -193,7 +193,7 @@ const FeeStructurePDF = () => {
     doc.text(`Generated on ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}`, pageWidth / 2, yPos + 5, { align: 'center' });
     
     // Save
-    doc.save('Microsoft-Institute-Fee-Structure-2026.pdf');
+    doc.save('Techno-Panaly-Fee-Structure-2026.pdf');
     toast.success('Fee structure PDF downloaded');
   };
 

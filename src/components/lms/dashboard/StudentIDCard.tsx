@@ -123,8 +123,8 @@ const StudentIDCard = ({ userId }: StudentIDCardProps) => {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(5);
     doc.setTextColor(234, 179, 8);
-    doc.text('MICROSOFT TRAINING', 31, 6);
-    doc.text('INSTITUTE', 31, 9.5);
+    doc.text('TECHNO PANALY', 31, 6);
+    doc.text('INSTITUTE OF TECHNOLOGY', 31, 9.5);
 
     doc.setFontSize(3);
     doc.setTextColor(148, 163, 184);
