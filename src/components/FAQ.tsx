@@ -11,7 +11,7 @@ const FAQ = () => {
     {
       question: "Is this a fully online academy?",
       answer:
-        "Yes. Our Remote Work Academy runs 100% online with live instructor-led classes, recorded sessions, and hands-on projects. You can join from anywhere in Africa. (Only our NITA-certified Welding & Fabrication department is in-person.)",
+        "Yes. Our Remote Work Academy runs 100% online with live instructor-led classes, recorded sessions, and hands-on projects. You can join from anywhere in Africa.",
     },
     {
       question: "Do I need experience to join?",
