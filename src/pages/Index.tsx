@@ -1,5 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
+import HeroSearch from "@/components/HeroSearch";
+import TechStrip from "@/components/TechStrip";
 import FlagshipPrograms from "@/components/FlagshipPrograms";
 import CareerPathway from "@/components/CareerPathway";
 import About from "@/components/About";
@@ -22,6 +24,8 @@ const Index = () => {
       <Navbar />
       <main>
         <Hero />
+        <HeroSearch />
+        <TechStrip />
         <FlagshipPrograms />
         <CareerPathway />
         <About />
