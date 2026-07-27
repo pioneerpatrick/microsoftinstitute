@@ -17,26 +17,18 @@ const allCourses = [
     { name: "Networking (Theory-Based)", level: "Certificate", fee: 27000, duration: "3 months" },
     { name: "Cyber Security (Fundamentals)", level: "Certificate", fee: 30000, duration: "3 months" },
   ]},
-  { school: "School of Business & Management", courses: [
-    { name: "Business Management", level: "Certificate", fee: 27500, duration: "3 months" },
-    { name: "Business Administration", level: "Certificate", fee: 28000, duration: "3 months" },
-    { name: "Human Resource Management", level: "Craft", fee: 29000, duration: "6 months" },
-    { name: "Accounting & Finance", level: "Certificate", fee: 29000, duration: "3 months" },
-    { name: "Banking & Finance", level: "Certificate", fee: 29000, duration: "3 months" },
-    { name: "Entrepreneurship", level: "Certificate", fee: 22000, duration: "3 months" },
-    { name: "Project Management", level: "Certificate", fee: 27000, duration: "3 months" },
-  ]},
-  { school: "Professional & Specialized Courses", courses: [
+  { school: "School of Artificial Intelligence & Data", courses: [
+    { name: "Artificial Intelligence (AI) Essentials", level: "Professional", fee: 15000, duration: "Monthly", isMonthly: true },
+    { name: "Prompt Engineering & AI Productivity", level: "Professional", fee: 15000, duration: "1 month" },
+    { name: "Machine Learning Fundamentals", level: "Professional", fee: 30000, duration: "3 months" },
+    { name: "Data Analytics with Excel & SQL", level: "Certificate", fee: 25000, duration: "2 months" },
     { name: "Digital Marketing", level: "Professional", fee: 30000, duration: "3 months" },
-    { name: "Artificial Intelligence (AI)", level: "Professional", fee: 15000, duration: "Monthly", isMonthly: true },
-    { name: "English Language Learning", level: "Certificate", fee: 5000, duration: "Monthly", isMonthly: true },
   ]},
-  { school: "Education, Administration & Office Skills", courses: [
-    { name: "Office Administration", level: "Certificate", fee: 27000, duration: "3 months" },
-    { name: "Secretarial Studies", level: "Certificate", fee: 27000, duration: "3 months" },
-    { name: "Records & Information Management", level: "Certificate", fee: 26000, duration: "3 months" },
-    { name: "Virtual Assistance", level: "Certificate", fee: 18000, duration: "2 months" },
-    { name: "Business Communication Skills", level: "Certificate", fee: 18000, duration: "2 months" },
+  { school: "School of Cloud, Networking & Cyber Security", courses: [
+    { name: "Microsoft 365 & Cloud Administration", level: "Certificate", fee: 28000, duration: "3 months" },
+    { name: "Cyber Security Operations", level: "Certificate", fee: 30000, duration: "3 months" },
+    { name: "Ethical Hacking Fundamentals", level: "Certificate", fee: 28000, duration: "2 months" },
+    { name: "IT Support & Helpdesk (Remote)", level: "Certificate", fee: 22000, duration: "2 months" },
   ]},
 ];
 
